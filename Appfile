@@ -1,0 +1,7 @@
+application {
+  name = "pops"
+  type = "ruby"
+  dependency {
+    source = "/Users/imac01/development/learning/otto/examples/postgresql"
+  }
+}

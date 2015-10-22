@@ -1,0 +1,2 @@
+gem 'pops_redmine_engine', path: 'engines/redmine-pops-engine'
+gem 'foundation_theme', path: 'engines/redmine-foundation-theme'
