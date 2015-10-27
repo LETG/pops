@@ -1,0 +1,22 @@
+[submodule "plugins/invitable"]
+	path = plugins/invitable
+	url = https://github.com/LETG/redmine-invitable.git
+[submodule "plugins/pops_project"]
+	path = plugins/pops_project
+	url = https://github.com/LETG/redmine-pops.git
+[submodule "plugins/documents_pops"]
+	path = plugins/documents_pops
+	url = https://github.com/LETG/redmine-documents-pops.git
+[submodule "plugins/redmine_ckeditor"]
+	path = plugins/redmine_ckeditor
+	url = https://github.com/a-ono/redmine_ckeditor.git
+	branch = 1.0.20
+[submodule "plugins/redmine_http_auth"]
+	path = plugins/redmine_http_auth
+	url = https://github.com/kevinfoote/redmine_http_auth
+[submodule "engines/redmine-foundation-theme"]
+	path = engines/redmine-foundation-theme
+	url = https://github.com/dotgee/redmine-foundation-theme.git
+[submodule "engines/redmine-pops-engine"]
+	path = engines/redmine-pops-engine
+	url = https://github.com/LETG/redmine-pops-engine.git
