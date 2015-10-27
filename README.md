@@ -26,7 +26,7 @@ In order for POPS to work properly, you will need the following installed :
 * Clone this repository and its submodules
 
 ```
-$ git clone --recursive https://github.com/LETG/pops
+$ git clone --recursive https://github.com/LETG/pops.git
 ```
 
 * Follow the [installation procedure of Redmine](http://www.redmine.org/projects/redmine/wiki/redmineinstall#Installation-procedure)
