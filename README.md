@@ -1,5 +1,4 @@
-What is POPS ?
-================
+# What is POPS ?
 
 POPS project is a set of additions to Redmine which aims to turn Redmine into a collaborative scientific platform.
 This include a focus to documents and project pages plus a full design revamp.
@@ -11,11 +10,9 @@ The POPS project is composed of several sub-projects :
 * [redmine-invitable](https://github.com/LETG/redmine-invitable) is a plugin allowing you to invite people to join Redmine per project.
 * [redmine-documents-pops](https://github.com/LETG/redmine-documents-pops) is a plugin changing how documents behave in Redmine.
 
-Installation guide
-==================
+# Installation guide
 
-Dependencies
-------------
+### Dependencies
 
 In order for POPS to work properly, you will need the following installed :
 
@@ -24,23 +21,26 @@ In order for POPS to work properly, you will need the following installed :
 * PostgreSQL 9.1 and greater or MySQL
 * ImageMagick (imagemagick, libmagickwand-dev)
 
-Guide
------
+## Method 1: Install from scratch
+
+* Clone this repository and its submodules
+
+```
+$ git clone --recursive https://github.com/LETG/pops
+```
+
+* Follow the [installation procedure of Redmine](http://www.redmine.org/projects/redmine/wiki/redmineinstall#Installation-procedure)
+
+* Follow the installation procedure of plugins
+
+```
+$ rake redmine:plugins:migrate
+```
+
+## Method 2: Install in an existing Redmine instance
 
 By its nature, POPS needs to override some Redmine functionnalities.
 As such, this will not be a straightforward installation process and knowledge of Rails is highly recommended.
-
-* Get a fresh Redmine copy :
-
-```bash
-$ git clone https://github.com/redmine/redmine.git pops --single-branch -b 2.6-stable --depth 1
-$ cd pops
-```
-
-* Configure Redmine and make sure it is working
-
-This is mostly database configuration, follow the officials [docs](http://www.redmine.org/projects/redmine/wiki/RedmineInstall) for more informations.
-You should have a working Redmine instance before continuing the setup.
 
 * Download and install all the required plugins
 
@@ -118,22 +118,19 @@ config.assets.paths << "#{Rails.root}/public/images/"
 ```
 
 
-Troubleshooting
----------------
+### Troubleshooting
 
 * Column doesn't exist / Migrations were not run
 
 Plugins folders need to have a specific name for their migrations to be ran. Please make sure they have the name specified in above steps.
 
-Authors
--------
+### Authors
 
 * [@almerino](https://github.com/almerino)
 * [@jchapron](https://github.com/jchapron)
 * [@dotgee](https://github.com/dotgee)
 
-Contributing
-------------
+### Contributing
 
 POPS is an open source project and we encourage contributions.
 
@@ -149,7 +146,6 @@ Here are some ways **you** can contribute:
 * by resolving [issues](https://github.com/LETG/redmine-pops/issues)
 * by reviewing [pull requests](https://github.com/LETG/redmine-pops/pulls)
 
-Licence
--------
+### Licence
 
 POPS is released under the [GNU GENERAL PUBLIC LICENSE](https://www.gnu.org/licenses/gpl-3.0.html).  See the [`LICENSE.md`](https://github.com/LETG/redmine-pops/blob/master/LICENSE.md) file.
