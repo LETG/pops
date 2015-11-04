@@ -94,7 +94,7 @@ config.paths['lib'].unshift(PopsRedmineEngine::Engine.root.join('lib'))
 
 ```bash
 $ mkdir engines && cd engines
-$ git clone https://github.com/dotgee/redmine-foundation-theme.git --depth 1
+$ git clone https://github.com/LETG/redmine-foundation-theme.git --depth 1
 ```
 
 Edit Gemfile.local and add :

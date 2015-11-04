@@ -16,7 +16,7 @@
 	url = https://github.com/kevinfoote/redmine_http_auth
 [submodule "engines/redmine-foundation-theme"]
 	path = engines/redmine-foundation-theme
-	url = https://github.com/dotgee/redmine-foundation-theme.git
+	url = https://github.com/LETG/redmine-foundation-theme.git
 [submodule "engines/redmine-pops-engine"]
 	path = engines/redmine-pops-engine
 	url = https://github.com/LETG/redmine-pops-engine.git
