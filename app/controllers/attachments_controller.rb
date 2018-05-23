@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -56,14 +56,15 @@ class AttachmentsController < ApplicationController
       # images are sent inline
       send_file @attachment.diskfile, :filename => filename_for_content_disposition(@attachment.filename),
                                       :type => detect_content_type(@attachment),
-                                      :disposition => (@attachment.image? ? 'inline' : 'attachment')
+				      :disposition => (@attachment.image? || (!!(@attachment.filename =~ /\.(pdf)$/i)) ? 'inline' : 'attachment')
+                                      #:disposition => (@attachment.image? ? 'inline' : 'attachment')
     end
   end
 
   def thumbnail
-    if @attachment.thumbnailable? && tbnail = @attachment.thumbnail(:size => params[:size])
-      if stale?(:etag => tbnail)
-        send_file tbnail,
+    if @attachment.thumbnailable? && thumbnail = @attachment.thumbnail(:size => params[:size])
+      if stale?(:etag => thumbnail)
+        send_file thumbnail,
           :filename => filename_for_content_disposition(@attachment.filename),
           :type => detect_content_type(@attachment),
           :disposition => 'inline'

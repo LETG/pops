@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2014  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@ class Document < ActiveRecord::Base
   acts_as_activity_provider :find_options => {:include => :project}
 
   validates_presence_of :project, :title, :category
-  validates_length_of :title, :maximum => 60
+  #validates_length_of :title, :maximum => 60
 
   after_create :send_notification
 

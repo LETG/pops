@@ -1,11 +1,24 @@
-<% if @user.auth_source %>
-<p><%= l(:mail_body_account_information_external, h(@user.auth_source.name)) %></p>
+<% if @password.empty? %>
+Bonjour,
+<br/>
+<%= "{#inviter} vous a invite a participer au projet #{project_name} sur la plateform collaborative POPS." %>
+<br/>
+Pour vous y connecter veuillez cliquer ici 
+<%= link_to "http://www-iuem.univ-brest.fr/pops/", "https://www-iuem.univ-brest.fr/pops" %>
+et vous identifier avec votre compte habituel apre®s avoir e√©lectionner votre organie
+<br/>
+<br/>
+Cordialement.
 <% else %>
-<p><%= l(:mail_body_account_information) %>:</p>
-<ul>
+  <% if @user.auth_source %>
+  <p><%= l(:mail_body_account_information_external, h(@user.auth_source.name)) %></p>
+  <% else %>
+  <p><%= l(:mail_body_account_information) %>:</p>
+  <ul>
     <li><%= l(:field_login) %>: <%=h @user.login %></li>
     <li><%= l(:field_password) %>: <%=h @password %></li>
-</ul>
-<% end %>
+  </ul>
+  <% end %>
 
-<p><%= l(:label_login) %>: <%= link_to h(@login_url), @login_url %></p>
+  <p><%= l(:label_login) %>: <%= link_to h(@login_url), @login_url %></p>
+<% end %>
