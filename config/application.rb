@@ -49,6 +49,8 @@ module RedmineApp
 
     config.action_mailer.perform_deliveries = false
 
+    config.redmine_verify_sessions = false
+
     # Do not include all helpers
     config.action_controller.include_all_helpers = false
 

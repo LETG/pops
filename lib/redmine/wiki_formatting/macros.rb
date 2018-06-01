@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -92,7 +92,7 @@ module Redmine
         #   invoked without a block of text.  
         #
         # Examples:
-        # By default, when the macro is invoked, the coma separated list of arguments
+        # By default, when the macro is invoked, the comma separated list of arguments
         # is split and passed to the macro block as an array. If no argument is given
         # the macro will be invoked with an empty array:
         #
@@ -207,8 +207,8 @@ module Redmine
         page = Wiki.find_page(args.first.to_s, :project => @project)
         raise 'Page not found' if page.nil? || !User.current.allowed_to?(:view_wiki_pages, page.wiki.project)
         @included_wiki_pages ||= []
-        raise 'Circular inclusion detected' if @included_wiki_pages.include?(page.title)
-        @included_wiki_pages << page.title
+        raise 'Circular inclusion detected' if @included_wiki_pages.include?(page.id)
+        @included_wiki_pages << page.id
         out = textilizable(page.content, :text, :attachments => page.attachments, :headings => false)
         @included_wiki_pages.pop
         out

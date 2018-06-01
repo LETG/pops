@@ -1,13 +1,9 @@
-### From http://svn.geekdaily.org/public/rails/plugins/generally_useful/tasks/coverage_via_rcov.rake
-
 namespace :test do
   desc 'Measures test coverage'
   task :coverage do
     rm_f "coverage"
-    rm_f "coverage.data"
-    rcov = "rcov --rails --aggregate coverage.data --text-summary -Ilib --html --exclude gems/"
-    files = %w(unit functional integration).map {|dir| Dir.glob("test/#{dir}/**/*_test.rb")}.flatten.join(" ")
-    system("#{rcov} #{files}")
+    ENV["COVERAGE"] = "1"
+    Rake::Task["test"].invoke
   end
 
   desc 'Run unit and functional scm tests'
@@ -86,6 +82,7 @@ namespace :test do
     Rake::TestTask.new(:units => "db:test:prepare") do |t|
       t.libs << "test"
       t.verbose = true
+      t.warning = false
       t.test_files = FileList['test/unit/repository*_test.rb'] + FileList['test/unit/lib/redmine/scm/**/*_test.rb']
     end
     Rake::Task['test:scm:units'].comment = "Run the scm unit tests"
@@ -93,22 +90,23 @@ namespace :test do
     Rake::TestTask.new(:functionals => "db:test:prepare") do |t|
       t.libs << "test"
       t.verbose = true
+      t.warning = false
       t.test_files = FileList['test/functional/repositories*_test.rb']
     end
     Rake::Task['test:scm:functionals'].comment = "Run the scm functional tests"
   end
 
-  Rake::TestTask.new(:rdm_routing) do |t|
+  Rake::TestTask.new(:routing) do |t|
     t.libs << "test"
     t.verbose = true
-    t.test_files = FileList['test/integration/routing/*_test.rb']
+    t.test_files = FileList['test/integration/routing/*_test.rb'] + FileList['test/integration/api_test/*_routing_test.rb']
   end
-  Rake::Task['test:rdm_routing'].comment = "Run the routing tests"
+  Rake::Task['test:routing'].comment = "Run the routing tests"
 
   Rake::TestTask.new(:ui => "db:test:prepare") do |t|
     t.libs << "test"
     t.verbose = true
-    t.test_files = FileList['test/ui/**/*_test.rb']
+    t.test_files = FileList['test/ui/**/*_test_ui.rb']
   end
   Rake::Task['test:ui'].comment = "Run the UI tests with Capybara (PhantomJS listening on port 4444 is required)"
 end

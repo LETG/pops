@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2014  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +17,7 @@
 
 class ActivitiesController < ApplicationController
   menu_item :activity
-  before_filter :find_optional_project
+  before_action :find_optional_project
   accept_rss_auth :index
 
   def index
@@ -27,23 +27,33 @@ class ActivitiesController < ApplicationController
       begin; @date_to = params[:from].to_date + 1; rescue; end
     end
 
-    @date_to ||= Date.today + 1
+    @date_to ||= User.current.today + 1
     @date_from = @date_to - @days
     @with_subprojects = params[:with_subprojects].nil? ? Setting.display_subprojects_issues? : (params[:with_subprojects] == '1')
-    @author = (params[:user_id].blank? ? nil : User.active.find(params[:user_id]))
+    if params[:user_id].present?
+      @author = User.active.find(params[:user_id])
+    end
 
     @activity = Redmine::Activity::Fetcher.new(User.current, :project => @project,
                                                              :with_subprojects => @with_subprojects,
                                                              :author => @author)
+    pref = User.current.pref
     @activity.scope_select {|t| !params["show_#{t}"].nil?}
-    @activity.scope = (@author.nil? ? :default : :all) if @activity.scope.empty?
+    if @activity.scope.present?
+      if params[:submit].present?
+        pref.activity_scope = @activity.scope
+        pref.save
+      end
+    else
+      if @author.nil?
+        scope = pref.activity_scope & @activity.event_types
+        @activity.scope = scope.present? ? scope : :default
+      else
+        @activity.scope = :all
+      end
+    end
 
     events = @activity.events(@date_from, @date_to)
-
-    if @project
-      events = events.select {|e| e.is_a?(Attachment) ?
-          @project.self_and_descendants.map(&:id).include?(e.container.project_id) : @project.self_and_descendants.map(&:id).include?(e.project_id) }
-    end
 
     if events.empty? || stale?(:etag => [@activity.scope, @date_to, @date_from, @with_subprojects, @author, events.first, events.size, User.current, current_language])
       respond_to do |format|

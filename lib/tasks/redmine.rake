@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,11 @@ namespace :redmine do
     desc 'Moves attachments stored at the root of the file directory (ie. created before Redmine 2.3) to their subdirectories'
     task :move_to_subdirectories => :environment do
       Attachment.move_from_root_to_target_directory
+    end
+
+    desc 'Updates attachment digests to SHA256'
+    task :update_digests => :environment do
+      Attachment.update_digests_to_sha256
     end
   end
 
@@ -103,6 +108,9 @@ DESC
       Target.connection.reset_pk_sequence!(table_name) if Target.primary_key
       target_count = Target.count
       abort "Some records were not migrated" unless source_count == target_count
+
+      Object.send(:remove_const, :Target)
+      Object.send(:remove_const, :Source)
     end
   end
 
@@ -170,6 +178,13 @@ DESC
         t.libs << "test"
         t.verbose = true
         t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/integration/**/*_test.rb"
+      end
+
+      desc 'Runs the plugins ui tests.'
+      Rake::TestTask.new :ui => "db:test:prepare" do |t|
+        t.libs << "test"
+        t.verbose = true
+        t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/ui/**/*_test.rb"
       end
     end
   end
