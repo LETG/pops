@@ -16,10 +16,10 @@
 	url = https://github.com/kevinfoote/redmine_http_auth
 [submodule "engines/redmine-foundation-theme"]
 	path = engines/redmine-foundation-theme
-	url = https://github.com/LETG/redmine-foundation-theme.git
+	url = http://git.linaia.online/linaia/redmine-foundation-theme.git
 [submodule "engines/redmine-pops-engine"]
 	path = engines/redmine-pops-engine
-	url = https://github.com/LETG/redmine-pops-engine.git
+	url = http://git.linaia.online/linaia/redmine-pops-engine.git
 [submodule "plugins/redmine_improved_searchbox"]
 	path = plugins/redmine_improved_searchbox
 	url = https://github.com/ries-tech/redmine_improved_searchbox.git
