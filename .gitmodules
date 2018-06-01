@@ -3,7 +3,7 @@
 	url = https://github.com/LETG/redmine-invitable.git
 [submodule "plugins/pops_project"]
 	path = plugins/pops_project
-	url = https://github.com/LETG/redmine-pops.git
+	url = http://git.linaia.online/linaia/redmine-pops.git
 [submodule "plugins/documents_pops"]
 	path = plugins/documents_pops
 	url = https://github.com/LETG/redmine-documents-pops.git
