@@ -22,4 +22,4 @@
 	url = https://github.com/LETG/redmine-pops-engine.git
 [submodule "plugins/redmine_improved_searchbox"]
 	path = plugins/redmine_improved_searchbox
-	url = https://github.com/ries-tech/redmine_improved_searchbox.git
+	url = https://github.com/LETG/redmine_improved_searchbox.git
