@@ -1,14 +1,12 @@
 [submodule "plugins/invitable"]
 	path = plugins/invitable
-	url = http://git.linaia.online/linaia/redmine-invitable.git
-  # url = https://github.com/LETG/redmine-invitable.git
+  	url = https://github.com/LETG/redmine-invitable.git
 [submodule "plugins/pops_project"]
 	path = plugins/pops_project
-	url = http://git.linaia.online/linaia/redmine-pops.git
+	url = https://github.com/LETG/redmine-pops.git
 [submodule "plugins/documents_pops"]
-	path = plugins/documents_pops
-	url = http://git.linaia.online/linaia/redmine-documents-pops.git
-  # url = https://github.com/LETG/redmine-documents-pops.git
+	path = plugins/documents_pops	
+  	url = https://github.com/LETG/redmine-documents-pops.git
 [submodule "plugins/redmine_ckeditor"]
 	path = plugins/redmine_ckeditor
 	url = https://github.com/a-ono/redmine_ckeditor.git
@@ -18,10 +16,10 @@
 	url = https://github.com/kevinfoote/redmine_http_auth
 [submodule "engines/redmine-foundation-theme"]
 	path = engines/redmine-foundation-theme
-	url = http://git.linaia.online/linaia/redmine-foundation-theme.git
+	url = https://github.com/LETG/redmine-foundation-theme.git
 [submodule "engines/redmine-pops-engine"]
 	path = engines/redmine-pops-engine
-	url = http://git.linaia.online/linaia/redmine-pops-engine.git
+	url = https://github.com/LETG/redmine-pops-engine.git
 [submodule "plugins/redmine_improved_searchbox"]
 	path = plugins/redmine_improved_searchbox
 	url = https://github.com/ries-tech/redmine_improved_searchbox.git
