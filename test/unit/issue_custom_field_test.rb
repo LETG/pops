@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,11 +24,15 @@ class IssueCustomFieldTest < ActiveSupport::TestCase
 
   fixtures :roles
 
+  def setup
+    User.current = nil
+  end
+
   def test_custom_field_with_visible_set_to_false_should_validate_roles
     set_language_if_valid 'en'
     field = IssueCustomField.new(:name => 'Field', :field_format => 'string', :visible => false)
     assert !field.save
-    assert_include "Roles can't be blank", field.errors.full_messages
+    assert_include "Roles cannot be blank", field.errors.full_messages
     field.role_ids = [1, 2]
     assert field.save
   end

@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@ class BoardTest < ActiveSupport::TestCase
   include Redmine::I18n
 
   def setup
+    User.current = nil
     @project = Project.find(1)
   end
 
@@ -92,6 +93,7 @@ class BoardTest < ActiveSupport::TestCase
   end
 
   def test_destroy
+    set_tmp_attachments_directory
     board = Board.find(1)
     assert_difference 'Message.count', -6 do
       assert_difference 'Attachment.count', -1 do
@@ -112,5 +114,14 @@ class BoardTest < ActiveSupport::TestCase
     child.reload
     assert_nil child.parent
     assert_nil child.parent_id
+  end
+
+  def test_reset_counters_should_update_attributes
+    Board.where(:id => 1).update_all(:topics_count => 0, :messages_count => 0, :last_message_id => 0)
+    Board.reset_counters!(1)
+    board = Board.find(1)
+    assert_equal board.topics.count, board.topics_count
+    assert_equal board.messages.count, board.messages_count
+    assert_equal board.messages.order("id DESC").first.id, board.last_message_id
   end
 end

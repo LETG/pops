@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,4 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module IssueStatusesHelper
+  def issue_status_type_badge(status)
+    if status.is_closed?
+      content_tag('span', l(:label_closed_issues), class: 'badge badge-status-closed')
+    else
+      content_tag('span', l(:label_open_issues), class: 'badge badge-status-open')
+    end
+  end
 end

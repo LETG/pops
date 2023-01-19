@@ -140,8 +140,8 @@ gl:
         invalid: "non é válido"
         confirmation: "non coincide coa confirmación"
         accepted: "debe ser aceptado"
-        empty: "non pode estar valeiro"
-        blank: "non pode estar en blanco"
+        empty: "non pode estar baleiro"
+        blank: "non pode estar en branco"
         too_long: "é demasiado longo (non máis de %{count} carácteres)"
         too_short: "é demasiado curto (non menos de %{count} carácteres)"
         wrong_length: "non ten a lonxitude correcta (debe ser de %{count} carácteres)"
@@ -159,8 +159,12 @@ gl:
         circular_dependency: "Esta relación podería crear unha dependencia circular"
         cant_link_an_issue_with_a_descendant: "As peticións non poden estar ligadas coas súas subtarefas"
         earlier_than_minimum_start_date: "Non pode ser antes de %{date} por mor de peticións anteriores"
-        not_a_regexp: "is not a valid regular expression"
-        open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        not_a_regexp: "non é unha expresión regular válida"
+        open_issue_with_closed_parent: "Unha petición aberta non pode ser asignada a unha tarefa pai pechada"
+        must_contain_uppercase: "debe conter letras maiúsculas (A-Z)"
+        must_contain_lowercase: "debe conter letras minúsculas (a-z)"
+        must_contain_digits: "debe conter díxitos (0-9)"
+        must_contain_special_chars: "debe conter caracteres especiais (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Por favor seleccione
 
@@ -335,7 +339,6 @@ gl:
   label_age: Idade
   label_ago: "hai"
   label_all: todos
-  label_all_time: todo o tempo
   label_all_words: Tódalas palabras
   label_and_its_subprojects: "%{value} e proxectos secundarios"
   label_applied_status: Aplicar estado
@@ -426,7 +429,7 @@ gl:
   label_f_hour: "%{value} hora"
   label_f_hour_plural: "%{value} horas"
   label_feed_plural: Feeds
-  label_feeds_access_key_created_on: "Clave de acceso por Atom creada hai %{value}"
+  label_feeds_access_key_created_on: "Chave de acceso por Atom creada hai %{value}"
   label_file_added: Ficheiro engadido
   label_file_plural: Ficheiros
   label_filter_add: Engadir o filtro
@@ -435,7 +438,7 @@ gl:
   label_follows: posterior a
   label_gantt: Gantt
   label_general: Xeral
-  label_generate_key: Xerar clave
+  label_generate_key: Xerar chave
   label_help: Axuda
   label_history: Histórico
   label_home: Inicio
@@ -517,12 +520,10 @@ gl:
   label_open_issues_plural: abertas
   label_optional_description: Descrición opcional
   label_options: Opcións
-  label_overall_activity: Actividade global
   label_overview: Vistazo
   label_password_lost: "Esqueceu o contrasinal?"
   label_permissions: Permisos
   label_permissions_report: Informe de permisos
-  label_please_login: "Acceder"
   label_plugins: Complementos
   label_precedes: anterior a
   label_preferences: Preferencias
@@ -648,10 +649,9 @@ gl:
   notice_email_error: "Ocorreu un error enviando o correo (%{value})"
   notice_email_sent: "Enviouse un correo a %{value}"
   notice_failed_to_save_issues: "Imposible gravar %{count} petición(s) de %{total} seleccionada(s): %{ids}."
-  notice_feeds_access_key_reseted: A súa clave de acceso para Atom reiniciouse.
+  notice_feeds_access_key_reseted: A súa chave de acceso para Atom reiniciouse.
   notice_file_not_found: A páxina á que tenta acceder non existe.
   notice_locking_conflict: Os datos modificáronse por outro usuario.
-  notice_no_issue_selected: "Ningunha petición seleccionada. Por favor, comprobe a petición que quere modificar"
   notice_not_authorized: Non ten autorización para acceder a esta páxina.
   notice_successful_connection: "Accedeu correctamente."
   notice_successful_create: Creación correcta.
@@ -690,7 +690,6 @@ gl:
   permission_manage_repository: Administrar repositorio
   permission_manage_versions: Administrar versións
   permission_manage_wiki: Administrar wiki
-  permission_move_issues: Mover peticións
   permission_protect_wiki_pages: Protexer páxinas wiki
   permission_rename_wiki_pages: Renomear páxinas wiki
   permission_save_queries: Gravar consultas
@@ -714,14 +713,12 @@ gl:
   project_module_time_tracking: Control de tempo
   project_module_wiki: Wiki
   setting_activity_days_default: Días a mostrar na actividade do proxecto
-  setting_app_subtitle: Subtítulo da aplicación
   setting_app_title: Título da aplicación
   setting_attachment_max_size: Tamaño máximo do ficheiro
   setting_autofetch_changesets: Autorechear as remisións do repositorio
   setting_autologin: "Identificarse automaticamente."
-  setting_bcc_recipients: Ocultar as copias de carbón (bcc)
-  setting_commit_fix_keywords: Palabras clave para a corrección
-  setting_commit_ref_keywords: Palabras clave para a referencia
+  setting_commit_fix_keywords: Palabras chave para a corrección
+  setting_commit_ref_keywords: Palabras chave para a referencia
   setting_cross_project_issue_relations: Permitir relacionar peticións de distintos proxectos
   setting_date_format: Formato da data
   setting_default_language: Idioma predeterminado
@@ -738,7 +735,7 @@ gl:
   setting_login_required: Requírese identificación
   setting_mail_from: Correo dende o que enviar mensaxes
   setting_mail_handler_api_enabled: Activar o programa para mensaxes entrantes
-  setting_mail_handler_api_key: Clave da API
+  setting_mail_handler_api_key: Chave da API
   setting_per_page_options: Obxectos por páxina
   setting_plain_text_mail: só texto plano (non HTML)
   setting_protocol: Protocolo
@@ -775,13 +772,12 @@ gl:
   text_issues_ref_in_commit_messages: Referencia e petición de corrección nas mensaxes
   text_length_between: "Lonxitude entre %{min} e %{max} caracteres."
   text_load_default_configuration: "Cargar a configuración predeterminada"
-  text_min_max_length_info: 0 para ningunha restrición
   text_no_configuration_data: "Inda non se configuraron perfiles, nin tipos, estados e fluxo de traballo asociado a peticións. Recoméndase encarecidamente cargar a configuración predeterminada. Unha vez cargada, poderá modificala."
   text_project_destroy_confirmation: Estás seguro de querer eliminar o proxecto?
   text_reassign_time_entries: 'Reasignar as horas a esta petición:'
   text_regexp_info: ex. ^[A-Z0-9]+$
   text_repository_usernames_mapping: "Estableza a correspondencia entre os usuarios de Redmine e os presentes no historial do repositorio.\nOs usuarios co mesmo nome ou correo en Redmine e no repositorio serán asociados automaticamente."
-  text_rmagick_available: RMagick dispoñíbel (opcional)
+  text_minimagick_available: MiniMagick dispoñíbel (opcional)
   text_select_mail_notifications: Seleccionar os eventos a notificar
   text_select_project_modules: 'Seleccione os módulos a activar para este proxecto:'
   text_status_changed_by_changeset: "Aplicado nos cambios %{value}"
@@ -793,6 +789,7 @@ gl:
   text_unallowed_characters: Caracteres non permitidos
   text_user_mail_option: "Dos proxectos non seleccionados, só recibirá notificacións sobre elementos monitorizados ou elementos nos que estea involucrado (por exemplo, peticións das que vostede sexa autor ou asignadas a vostede)."
   text_user_wrote: "%{value} escribiu:"
+  text_user_wrote_in: "%{value} escribiu (%{link}):"
   text_wiki_destroy_confirmation: Seguro que quere borrar o wiki e todo o seu contido?
   text_workflow_edit: Seleccionar un fluxo de traballo para actualizar
   warning_attachments_not_saved: "Non foi posíbel gardar %{count} ficheiros."
@@ -804,9 +801,6 @@ gl:
   setting_repository_log_display_limit: "Número máximo de revisións que se mostran no ficheiro do historial."
   setting_file_max_size_displayed: "Tamaño máximo dos ficheiros de texto que se mostran liña por liña."
   field_watcher: "Seguidor"
-  setting_openid: "Permitir rexistrarse e acceder mediante OpenID."
-  field_identity_url: "URL de OpenID"
-  label_login_with_open_id_option: "ou acceda mediante OpenID."
   field_content: "Contido"
   label_descending: "Descendente"
   label_sort: "Ordenar"
@@ -859,7 +853,6 @@ gl:
   label_version_sharing_tree: "Coa árbore de proxectos"
   label_version_sharing_none: "Non compartir"
   error_can_not_archive_project: "Non é posíbel arquivar este proxecto."
-  button_duplicate: "Duplicado"
   button_copy_and_follow: "Copiar e seguir"
   label_copy_source: "Fonte"
   setting_issue_done_ratio: "Calcular a proporción de peticións completadas mediante"
@@ -898,7 +891,7 @@ gl:
   permission_export_wiki_pages: "Exportar as páxinas do wiki"
   setting_cache_formatted_text: "Gardar o texto formatado na caché."
   permission_manage_project_activities: "Xestionar as actividades do proxecto"
-  error_unable_delete_issue_status: "Non foi posíbel eliminar o estado da petición."
+  error_unable_delete_issue_status: "Non foi posíbel eliminar o estado da petición. (%{value})"
   label_profile: "Perfil"
   permission_manage_subtasks: "Xestionar as subtarefas"
   field_parent_issue: "Tarefa superior"
@@ -913,7 +906,6 @@ gl:
   text_zoom_out: "Afastar"
   text_zoom_in: "Achegar"
   notice_unable_delete_time_entry: "Non foi posíbel eliminar a entrada do historial."
-  label_overall_spent_time: "Tempo total empregado"
   field_time_entries: "Rexistrar tempo"
   project_module_gantt: "Gantt"
   project_module_calendar: "Calendario"
@@ -1028,7 +1020,6 @@ gl:
   setting_session_timeout: "Tempo de inactividade máximo das sesións"
   label_session_expiration: "Caducidade das sesións"
   permission_close_project: "Pechar ou volver abrir o proxecto"
-  label_show_closed_projects: "Ver os proxectos pechados"
   button_close: "Pechar"
   button_reopen: "Volver abrir"
   project_status_active: "activo"
@@ -1121,118 +1112,345 @@ gl:
   setting_link_copied_issue: "Ligar aos tíckets ao copialos"
   label_link_copied_issue: "Ligar ao tícket copiado"
   label_ask: "Preguntar"
-  label_search_attachments_yes: Search attachment filenames and descriptions
-  label_search_attachments_no: Do not search attachments
-  label_search_attachments_only: Search attachments only
-  label_search_open_issues_only: Open issues only
+  label_search_attachments_yes: Buscar nomes e descricións dos ficheiros
+  label_search_attachments_no: Non buscar ficheiros
+  label_search_attachments_only: Buscar só ficheiros
+  label_search_open_issues_only: Só peticións abertas
   field_address: Correo electrónico
-  setting_max_additional_emails: Maximum number of additional email addresses
-  label_email_address_plural: Emails
-  label_email_address_add: Add email address
-  label_enable_notifications: Enable notifications
-  label_disable_notifications: Disable notifications
-  setting_search_results_per_page: Search results per page
-  label_blank_value: blank
-  permission_copy_issues: Copy issues
-  error_password_expired: Your password has expired or the administrator requires you
-    to change it.
-  field_time_entries_visibility: Time logs visibility
-  setting_password_max_age: Require password change after
-  label_parent_task_attributes: Parent tasks attributes
-  label_parent_task_attributes_derived: Calculated from subtasks
-  label_parent_task_attributes_independent: Independent of subtasks
-  label_time_entries_visibility_all: All time entries
-  label_time_entries_visibility_own: Time entries created by the user
-  label_member_management: Member management
-  label_member_management_all_roles: All roles
-  label_member_management_selected_roles_only: Only these roles
-  label_password_required: Confirm your password to continue
+  setting_max_additional_emails: Máximo número de enderezos de correo adicionais
+  label_email_address_plural: Correos
+  label_email_address_add: Engadir enderezo de correo
+  label_enable_notifications: Activar notificacións
+  label_disable_notifications: Desactivar notificacións
+  setting_search_results_per_page: Resultados da busca por páxina
+  label_blank_value: En branco
+  permission_copy_issues: Copiar peticións
+  error_password_expired: A túa contrasinal caducou ou o administrador obrígate
+    a cambiala.
+  field_time_entries_visibility: Visibilidade das entradas de tempo
+  setting_password_max_age: Obrigar a cambiar a contrasinal despois de
+  label_parent_task_attributes: Atributos da tarefa pai
+  label_parent_task_attributes_derived: Calculada a partir das subtarefas
+  label_parent_task_attributes_independent: Independente das subtarefas
+  label_time_entries_visibility_all: Todas as entradas de tempo
+  label_time_entries_visibility_own: Horas creadas polo usuario
+  label_member_management: Xestión de membros
+  label_member_management_all_roles: Todos os roles
+  label_member_management_selected_roles_only: Só estes roles
+  label_password_required: Confirma a túa contrasinal para continuar
   label_total_spent_time: "Tempo total empregado"
-  notice_import_finished: "%{count} items have been imported"
-  notice_import_finished_with_errors: "%{count} out of %{total} items could not be imported"
-  error_invalid_file_encoding: The file is not a valid %{encoding} encoded file
-  error_invalid_csv_file_or_settings: The file is not a CSV file or does not match the
-    settings below
-  error_can_not_read_import_file: An error occurred while reading the file to import
-  permission_import_issues: Import issues
-  label_import_issues: Import issues
-  label_select_file_to_import: Select the file to import
-  label_fields_separator: Field separator
-  label_fields_wrapper: Field wrapper
-  label_encoding: Encoding
-  label_comma_char: Comma
-  label_semi_colon_char: Semicolon
-  label_quote_char: Quote
-  label_double_quote_char: Double quote
-  label_fields_mapping: Fields mapping
-  label_file_content_preview: File content preview
-  label_create_missing_values: Create missing values
-  button_import: Import
-  field_total_estimated_hours: Total estimated time
+  notice_import_finished: "%{count} elementos foron importados"
+  notice_import_finished_with_errors: "%{count} dun total de %{total} elementos non puideron ser importados"
+  error_invalid_file_encoding: O ficheiro non é un ficheiro codificado %{encoding} válido
+  error_invalid_csv_file_or_settings: O ficheiro non é un arquivo CSV ou non coincide coas
+    opcións de abaixo (%{value})
+  error_can_not_read_import_file: Aconteceu un erro lendo o ficheiro a importar
+  permission_import_issues: Importar peticións
+  label_import_issues: Importar peticións
+  label_select_file_to_import: Selecciona o ficheiro a importar
+  label_fields_separator: Separador dos campos
+  label_fields_wrapper: Envoltorio dos campos
+  label_encoding: Codificación
+  label_comma_char: Coma
+  label_semi_colon_char: Punto e coma
+  label_quote_char: Comilla simple
+  label_double_quote_char: Comilla dobre
+  label_fields_mapping: Mapeo de campos
+  label_file_content_preview: Vista previa do contido
+  label_create_missing_values: Crear valores non presentes
+  button_import: Importar
+  field_total_estimated_hours: Total de tempo estimado
   label_api: API
-  label_total_plural: Totals
-  label_assigned_issues: Assigned issues
-  label_field_format_enumeration: Key/value list
+  label_total_plural: Totais
+  label_assigned_issues: Peticións asignadas
+  label_field_format_enumeration: Listaxe chave/valor
   label_f_hour_short: '%{value} h'
-  field_default_version: Default version
-  error_attachment_extension_not_allowed: Attachment extension %{extension} is not allowed
-  setting_attachment_extensions_allowed: Allowed extensions
-  setting_attachment_extensions_denied: Disallowed extensions
-  label_any_open_issues: any open issues
-  label_no_open_issues: no open issues
-  label_default_values_for_new_users: Default values for new users
-  error_ldap_bind_credentials: Invalid LDAP Account/Password
-  setting_sys_api_key: Clave da API
-  setting_lost_password: "Esqueceu o contrasinal?"
-  mail_subject_security_notification: Security notification
-  mail_body_security_notification_change: ! '%{field} was changed.'
-  mail_body_security_notification_change_to: ! '%{field} was changed to %{value}.'
-  mail_body_security_notification_add: ! '%{field} %{value} was added.'
-  mail_body_security_notification_remove: ! '%{field} %{value} was removed.'
-  mail_body_security_notification_notify_enabled: Email address %{value} now receives
-    notifications.
-  mail_body_security_notification_notify_disabled: Email address %{value} no longer
-    receives notifications.
-  mail_body_settings_updated: ! 'The following settings were changed:'
-  field_remote_ip: IP address
-  label_wiki_page_new: New wiki page
-  label_relations: Relations
-  button_filter: Filter
-  mail_body_password_updated: Your password has been changed.
-  label_no_preview: No preview available
-  error_no_tracker_allowed_for_new_issue_in_project: The project doesn't have any trackers
-    for which you can create an issue
-  label_tracker_all: All trackers
-  label_new_project_issue_tab_enabled: Display the "New issue" tab
-  setting_new_item_menu_tab: Project menu tab for creating new objects
-  label_new_object_tab_enabled: Display the "+" drop-down
-  error_no_projects_with_tracker_allowed_for_new_issue: There are no projects with trackers
-    for which you can create an issue
-  field_textarea_font: Font used for text areas
-  label_font_default: Default font
-  label_font_monospace: Monospaced font
-  label_font_proportional: Proportional font
-  setting_timespan_format: Time span format
-  label_table_of_contents: Table of contents
-  setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
-  error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
-    project: %{errors}'
-  error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
-    be reassigned to an issue that is about to be deleted
-  setting_timelog_required_fields: Required fields for time logs
+  field_default_version: Versión predeterminada
+  error_attachment_extension_not_allowed: A extensión anexada %{extension} non é permitida
+  setting_attachment_extensions_allowed: Extensións permitidas
+  setting_attachment_extensions_denied: Extensións prohibidas
+  label_any_open_issues: Calquera petición aberta
+  label_no_open_issues: Peticións non abertas
+  label_default_values_for_new_users: Valor predeterminado para novos usuarios
+  error_ldap_bind_credentials: A conta/contrasinal do LDAP non é válida
+  setting_sys_api_key: Chave da API
+  setting_lost_password: Esqueceu a contrasinal?
+  mail_subject_security_notification: Notificación de seguridade
+  mail_body_security_notification_change: ! '%{field} modificado.'
+  mail_body_security_notification_change_to: ! '%{field} modificado por %{value}.'
+  mail_body_security_notification_add: ! '%{field} %{value} engadido.'
+  mail_body_security_notification_remove: ! '%{field} %{value} eliminado.'
+  mail_body_security_notification_notify_enabled: O correo electrónico %{value} agora recibirá
+    notificacións
+  mail_body_security_notification_notify_disabled: O correo electrónico %{value} deixará de recibir
+    notificacións
+  mail_body_settings_updated: ! 'As seguintes opcións foron actualizadas:'
+  field_remote_ip: Enderezo IP
+  label_wiki_page_new: Nova páxina wiki
+  label_relations: Relacións
+  button_filter: Filtro
+  mail_body_password_updated: A súa contrasinal foi cambiada.
+  label_no_preview: Non hai vista previa dispoñible
+  error_no_tracker_allowed_for_new_issue_in_project: O proxecto non ten ningún tipo
+    para que poida crear unha petición
+  label_tracker_all: Tódolos tipos
+  label_new_project_issue_tab_enabled: Amosar a lapela "Nova petición"
+  setting_new_item_menu_tab: Lapela no menú de cada proxecto para creación de novos obxectos
+  label_new_object_tab_enabled: Amosar a lista despregable "+"
+  error_no_projects_with_tracker_allowed_for_new_issue: Non hai proxectos con tipos
+    para as que poida crear unha petición
+  field_textarea_font: Fonte usada nas áreas de texto
+  label_font_default: Fonte por defecto
+  label_font_monospace: Fonte Monospaced
+  label_font_proportional: Fonte Proporcional
+  setting_timespan_format: Formato de período temporal
+  label_table_of_contents: Índice de contidos
+  setting_commit_logs_formatting: Aplicar formateo de texto para as mensaxes de commit
+  setting_mail_handler_enable_regex: Activar expresións regulares
+  error_move_of_child_not_possible: 'A subtarefa %{child} non se pode mover ao novo
+    proxecto: %{errors}'
+  error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: O tempo empregado non pode
+    ser reasignado a unha petición que vai ser eliminada
+  setting_timelog_required_fields: Campos obrigatorios para as imputacións de tempo
   label_attribute_of_object: '%{object_name}''s %{name}'
-  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
-  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
-  warning_fields_cleared_on_bulk_edit: Changes will result in the automatic deletion
-    of values from one or more fields on the selected objects
-  field_updated_by: Updated by
-  field_last_updated_by: Last updated by
-  field_full_width_layout: Full width layout
-  label_last_notes: Last notes
-  field_digest: Checksum
-  field_default_assigned_to: Default assignee
-  setting_show_custom_fields_on_registration: Show custom fields on registration
-  permission_view_news: View news
-  label_no_preview_alternative_html: No preview available. %{link} the file instead.
-  label_no_preview_download: Download
+  label_user_mail_option_only_assigned: Só para as cousas que sigo ou que teño asignado
+  label_user_mail_option_only_owner: Só para as cousas que sigo ou son o propietario
+  warning_fields_cleared_on_bulk_edit: Os cambios provocarán o borrado automático
+    dos valores de un ou máis campos dos obxectos seleccionados
+  field_updated_by: Actualizado por
+  field_last_updated_by: Última actualización por
+  field_full_width_layout: Deseño para ancho completo
+  label_last_notes: Últimas notas
+  field_digest: Suma de verificación
+  field_default_assigned_to: Asignado por defecto
+  setting_show_custom_fields_on_registration: Amosar os campos personalizados no rexistro
+  permission_view_news: Ver noticias
+  label_no_preview_alternative_html: Non hai vista previa dispoñible. %{link} o ficheiro no seu lugar.
+  label_no_preview_download: Descargar
+  setting_close_duplicate_issues: Pechar as peticións duplicadas de xeito automático
+  error_exceeds_maximum_hours_per_day: Non se poden imputar máis de %{max_hours} horas no
+    mesmo día (%{logged_hours} horas teñen sido xa imputadas)
+  setting_time_entry_list_defaults: Configuración por defecto do tempo imputado
+  setting_timelog_accept_0_hours: Admitir tempo imputado con 0 horas
+  setting_timelog_max_hours_per_day: Máximo número de horas que poden imputarse por día e usuario
+  label_x_revisions: "%{count} revisións"
+  error_can_not_delete_auth_source: Este método de autenticación está en uso e non pode
+    ser borrado.
+  button_actions: Accións
+  mail_body_lost_password_validity: Por favor, teña en conta que só pode cambiar a contrasinal
+    unha vez usando esta ligazón.
+  text_login_required_html: Cando non precisan autenticación os proxectos públicos e os seus
+    contidos están dispoñibles libremente na rede. Vostede pode <a href="%{anonymous_role_path}">editar
+    os permisos aplicados</a>.
+  label_login_required_yes: 'Si'
+  label_login_required_no: Non, permitir acceso anónimo aos proxectos públicos
+  text_project_is_public_non_member: Os proxectos públicos e os seus contidos están dispoñibles
+    para todos os usuarios logueados.
+  text_project_is_public_anonymous: Os proxectos públicos e os seus contidos están dispoñibles libremente
+    na rede.
+  label_version_and_files: Versións (%{count}) e Ficheiros
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (sen comprobación de certificado)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Se recomenda usar unha conexión LDAPS con comprobación de
+    certificado para evitar calquera manipulación durante o proceso de autenticación.
+  label_nothing_to_preview: Nada que previsualizar
+  error_token_expired: Esta ligazón para recuperar a contrasinal ten caducado, por favor, tente de novo.
+  error_spent_on_future_date: Non pode imputar tempo nunha data futura
+  setting_timelog_accept_future_dates: Permitir imputar tempo en datas futuras
+  label_delete_link_to_subtask: Eliminar relación
+  error_not_allowed_to_log_time_for_other_users: Vostede non ten permitido imputar tempo para outros usuarios
+  permission_log_time_for_other_users: Imputar tempo dedicado a outros usuarios
+  label_tomorrow: mañá
+  label_next_week: próxima semana
+  label_next_month: próximo mes
+  text_role_no_workflow: Non hai fluxo de traballo definido para este rol
+  text_status_no_workflow: Ningún tipo de tarefa usa este estado nos fluxos de traballo
+  setting_mail_handler_preferred_body_part: Parte preferida dos correos multiparte (HTML)
+  setting_show_status_changes_in_mail_subject: Amosar os cambios de estado no asunto das notificacións de correo das
+    tarefas
+  label_inherited_from_parent_project: Herdado do proxecto pai
+  label_inherited_from_group: Herdado do grupo %{name}
+  label_trackers_description: Descricións dos tipos de tarefas
+  label_open_trackers_description: Ver as descricións de todos os tipos de tarefas
+  label_preferred_body_part_text: Texto
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Asunto da tarefa pai
+  permission_edit_own_issues: Editar as propias tarefas
+  text_select_apply_tracker: Seleccionar o tipo de tarefa
+  label_updated_issues: Tarefas actualizadas
+  text_avatar_server_config_html: O servidor de avatares é actualmente <a href="%{url}">%{url}</a>.
+    Vostede o pode configurar en config/configuration.yml.
+  setting_gantt_months_limit: Máximo número de meses amosados no diagrama de gantt
+  permission_import_time_entries: Importar tempos dedicados
+  label_import_notifications: Enviar notificacións de correo durante a importación
+  text_gs_available: Soporte de PDF ImageMagick dispoñible (opcional)
+  field_recently_used_projects: Número de proxectos recentemente usados no despregable de proxectos
+  label_optgroup_bookmarks: Favoritos
+  label_optgroup_others: Outros proxectos
+  label_optgroup_recents: Usado recentemente
+  button_project_bookmark: Engadir favoritos
+  button_project_bookmark_delete: Borrar favoritos
+  field_history_default_tab: Lapela por defecto no histórico de tarefas
+  label_issue_history_properties: Cambios nas propiedades
+  label_issue_history_notes: Notas
+  label_last_tab_visited: Última lapela visitada
+  field_unique_id: ID único
+  text_no_subject: sen asunto
+  setting_password_required_char_classes: Clases de caracteres requeridos para as contrasinais
+  label_password_char_class_uppercase: letras maiúsculas
+  label_password_char_class_lowercase: letras minúsculas
+  label_password_char_class_digits: díxitos
+  label_password_char_class_special_chars: caracteres especiais
+  text_characters_must_contain: Debe conter %{character_classes}.
+  label_starts_with: comeza con
+  label_ends_with: finaliza con
+  label_issue_fixed_version_updated: Versión destino actualizada
+  setting_project_list_defaults: Listaxes por defecto dos proxectos
+  label_display_type: Amosar os resultados coma
+  label_display_type_list: Listaxe
+  label_display_type_board: Taboleiro
+  label_my_bookmarks: Meus favoritos
+  label_import_time_entries: Importar tempos dedicados
+  field_toolbar_language_options: Idiomas da barra de ferramentas de resaltado de código
+  label_user_mail_notify_about_high_priority_issues_html: Tamén notifícame sobre as tarefas
+    cunha prioridade <em>%{prio}</em> ou maior
+  label_assign_to_me: Asignar a min
+  notice_issue_not_closable_by_open_tasks: Esta tarefa non pode ser pechada porque ten
+    polo menos unha subtarefa aberta.
+  notice_issue_not_closable_by_blocking_issue: Esta tarefa non pode ser pechada porque
+    está bloqueada polo menos por unha tarefa aberta.
+  notice_issue_not_reopenable_by_closed_parent_issue: Esta tarefa non pode ser reaberta
+    porque a súa tarefa pai está pechada.
+  error_bulk_download_size_too_big: Os ficheiros non poden ser descargados á vez porque
+    o tamaño total excede o máximo autorizado (%{max_size})
+  setting_bulk_download_max_size: Tamaño máximo para descargar á vez
+  label_download_all_attachments: Descargar todos os ficheiros
+  error_attachments_too_many: Este ficheiro non pode ser subido porque excede o número
+    máximo de ficheiros que poden ser achegados de xeito simultáneo (%{max_number_of_files})
+  setting_email_domains_allowed: Dominios de correo permitidos
+  setting_email_domains_denied: Dominios de correo prohibidos
+  field_passwd_changed_on: Password cambiado por última vez
+  label_relations_mapping: Correspondencia de relacións
+  label_import_users: Importar usuarios
+  label_days_to_html: "%{days} días ata %{date}"
+  setting_twofa: Autenticación de dous factores
+  label_optional: opcional
+  label_required_lower: obrigatorio
+  button_disable: Deshabilitar
+  twofa__totp__name: Aplicación de autenticación
+  twofa__totp__text_pairing_info_html: Escanea este código QR ou introduce a chave de texto plano
+    nunha aplicación de 2 factores (e.x. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) e mete o código no campo de debaixo para activar a autenticación de 2 factores.
+  twofa__totp__label_plain_text_key: Chave de texto plano
+  twofa__totp__label_activate: Habilitar aplicación de atenticación
+  twofa_currently_active: 'Activo agora mesmo: %{twofa_scheme_name}'
+  twofa_not_active: Sen activar
+  twofa_label_code: Código
+  twofa_hint_disabled_html: Configurar <strong>%{label}</strong> desactivará e desvinculará
+    a autenticación de dous factores para todos os usuarios.
+  twofa_hint_required_html: Configurar <strong>%{label}</strong> requerirá a todos os usuarios
+    configurar autenticación de dous factores no seu seguinte acceso.
+  twofa_label_setup: Establecer autenticación de dous factores
+  twofa_label_deactivation_confirmation: Desactivar autenticación de dous factores
+  twofa_notice_select: 'Por favor seleccione o esquema de dous factores que desexa usar:'
+  twofa_warning_require: O administrador obriga a que habilite autenticación de dous factores.
+  twofa_activated: Autenticación de dous factores habilitada con éxito. Se recomenda
+    <a data-method="post" href="%{bc_path}">xerar códigos de respaldo</a> para a súa conta.
+  twofa_deactivated: Autenticación de dous factores deshabilitada.
+  twofa_mail_body_security_notification_paired: Autenticación de dous factores habilitada
+    con éxito usando %{field}.
+  twofa_mail_body_security_notification_unpaired: Autenticación de dous factores deshabilitada
+    para a túa conta.
+  twofa_mail_body_backup_codes_generated: Xerados novos códigos de respaldo de autenticación de dous
+    factores.
+  twofa_mail_body_backup_code_used: Un código de respaldo de autenticación de dous factores foi
+    utilizado.
+  twofa_invalid_code: O código non é válido ou caducou.
+  twofa_label_enter_otp: Por favor, introduza su código de autenticación de dous factores.
+  twofa_too_many_tries: Demasiados intentos.
+  twofa_resend_code: Reenviar código
+  twofa_code_sent: Enviouse a vostede un código de autenticación.
+  twofa_generate_backup_codes: Xerar códigos de respaldo
+  twofa_text_generate_backup_codes_confirmation: Esto invalidará todos os códigos de respaldo
+    existentes e xerará uns novos. Desexa continuar?
+  twofa_notice_backup_codes_generated: Os seus códigos de respaldo foron xerados
+  twofa_warning_backup_codes_generated_invalidated: Novos códigos de respaldo foron xerados.
+    Os seus códigos existentes de %{time} agora son inválidos.
+  twofa_label_backup_codes: Códigos de respaldo de autenticación de dous factores
+  twofa_text_backup_codes_hint: Use estes códigos en troques de contrasinais dun único uso caso
+    de non ter acceso ao seu segundo factor. Cada código só pode usarse unha vez. É
+    recomendable imprimilos e gardalos nun lugar seguro.
+  twofa_text_backup_codes_created_at: Códigos de respaldo xerados o %{datetime}.
+  twofa_backup_codes_already_shown: Os códigos de respaldo non pode ser amosados de novo, por favor <a data-method="post"
+    href="%{bc_path}">cree novos códigos de respaldo</a> se é preciso.
+  error_can_not_execute_macro_html: Error ao executar a <strong>%{name}</strong> macro
+    (%{error})
+  error_macro_does_not_accept_block: Esta macro non acepta un bloque de texto
+  error_childpages_macro_no_argument: Sen argumento esta macro só pode ser chamada dende
+    as páxinas wiki
+  error_circular_inclusion: Detectada unha inclusión circular
+  error_page_not_found: Páxina no atopada
+  error_filename_required: Se precisa nome de ficheiro
+  error_invalid_size_parameter: O parámetro de tamaño é inválido
+  error_attachment_not_found: Ficheiro %{name} non atopado
+  permission_delete_project: Borrar o proxecto
+  field_twofa_scheme: Esquema de autenticación de dous factores
+  text_user_destroy_confirmation: Está vostede seguro de querer borrar este usuario e eliminar
+    todas as referencias a el? Isto non se pode desfacer. Ás veces bloquear un usuario en troques de
+    borralo é a mellor solución. Para confirmar, por favor introduza o seu usuario (%{login})
+    debaixo.
+  text_project_destroy_enter_identifier: Para confirmar, por favor introduza o identificador do proxecto.
+    (%{identifier}) debaixo.
+  button_add_subtask: Engadir subtarefa
+  notice_invalid_watcher: 'Invalid watcher: O usuario non recibirá ningunha notificación
+    porque non ten acceso a ver este obxecto.'
+  button_fetch_changesets: Recoller os cambios
+  permission_view_message_watchers: Ver a listaxe de seguidores da mensaxe
+  permission_add_message_watchers: Engadir seguidores na mensaxe
+  permission_delete_message_watchers: Borrar seguidores da mensaxe
+  label_message_watchers: Seguidores
+  button_copy_link: Copiar ligazón
+  error_invalid_authenticity_token: Sesión non válida.
+  error_query_statement_invalid: Aconteceu un erro executando a consulta e ten sido
+    engadido no log. Por favor, informe deste erro ao administrador do Redmine.
+  permission_view_wiki_page_watchers: Ver a listaxe de seguidores da páxina da wiki
+  permission_add_wiki_page_watchers: Engadir seguidores á páxina da wiki
+  permission_delete_wiki_page_watchers: Borrar os seguidores da páxina da wiki
+  label_wiki_page_watchers: Seguidores
+  label_attachment_description: Descrición do ficheiro
+  error_no_data_in_file: O ficheiro non contén ningún tipo de datos
+  field_twofa_required: Precisa autenticación de dous factores
+  twofa_hint_optional_html: A configuración <strong>%{label}</strong> permitirá aos usuarios estabrecer
+    autenticación de dous factores á súa vontade, a menos que sexa requerido por un dos seus grupos.
+  twofa_text_group_required: Esta configuración só é efectiva cando a configuración de autenticación global
+    de dous factores estea estabrecida a 'opcional'. Actualmente, a autenticación de dous factores
+    é obrigatoria para todos os usuarios.
+  twofa_text_group_disabled: Esta configuración só é efectiva cando a configuración de autenticación global
+    de dous factores estea estabrecida a 'opcional'. Actualmente, a autenticación de dous factores
+    está deshabilitada.
+  field_default_issue_query: Consulta de peticións por defecto
+  label_default_queries:
+    for_all_projects: Para todos os proxectos
+    for_current_project: Para o proxecto actual
+    for_all_users: Para todos os usuarios
+    for_this_user: For this user
+  text_allowed_queries_to_select: Soamente seleccionables consultas públicas (para calquera usuario)
+  text_all_migrations_have_been_run: Foron executadas todas as migracións de base de datos
+  button_save_object: Gardar %{object_name}
+  button_edit_object: Edita %{object_name}
+  button_delete_object: Borrar %{object_name}
+  text_setting_config_change: Podes configurar o comportamento en config/configuration.yml.
+    Por favor, reinicia a aplicación despois de editalo.
+  label_bulk_edit: Editar á vez
+  button_create_and_follow: Crear e seguir
+  label_subtask: Subtarefa
+  label_default_query: Consulta por defecto
+  field_default_project_query: Consulta por defecto do proxecto
+  label_required_administrators: Obrigatorio para os administradores
+  twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> compórtase
+    com opcional, pero requirirá que todos os usuarios con dereitos de administración configuren autenticación de dous factores
+    no seu próximo inicio de sesión.
+  label_auto_watch_on: Auto monitorizar
+  label_auto_watch_on_issue_contributed_to: Tarefas ás que teño contribuído

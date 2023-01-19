@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -54,7 +56,9 @@ module Redmine
         end
 
         def position_scope_was
-          build_position_scope {|c| send("#{c}_was")}
+          # this can be called in after_update or after_destroy callbacks
+          # with different methods in Rails 5 for retrieving the previous value
+          build_position_scope {|c| send(destroyed? ? "#{c}_was" : "#{c}_before_last_save")}
         end
 
         def build_position_scope
@@ -62,7 +66,7 @@ module Redmine
             h[column] = yield(column)
             h
           end
-          self.class.where(condition_hash)
+          self.class.unscoped.where(condition_hash)
         end
 
         def set_default_position
@@ -75,8 +79,8 @@ module Redmine
           if !new_record? && position_scope_changed?
             remove_position
             insert_position
-          elsif position_changed?
-            if position_was.nil?
+          elsif saved_change_to_position?
+            if position_before_last_save.nil?
               insert_position
             else
               shift_positions
@@ -89,16 +93,19 @@ module Redmine
         end
 
         def remove_position
-          position_scope_was.where("position >= ? AND id <> ?", position_was, id).update_all("position = position - 1")
+          # this can be called in after_update or after_destroy callbacks
+          # with different methods in Rails 5 for retrieving the previous value
+          previous = destroyed? ? position_was : position_before_last_save
+          position_scope_was.where("position >= ? AND id <> ?", previous, id).update_all("position = position - 1")
         end
 
         def position_scope_changed?
-          (changed & self.class.positioned_options[:scope].map(&:to_s)).any?
+          (saved_changes.keys & self.class.positioned_options[:scope].map(&:to_s)).any?
         end
 
         def shift_positions
-          offset = position_was <=> position
-          min, max = [position, position_was].sort
+          offset = position_before_last_save <=> position
+          min, max = [position, position_before_last_save].sort
           r = position_scope.where("id <> ? AND position BETWEEN ? AND ?", id, min, max).update_all("position = position + #{offset}")
           if r != max - min
             reset_positions_in_list
@@ -114,5 +121,3 @@ module Redmine
     end
   end
 end
-
-ActiveRecord::Base.send :include, Redmine::Acts::Positioned

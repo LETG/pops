@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,13 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class CustomFieldTest < ActiveSupport::TestCase
-  fixtures :custom_fields, :roles, :projects, :issues
+  fixtures :custom_fields, :roles, :projects,
+           :trackers, :issue_statuses,
+           :issues, :users
+
+  def setup
+    User.current = nil
+  end
 
   def test_create
     field = UserCustomField.new(:name => 'Money money money', :field_format => 'float')
@@ -53,7 +61,9 @@ class CustomFieldTest < ActiveSupport::TestCase
   end
 
   def test_default_value_should_not_be_validated_when_blank
-    field = CustomField.new(:name => 'Test', :field_format => 'list', :possible_values => ['a', 'b'], :is_required => true, :default_value => '')
+    field = CustomField.new(:name => 'Test', :field_format => 'list',
+                            :possible_values => ['a', 'b'], :is_required => true,
+                            :default_value => '')
     assert field.valid?
   end
 
@@ -83,10 +93,24 @@ class CustomFieldTest < ActiveSupport::TestCase
     assert_equal ["One value"], field.possible_values
   end
 
+  def test_possible_values_should_stringify_values
+    field = CustomField.new
+    field.possible_values = [1, 2]
+    assert_equal ["1", "2"], field.possible_values
+  end
+
   def test_possible_values_should_accept_a_string
     field = CustomField.new
     field.possible_values = "One value"
     assert_equal ["One value"], field.possible_values
+  end
+
+  def test_possible_values_should_return_utf8_encoded_strings
+    field = CustomField.new
+    s = "Value".b
+    field.possible_values = s
+    assert_equal [s], field.possible_values
+    assert_equal 'UTF-8', field.possible_values.first.encoding.name
   end
 
   def test_possible_values_should_accept_a_multiline_string
@@ -95,14 +119,12 @@ class CustomFieldTest < ActiveSupport::TestCase
     assert_equal ["One value", "And another one"], field.possible_values
   end
 
-  if "string".respond_to?(:encoding)
-    def test_possible_values_stored_as_binary_should_be_utf8_encoded
-      field = CustomField.find(11)
-      assert_kind_of Array, field.possible_values
-      assert field.possible_values.size > 0
-      field.possible_values.each do |value|
-        assert_equal "UTF-8", value.encoding.name
-      end
+  def test_possible_values_stored_as_binary_should_be_utf8_encoded
+    field = CustomField.find(11)
+    assert_kind_of Array, field.possible_values
+    assert field.possible_values.size > 0
+    field.possible_values.each do |value|
+      assert_equal "UTF-8", value.encoding.name
     end
   end
 
@@ -190,9 +212,11 @@ class CustomFieldTest < ActiveSupport::TestCase
     assert f.valid_field_value?('')
     assert !f.valid_field_value?(' ')
     assert f.valid_field_value?('123')
+    assert f.valid_field_value?(' 123 ')
     assert f.valid_field_value?('+123')
     assert f.valid_field_value?('-123')
     assert !f.valid_field_value?('6abc')
+    assert f.valid_field_value?(123)
   end
 
   def test_float_field_validation
@@ -202,9 +226,11 @@ class CustomFieldTest < ActiveSupport::TestCase
     assert f.valid_field_value?('')
     assert !f.valid_field_value?(' ')
     assert f.valid_field_value?('11.2')
+    assert f.valid_field_value?(' 11.2 ')
     assert f.valid_field_value?('-6.250')
     assert f.valid_field_value?('5')
     assert !f.valid_field_value?('6abc')
+    assert f.valid_field_value?(11.2)
   end
 
   def test_multi_field_validation
@@ -232,12 +258,18 @@ class CustomFieldTest < ActiveSupport::TestCase
   end
 
   def test_changing_multiple_to_false_should_delete_multiple_values
-    field = ProjectCustomField.create!(:name => 'field', :field_format => 'list', :multiple => 'true', :possible_values => ['field1', 'field2'])
-    other = ProjectCustomField.create!(:name => 'other', :field_format => 'list', :multiple => 'true', :possible_values => ['other1', 'other2'])
-
-    item_with_multiple_values = Project.generate!(:custom_field_values => {field.id => ['field1', 'field2'], other.id => ['other1', 'other2']})
-    item_with_single_values = Project.generate!(:custom_field_values => {field.id => ['field1'], other.id => ['other2']})
-
+    field = ProjectCustomField.create!(:name => 'field', :field_format => 'list',
+                                       :multiple => 'true',
+                                       :possible_values => ['field1', 'field2'])
+    other = ProjectCustomField.create!(:name => 'other', :field_format => 'list',
+                                       :multiple => 'true',
+                                       :possible_values => ['other1', 'other2'])
+    item_with_multiple_values = Project.generate!(:custom_field_values =>
+                                                   {field.id => ['field1', 'field2'],
+                                                    other.id => ['other1', 'other2']})
+    item_with_single_values = Project.generate!(:custom_field_values =>
+                                                   {field.id => ['field1'],
+                                                    other.id => ['other2']})
     assert_difference 'CustomValue.count', -1 do
       field.multiple = false
       field.save!
@@ -265,6 +297,7 @@ class CustomFieldTest < ActiveSupport::TestCase
   end
 
   def test_visibile_scope_with_admin_should_return_all_custom_fields
+    admin = User.generate! {|user| user.admin = true}
     CustomField.delete_all
     fields = [
       CustomField.generate!(:visible => true),
@@ -273,7 +306,7 @@ class CustomFieldTest < ActiveSupport::TestCase
       CustomField.generate!(:visible => false, :role_ids => [1, 2]),
     ]
 
-    assert_equal 4, CustomField.visible(User.find(1)).count
+    assert_equal 4, CustomField.visible(admin).count
   end
 
   def test_visibile_scope_with_non_admin_user_should_return_visible_custom_fields
@@ -304,8 +337,8 @@ class CustomFieldTest < ActiveSupport::TestCase
 
   def test_float_cast_blank_value_should_return_nil
     field = CustomField.new(:field_format => 'float')
-    assert_equal nil, field.cast_value(nil)
-    assert_equal nil, field.cast_value('')
+    assert_nil field.cast_value(nil)
+    assert_nil field.cast_value('')
   end
 
   def test_float_cast_valid_value_should_return_float
@@ -314,5 +347,78 @@ class CustomFieldTest < ActiveSupport::TestCase
     assert_equal 12.5, field.cast_value('12.5')
     assert_equal 12.5, field.cast_value('+12.5')
     assert_equal -12.5, field.cast_value('-12.5')
+  end
+
+  def test_project_custom_field_visibility
+    project_field = ProjectCustomField.generate!(:visible => false, :field_format => 'list', :possible_values => %w[a b c])
+    project = Project.find(3)
+    project.custom_field_values = {project_field.id => 'a'}
+
+    # Admins can find projects with the field
+    with_current_user(User.find(1)) do
+      assert_includes Project.where(project_field.visibility_by_project_condition), project
+    end
+
+    # The field is not visible to normal users
+    with_current_user(User.find(2)) do
+      refute_includes Project.where(project_field.visibility_by_project_condition), project
+    end
+  end
+
+  def test_full_text_formatting?
+    field = IssueCustomField.create!(:name => 'Long text', :field_format => 'text', :text_formatting => 'full')
+    assert field.full_text_formatting?
+
+    field2 = IssueCustomField.create!(:name => 'Another long text', :field_format => 'text')
+    assert !field2.full_text_formatting?
+  end
+
+  def test_copy_from
+    custom_field = CustomField.find(1)
+    copy = CustomField.new.copy_from(custom_field)
+
+    assert_nil copy.id
+    assert_equal '', copy.name
+    assert_nil copy.position
+    (custom_field.attribute_names - ['id', 'name', 'position']).each do |attribute_name|
+      assert_equal custom_field.send(attribute_name).to_s, copy.send(attribute_name).to_s
+    end
+
+    copy.name = 'Copy'
+    assert copy.save
+  end
+
+  def test_copy_from_should_copy_enumerations
+    custom_field = CustomField.create(:field_format => 'enumeration', :name => 'CustomField')
+    custom_field.enumerations.build(:name => 'enumeration1', :position => 1)
+    custom_field.enumerations.build(:name => 'enumeration2', :position => 2)
+    assert custom_field.save
+
+    copy = CustomField.new.copy_from(custom_field)
+    copy.name = 'Copy'
+    assert copy.save
+    assert_equal ['enumeration1', 'enumeration2'], copy.enumerations.pluck(:name)
+    assert_equal [1, 2], copy.enumerations.pluck(:position)
+  end
+
+  def test_copy_from_should_copy_roles
+    %w(IssueCustomField TimeEntryCustomField ProjectCustomField VersionCustomField).each do |klass_name|
+      klass = klass_name.constantize
+      custom_field = klass.new(:name => klass_name, :role_ids => [1, 2, 3, 4, 5])
+      copy = klass.new.copy_from(custom_field)
+      assert_equal [1, 2, 3, 4, 5], copy.role_ids.sort
+    end
+  end
+
+  def test_copy_from_should_copy_trackers
+    issue_custom_field = IssueCustomField.new(:name => 'IssueCustomField', :tracker_ids => [1, 2, 3])
+    copy = IssueCustomField.new.copy_from(issue_custom_field)
+    assert_equal [1, 2, 3], copy.tracker_ids
+  end
+
+  def test_copy_from_should_copy_projects
+    issue_custom_field = IssueCustomField.new(:name => 'IssueCustomField', :project_ids => [1, 2, 3, 4, 5, 6])
+    copy = IssueCustomField.new.copy_from(issue_custom_field)
+    assert_equal [1, 2, 3, 4, 5, 6], copy.project_ids
   end
 end

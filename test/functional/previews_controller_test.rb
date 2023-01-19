@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,7 @@
 
 require File.expand_path('../../test_helper', __FILE__)
 
-class PreviewsControllerTest < ActionController::TestCase
+class PreviewsControllerTest < Redmine::ControllerTest
   fixtures :projects, :trackers, :issue_statuses, :issues,
            :enumerations, :users, :issue_categories,
            :projects_trackers,
@@ -28,70 +30,105 @@ class PreviewsControllerTest < ActionController::TestCase
            :journals, :journal_details,
            :news
 
-  def test_preview_new_issue
+  def test_preview_new_issue_description
     @request.session[:user_id] = 2
-    post :issue, :project_id => '1', :issue => {:description => 'Foo'}
+    post(
+      :issue,
+      :params => {
+        :project_id => '1',
+        :text => 'Foo'
+      }
+    )
     assert_response :success
-    assert_template 'previews/issue'
-    assert_not_nil assigns(:description)
+    assert_select 'p', :text => 'Foo'
+  end
+
+  def test_preview_issue_description
+    @request.session[:user_id] = 2
+    post(
+      :issue,
+      :params => {
+        :project_id => '1',
+        :issue_id => 1,
+        :text => 'Unable to print recipes'
+      }
+    )
+    assert_response :success
+
+    assert_select 'p', :text => 'Unable to print recipes'
   end
 
   def test_preview_issue_notes
     @request.session[:user_id] = 2
-    post :issue, :project_id => '1', :id => 1,
-         :issue => {:description => Issue.find(1).description, :notes => 'Foo'}
+    post(
+      :issue,
+      :params => {
+        :project_id => '1',
+        :id => 1,
+        :text => 'Foo'
+      }
+    )
     assert_response :success
-    assert_template 'previews/issue'
-    assert_not_nil assigns(:notes)
-  end
-
-  def test_preview_journal_notes_for_update
-    @request.session[:user_id] = 2
-    post :issue, :project_id => '1', :id => 1, :notes => 'Foo'
-    assert_response :success
-    assert_template 'previews/issue'
-    assert_not_nil assigns(:notes)
-    assert_tag :p, :content => 'Foo'
+    assert_select 'p', :text => 'Foo'
   end
 
   def test_preview_issue_notes_should_support_links_to_existing_attachments
     Attachment.generate!(:container => Issue.find(1), :filename => 'foo.bar')
     @request.session[:user_id] = 2
-    post :issue, :project_id => '1', :id => 1, :notes => 'attachment:foo.bar'
+    post(
+      :issue,
+      :params => {
+        :project_id => '1',
+        :issue_id => 1,
+        :field => 'notes',
+        :text => 'attachment:foo.bar'
+      }
+    )
     assert_response :success
     assert_select 'a.attachment', :text => 'foo.bar'
   end
 
-  def test_preview_issue_with_project_changed
+  def test_preview_issue_notes_should_show_thumbnail_of_file_immidiately_after_attachment
+    attachment = Attachment.generate!(filename: 'foo.png', digest: Redmine::Utils.random_hex(32))
+    attachment.update(container: nil)
+
     @request.session[:user_id] = 2
-    post :issue, :project_id => '1', :id => 1, :issue => {:notes => 'notes', :project_id => 2}
+    post(
+      :issue,
+      params: {
+        project_id: '1',
+        issue_id: 1,
+        field: 'notes',
+        text: '{{thumbnail(foo.png)}}',
+        attachments: {'1': { token: attachment.token }}
+      }
+    )
     assert_response :success
-    assert_not_nil assigns(:issue)
-    assert_not_nil assigns(:notes)
+    assert_select 'a.thumbnail[title=?]', 'foo.png'
   end
 
   def test_preview_new_news
-    get :news, :project_id => 1,
-                  :news => {:title => '',
-                            :description => 'News description',
-                            :summary => ''}
+    get(
+      :news,
+      :params => {
+        :project_id => 1,
+        :text => 'News description',
+      }
+    )
     assert_response :success
-    assert_template 'common/_preview'
-    assert_tag :tag => 'fieldset', :attributes => { :class => 'preview' },
-                                   :content => /News description/
+    assert_select 'p', :text => /News description/
   end
 
-  def test_existing_new_news
-    get :news, :project_id => 1, :id => 2,
-                  :news => {:title => '',
-                            :description => 'News description',
-                            :summary => ''}
+  def test_preview_existing_news
+    get(
+      :news,
+      :params => {
+        :project_id => 1,
+        :id => 2,
+        :text => 'News description'
+      }
+    )
     assert_response :success
-    assert_template 'common/_preview'
-    assert_equal News.find(2), assigns(:previewed)
-    assert_not_nil assigns(:attachments)
-
-    assert_tag :tag => 'fieldset', :attributes => { :class => 'preview' },
-                                   :content => /News description/
+    assert_select 'p', :text => /News description/
   end
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,8 +19,7 @@
 
 class Token < ActiveRecord::Base
   belongs_to :user
-  validates_uniqueness_of :value
-  attr_protected :id
+  validates_uniqueness_of :value, :case_sensitive => true
 
   before_create :delete_previous_tokens, :generate_new_token
 
@@ -36,11 +37,12 @@ class Token < ActiveRecord::Base
   end
 
   add_action :api,       max_instances: 1,  validity_time: nil
-  add_action :autologin, max_instances: 10, validity_time: Proc.new { Setting.autologin.to_i.days }
+  add_action :autologin, max_instances: 10, validity_time: Proc.new {Setting.autologin.to_i.days}
   add_action :feeds,     max_instances: 1,  validity_time: nil
-  add_action :recovery,  max_instances: 1,  validity_time: Proc.new { Token.validity_time }
-  add_action :register,  max_instances: 1,  validity_time: Proc.new { Token.validity_time }
+  add_action :recovery,  max_instances: 1,  validity_time: Proc.new {Token.validity_time}
+  add_action :register,  max_instances: 1,  validity_time: Proc.new {Token.validity_time}
   add_action :session,   max_instances: 10, validity_time: nil
+  add_action :twofa_backup_code, max_instances: 10, validity_time: nil
 
   def generate_new_token
     self.value = Token.generate_token_value
@@ -111,14 +113,16 @@ class Token < ActiveRecord::Base
   def self.find_token(action, key, validity_days=nil)
     action = action.to_s
     key = key.to_s
-    return nil unless action.present? && key =~ /\A[a-z0-9]+\z/i
+    return nil unless action.present? && /\A[a-z0-9]+\z/i.match?(key)
 
-    token = Token.where(:action => action, :value => key).first
-    if token && (token.action == action) && (token.value == key) && token.user
-      if validity_days.nil? || (token.created_on > validity_days.days.ago)
-        token
-      end
-    end
+    token = Token.find_by(:action => action, :value => key)
+    return unless token
+    return unless token.action == action
+    return unless ActiveSupport::SecurityUtils.secure_compare(token.value.to_s, key)
+    return unless token.user
+    return unless validity_days.nil? || (token.created_on > validity_days.days.ago)
+
+    token
   end
 
   def self.generate_token_value

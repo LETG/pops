@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Redmine
   module Info
     class << self
@@ -7,14 +9,29 @@ module Redmine
       def versioned_name; "#{app_name} #{Redmine::VERSION}" end
 
       def environment
-        s = "Environment:\n"
+        s = +"Environment:\n"
         s << [
           ["Redmine version", Redmine::VERSION],
           ["Ruby version", "#{RUBY_VERSION}-p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE}) [#{RUBY_PLATFORM}]"],
           ["Rails version", Rails::VERSION::STRING],
           ["Environment", Rails.env],
-          ["Database adapter", ActiveRecord::Base.connection.adapter_name]
+          ["Database adapter", ActiveRecord::Base.connection.adapter_name],
+          ["Mailer queue", ActionMailer::MailDeliveryJob.queue_adapter.class.name],
+          ["Mailer delivery", ActionMailer::Base.delivery_method]
         ].map {|info| "  %-30s %s" % info}.join("\n") + "\n"
+
+        theme_string = ''
+        theme_string += (Setting.ui_theme.blank? ? 'Default' : Setting.ui_theme.capitalize)
+        unless Setting.ui_theme.blank? ||
+          Redmine::Themes.theme(Setting.ui_theme).nil? ||
+          !Redmine::Themes.theme(Setting.ui_theme).javascripts.include?('theme')
+          theme_string += ' (includes JavaScript)'
+        end
+
+        s << "Redmine settings:\n"
+        s << [
+          ["Redmine theme", theme_string]
+        ].map {|settings| "  %-30s %s" % settings}.join("\n") + "\n"
 
         s << "SCM:\n"
         Redmine::Scm::Base.all.each do |scm|

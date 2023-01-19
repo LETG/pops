@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,7 +34,18 @@ module Redmine
           'h3' => {:pre => "\n\nh3. ", :post => "\n\n"},
           'h4' => {:pre => "\n\nh4. ", :post => "\n\n"},
           'h5' => {:pre => "\n\nh5. ", :post => "\n\n"},
-          'h6' => {:pre => "\n\nh6. ", :post => "\n\n"}
+          'h6' => {:pre => "\n\nh6. ", :post => "\n\n"},
+          'th' => {:pre => '*', :post => "*\n"},
+          'td' => {:pre => '', :post => "\n"},
+          'a' => lambda do |node|
+            if node.content.present? && node.attributes.key?('href')
+              %| "#{node.content}":#{node.attributes['href'].value} |
+            elsif node.attributes.key?('href')
+              %| #{node.attributes['href'].value} |
+            else
+              node.content
+            end
+          end
         )
       end
     end

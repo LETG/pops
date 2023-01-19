@@ -1,5 +1,6 @@
 <%= error_messages_for 'tracker' %>
 
+<div class="splitcontent">
 <div class="splitcontentleft">
 <div class="box tabular">
 <!--[form:tracker]-->
@@ -10,6 +11,7 @@
         :required => true %>
 </p>
 <p><%= f.check_box :is_in_roadmap %></p>
+<p><%= f.text_area :description, :rows => 4 %></p>
 <p>
   <label><%= l(:field_core_fields) %></label>
   <% Tracker::CORE_FIELDS.each do |field| %>
@@ -37,7 +39,7 @@
 
 <% if @tracker.new_record? && @trackers.any? %>
 <p><label for="copy_workflow_from"><%= l(:label_copy_workflow_from) %></label>
-<%= select_tag(:copy_workflow_from, content_tag("option") + options_from_collection_for_select(@trackers, :id, :name)) %></p>
+<%= select_tag(:copy_workflow_from, content_tag("option") + options_from_collection_for_select(@trackers, :id, :name, params[:copy_workflow_from] || @copy_from.try(:id))) %></p>
 <% end %>
 <!--[eoform:tracker]-->
 </div>
@@ -46,13 +48,13 @@
 
 <div class="splitcontentright">
 <% if @projects.any? %>
-<fieldset class="box" id="tracker_project_ids"><legend><%= l(:label_project_plural) %></legend>
+<fieldset class="box" id="tracker_project_ids"><legend><%= toggle_checkboxes_link("#tracker_project_ids input[type=checkbox]") %><%= l(:label_project_plural) %></legend>
 <% project_ids = @tracker.project_ids.to_a %>
 <%= render_project_nested_lists(@projects) do |p|
   content_tag('label', check_box_tag('tracker[project_ids][]', p.id, project_ids.include?(p.id), :id => nil) + ' ' + h(p))
 end %>
 <%= hidden_field_tag('tracker[project_ids][]', '', :id => nil) %>
-<p><%= check_all_links 'tracker_project_ids' %></p>
 </fieldset>
 <% end %>
+</div>
 </div>

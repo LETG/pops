@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,13 +17,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+require 'redmine'
+
 module Redmine
   module Configuration
 
     # Configuration default values
     @defaults = {
+      'avatar_server_url' => 'https://www.gravatar.com',
       'email_delivery' => nil,
-      'max_concurrent_ajax_uploads' => 2
+      'max_concurrent_ajax_uploads' => 2,
+      'common_mark_enable_hardbreaks' => true
     }
 
     @config = nil
@@ -53,6 +59,12 @@ module Redmine
         if @config['email_delivery']
           ActionMailer::Base.perform_deliveries = true
           @config['email_delivery'].each do |k, v|
+            # Comprehensive error message for those who used async_smtp and async_sendmail
+            # delivery methods that are removed in Redmine 4.0.
+            if k == 'delivery_method' && v.to_s =~ /\Aasync_(.+)/
+              abort "Redmine now uses ActiveJob to send emails asynchronously and the :#{v} delivery method is no longer available.\n" +
+                "Please update your config/configuration.yml to use :#$1 delivery method instead."
+            end
             v.symbolize_keys! if v.respond_to?(:symbolize_keys!)
             ActionMailer::Base.send("#{k}=", v)
           end
@@ -84,8 +96,8 @@ module Redmine
         yaml = nil
         begin
           yaml = YAML::load(ERB.new(File.read(filename)).result)
-        rescue ArgumentError
-          abort "Your Redmine configuration file located at #{filename} is not a valid YAML file and could not be loaded."
+        rescue ArgumentError, Psych::SyntaxError => e
+          abort "Your Redmine configuration file located at #{filename} is not a valid YAML file and could not be loaded:\n#{e.message}"
         rescue SyntaxError => e
           abort "A syntax error occurred when parsing your Redmine configuration file located at #{filename} with ERB:\n#{e.message}"
         end
@@ -114,7 +126,7 @@ module Redmine
       # Checks the validness of regular expressions set for repository paths at startup
       def check_regular_expressions
         @config.each do |name, value|
-          if value.present? && name =~ /^scm_.+_path_regexp$/
+          if value.present? && /^scm_.+_path_regexp$/.match?(name)
             begin
               Regexp.new value.to_s.strip
             rescue => e

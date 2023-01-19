@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,7 +43,7 @@ module CustomFieldsHelper
   ]
 
   def render_custom_fields_tabs(types)
-    tabs = CUSTOM_FIELDS_TABS.select {|h| types.include?(h[:name]) }
+    tabs = CUSTOM_FIELDS_TABS.select {|h| types.include?(h[:name])}
     render_tabs tabs
   end
 
@@ -55,7 +55,7 @@ module CustomFieldsHelper
     items = []
     items << [l(:label_custom_field_plural), custom_fields_path]
     items << [l(custom_field.type_name), custom_fields_path(:tab => custom_field.class.name)] if custom_field
-    items << (custom_field.nil? || custom_field.new_record? ? l(:label_custom_field_new) : custom_field.name) 
+    items << (custom_field.nil? || custom_field.new_record? ? l(:label_custom_field_new) : custom_field.name)
 
     title(*items)
   end
@@ -69,7 +69,7 @@ module CustomFieldsHelper
 
   def custom_field_tag_name(prefix, custom_field)
     name = "#{prefix}[custom_field_values][#{custom_field.id}]"
-    name << "[]" if custom_field.multiple?
+    name += "[]" if custom_field.multiple?
     name
   end
 
@@ -79,11 +79,25 @@ module CustomFieldsHelper
 
   # Return custom field html tag corresponding to its format
   def custom_field_tag(prefix, custom_value)
-    custom_value.custom_field.format.edit_tag self,
-      custom_field_tag_id(prefix, custom_value.custom_field),
-      custom_field_tag_name(prefix, custom_value.custom_field),
+    cf = custom_value.custom_field
+    css = cf.css_classes
+    placeholder = cf.description
+    placeholder&.tr!("\n", ' ') if cf.field_format != 'text'
+    data = nil
+    if cf.full_text_formatting?
+      css += ' wiki-edit'
+      data = {
+        :auto_complete => true
+      }
+    end
+    cf.format.edit_tag(
+      self,
+      custom_field_tag_id(prefix, cf),
+      custom_field_tag_name(prefix, cf),
       custom_value,
-      :class => "#{custom_value.custom_field.field_format}_cf"
+      :class => css,
+      :placeholder => placeholder,
+      :data => data)
   end
 
   # Return custom field name tag
@@ -92,16 +106,17 @@ module CustomFieldsHelper
     css = title ? "field-description" : nil
     content_tag 'span', custom_field.name, :title => title, :class => css
   end
-  
+
   # Return custom field label tag
   def custom_field_label_tag(name, custom_value, options={})
     required = options[:required] || custom_value.custom_field.is_required?
     for_tag_id = options.fetch(:for_tag_id, "#{name}_custom_field_values_#{custom_value.custom_field.id}")
     content = custom_field_name_tag custom_value.custom_field
-
-    content_tag "label", content +
+    content_tag(
+      "label", content +
       (required ? " <span class=\"required\">*</span>".html_safe : ""),
-      :for => for_tag_id
+      :for => for_tag_id,
+      :class => custom_value.customized && custom_value.customized.errors[custom_value.custom_field.name].present? ? 'error' : nil)
   end
 
   # Return custom field tag with its label tag
@@ -117,13 +132,34 @@ module CustomFieldsHelper
 
   # Returns the custom field tag for when bulk editing objects
   def custom_field_tag_for_bulk_edit(prefix, custom_field, objects=nil, value='')
-    custom_field.format.bulk_edit_tag self,
+    css =  custom_field.css_classes
+    data = nil
+    if custom_field.full_text_formatting?
+      css += ' wiki-edit'
+      data = {
+        :auto_complete => true
+      }
+    end
+    custom_field.format.bulk_edit_tag(
+      self,
       custom_field_tag_id(prefix, custom_field),
       custom_field_tag_name(prefix, custom_field),
       custom_field,
       objects,
       value,
-      :class => "#{custom_field.field_format}_cf"
+      :class => css,
+      :data => data)
+  end
+
+  # Returns custom field value tag
+  def custom_field_value_tag(value)
+    attr_value = show_value(value)
+
+    if !attr_value.blank? && value.custom_field.full_text_formatting?
+      content_tag('div', attr_value, :class => 'wiki')
+    else
+      attr_value
+    end
   end
 
   # Return a string used to display a custom value
@@ -157,7 +193,7 @@ module CustomFieldsHelper
     api.array :custom_fields do
       custom_values.each do |custom_value|
         attrs = {:id => custom_value.custom_field_id, :name => custom_value.custom_field.name}
-        attrs.merge!(:multiple => true) if custom_value.custom_field.multiple?
+        attrs[:multiple] = true if custom_value.custom_field.multiple?
         api.custom_field attrs do
           if custom_value.value.is_a?(Array)
             api.array :value do
@@ -179,5 +215,16 @@ module CustomFieldsHelper
       select_options << [l(:label_radio_buttons), 'radio']
     end
     form.select :edit_tag_style, select_options, :label => :label_display
+  end
+
+  def select_type_radio_buttons(default_type)
+    if CUSTOM_FIELDS_TABS.none? {|tab| tab[:name] == default_type}
+      default_type = 'IssueCustomField'
+    end
+    custom_field_type_options.map do |name, type|
+      content_tag(:label, :style => 'display:block;') do
+        radio_button_tag('type', type, type == default_type) + name
+      end
+    end.join("\n").html_safe
   end
 end

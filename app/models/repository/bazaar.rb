@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,6 @@
 require 'redmine/scm/adapters/bazaar_adapter'
 
 class Repository::Bazaar < Repository
-  attr_protected :root_url
   validates_presence_of :url, :log_encoding
 
   def self.human_attribute_name(attribute_key_name, *args)
@@ -63,6 +64,7 @@ class Repository::Bazaar < Repository
     if entries
       entries.each do |e|
         next if e.lastrev.revision.blank?
+
         # Set the filesize unless browsing a specific revision
         if identifier.nil? && e.is_file?
           full_path = File.join(root_url, e.path)
@@ -95,27 +97,29 @@ class Repository::Bazaar < Repository
       if db_revision < scm_revision
         logger.debug "Fetching changesets for repository #{url}" if logger && logger.debug?
         identifier_from = db_revision + 1
-        while (identifier_from <= scm_revision)
+        while identifier_from <= scm_revision
           # loads changesets by batches of 200
           identifier_to = [identifier_from + 199, scm_revision].min
           revisions = scm.revisions('', identifier_to, identifier_from)
-          transaction do
-            revisions.reverse_each do |revision|
-              changeset = Changeset.create(:repository   => self,
-                                           :revision     => revision.identifier,
-                                           :committer    => revision.author,
-                                           :committed_on => revision.time,
-                                           :scmid        => revision.scmid,
-                                           :comments     => revision.message)
+          unless revisions.nil?
+            transaction do
+              revisions.reverse_each do |revision|
+                changeset = Changeset.create(:repository   => self,
+                                             :revision     => revision.identifier,
+                                             :committer    => revision.author,
+                                             :committed_on => revision.time,
+                                             :scmid        => revision.scmid,
+                                             :comments     => revision.message)
 
-              revision.paths.each do |change|
-                Change.create(:changeset => changeset,
-                              :action    => change[:action],
-                              :path      => change[:path],
-                              :revision  => change[:revision])
+                revision.paths.each do |change|
+                  Change.create(:changeset => changeset,
+                                :action    => change[:action],
+                                :path      => change[:path],
+                                :revision  => change[:revision])
+                end
               end
             end
-          end unless revisions.nil?
+          end
           identifier_from = identifier_to + 1
         end
       end

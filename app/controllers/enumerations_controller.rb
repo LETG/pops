@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,14 +32,14 @@ class EnumerationsController < ApplicationController
   def index
     respond_to do |format|
       format.html
-      format.api {
+      format.api do
         @klass = Enumeration.get_subclass(params[:type])
         if @klass
           @enumerations = @klass.shared.sorted.to_a
         else
           render_404
         end
-      }
+      end
     end
   end
 
@@ -57,18 +59,18 @@ class EnumerationsController < ApplicationController
   end
 
   def update
-    if @enumeration.update_attributes(enumeration_params)
+    if @enumeration.update(enumeration_params)
       respond_to do |format|
-        format.html {
+        format.html do
           flash[:notice] = l(:notice_successful_update)
           redirect_to enumerations_path
-        }
-        format.js { head 200 }
+        end
+        format.js {head 200}
       end
     else
       respond_to do |format|
-        format.html { render :action => 'edit' }
-        format.js { head 422 }
+        format.html {render :action => 'edit'}
+        format.js {head 422}
       end
     end
   end
@@ -91,8 +93,10 @@ class EnumerationsController < ApplicationController
 
   def build_new_enumeration
     class_name = params[:enumeration] && params[:enumeration][:type] || params[:type]
-    @enumeration = Enumeration.new_subclass_instance(class_name, enumeration_params)
-    if @enumeration.nil?
+    @enumeration = Enumeration.new_subclass_instance(class_name)
+    if @enumeration
+      @enumeration.attributes = enumeration_params || {}
+    else
       render_404
     end
   end
@@ -105,6 +109,7 @@ class EnumerationsController < ApplicationController
 
   def enumeration_params
     # can't require enumeration on #new action
-    params.permit(:enumeration => [:name, :active, :is_default, :position])[:enumeration]
+    cf_ids = @enumeration.available_custom_fields.map {|c| c.multiple? ? {c.id.to_s => []} : c.id.to_s}
+    params.permit(:enumeration => [:name, :active, :is_default, :position, :custom_field_values => cf_ids])[:enumeration]
   end
 end

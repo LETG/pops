@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,21 +26,29 @@ class Document < ActiveRecord::Base
 
   acts_as_searchable :columns => ['title', "#{table_name}.description"],
                      :preload => :project
-  acts_as_event :title => Proc.new {|o| "#{l(:label_document)}: #{o.title}"},
-                :author => Proc.new {|o| o.attachments.reorder("#{Attachment.table_name}.created_on ASC").first.try(:author) },
-                :url => Proc.new {|o| {:controller => 'documents', :action => 'show', :id => o.id}}
-  acts_as_activity_provider :scope => preload(:project)
+  acts_as_event(
+    :title => Proc.new {|o| "#{l(:label_document)}: #{o.title}"},
+    :author =>
+      Proc.new do |o|
+        o.attachments.reorder("#{Attachment.table_name}.created_on ASC").
+          first.try(:author)
+      end,
+    :url =>
+      Proc.new do |o|
+        {:controller => 'documents', :action => 'show', :id => o.id}
+      end
+  )
+  acts_as_activity_provider :scope => proc {preload(:project)}
 
   validates_presence_of :project, :title, :category
   validates_length_of :title, :maximum => 255
-  attr_protected :id
 
-  after_create :send_notification
+  after_create_commit :send_notification
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     joins(:project).
     where(Project.allowed_to_condition(args.shift || User.current, :view_documents, *args))
-  }
+  end)
 
   safe_attributes 'category_id', 'title', 'description', 'custom_fields', 'custom_field_values'
 
@@ -69,7 +79,7 @@ class Document < ActiveRecord::Base
 
   def send_notification
     if Setting.notified_events.include?('document_added')
-      Mailer.document_added(self).deliver
+      Mailer.deliver_document_added(self, User.current)
     end
   end
 end

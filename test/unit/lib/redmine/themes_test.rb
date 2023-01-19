@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,6 @@
 require File.expand_path('../../../../test_helper', __FILE__)
 
 class Redmine::ThemesTest < ActiveSupport::TestCase
-
   def test_themes
     themes = Redmine::Themes.themes
     assert_kind_of Array, themes
@@ -55,5 +56,7 @@ class Redmine::ThemesTest < ActiveSupport::TestCase
     theme = Redmine::Themes.themes.pop
 
     assert_nil Redmine::Themes.theme(theme.id, :rescan => false)
+  ensure
+    Redmine::Themes.rescan
   end
 end

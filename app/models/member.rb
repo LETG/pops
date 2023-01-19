@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,28 +21,28 @@ class Member < ActiveRecord::Base
   belongs_to :user
   belongs_to :principal, :foreign_key => 'user_id'
   has_many :member_roles, :dependent => :destroy
-  has_many :roles, lambda { distinct }, :through => :member_roles
+  has_many :roles, lambda {distinct}, :through => :member_roles
   belongs_to :project
 
   validates_presence_of :principal, :project
-  validates_uniqueness_of :user_id, :scope => :project_id
+  validates_uniqueness_of :user_id, :scope => :project_id, :case_sensitive => true
   validate :validate_role
-  attr_protected :id
 
   before_destroy :set_issue_category_nil, :remove_from_project_default_assigned_to
 
-  scope :active, lambda { joins(:principal).where(:users => {:status => Principal::STATUS_ACTIVE})}
-
-	# Sort by first role and principal
-  scope :sorted, lambda {
+  scope :active, (lambda do
+    joins(:principal).where(:users => {:status => Principal::STATUS_ACTIVE})
+  end)
+  # Sort by first role and principal
+  scope :sorted, (lambda do
     includes(:member_roles, :roles, :principal).
       reorder("#{Role.table_name}.position").
       order(Principal.fields_for_order_statement)
-  }
-  scope :sorted_by_project, lambda {
+  end)
+  scope :sorted_by_project, (lambda do
     includes(:project).
       reorder("#{Project.table_name}.lft")
-  }
+  end)
 
   alias :base_reload :reload
   def reload(*args)
@@ -66,12 +68,16 @@ class Member < ActiveRecord::Base
 
     new_role_ids = ids - role_ids
     # Add new roles
-    new_role_ids.each {|id| member_roles << MemberRole.new(:role_id => id, :member => self) }
+    new_role_ids.each do |id|
+      member_roles << MemberRole.new(:role_id => id, :member => self)
+    end
     # Remove roles (Rails' #role_ids= will not trigger MemberRole#on_destroy)
     member_roles_to_destroy = member_roles.select {|mr| !ids.include?(mr.role_id)}
     if member_roles_to_destroy.any?
       member_roles_to_destroy.each(&:destroy)
     end
+    member_roles.reload
+    super(ids)
   end
 
   def <=>(member)
@@ -107,6 +113,16 @@ class Member < ActiveRecord::Base
   # Returns true if the member has the role and if it's inherited
   def has_inherited_role?(role)
     member_roles.any? {|mr| mr.role_id == role.id && mr.inherited_from.present?}
+  end
+
+  # Returns an Array of Project and/or Group from which the given role
+  # was inherited, or an empty Array if the role was not inherited
+  def role_inheritance(role)
+    member_roles.
+      select {|mr| mr.role_id == role.id && mr.inherited_from.present?}.
+      map {|mr| mr.inherited_from_member_role.try(:member)}.
+      compact.
+      map {|m| m.project == project ? m.principal : m.project}
   end
 
   # Returns true if the member's role is editable by user
@@ -192,23 +208,13 @@ class Member < ActiveRecord::Base
       project_ids = Array.wrap(attributes[:project_ids] || attributes[:project_id])
       role_ids = Array.wrap(attributes[:role_ids])
       project_ids.each do |project_id|
-        member = Member.find_or_new(project_id, principal)
+        member = Member.find_or_initialize_by(:project_id => project_id, :user_id => principal.id)
         member.role_ids |= role_ids
         member.save
         members << member
       end
     end
     members
-  end
-
-  # Finds or initializes a Member for the given project and principal
-  def self.find_or_new(project, principal)
-    project_id = project.is_a?(Project) ? project.id : project
-    principal_id = principal.is_a?(Principal) ? principal.id : principal
-
-    member = Member.find_by_project_id_and_user_id(project_id, principal_id)
-    member ||= Member.new(:project_id => project_id, :user_id => principal_id)
-    member
   end
 
   protected

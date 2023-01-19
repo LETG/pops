@@ -1,10 +1,14 @@
+<% default_action = false %>
+
 <div class="tabs">
   <ul>
   <% tabs.each do |tab| -%>
+    <% action = get_tab_action(tab) %>
     <li><%= link_to l(tab[:label]), (tab[:url] || { :tab => tab[:name] }),
                                     :id => "tab-#{tab[:name]}",
                                     :class => (tab[:name] != selected_tab ? nil : 'selected'),
-                                    :onclick => tab[:partial] ? "showTab('#{tab[:name]}', this.href); this.blur(); return false;" : nil %></li>
+                                    :onclick => (action.nil? ? nil : "#{ action }; return false;") %></li>
+    <% default_action = action if tab[:name] == selected_tab %>
   <% end -%>
   </ul>
   <div class="tabs-buttons" style="display:none;">
@@ -14,8 +18,10 @@
 </div>
 
 <% tabs.each do |tab| -%>
-  <%= content_tag('div', render(:partial => tab[:partial], :locals => {:tab => tab} ),
+  <%= content_tag('div', (render(:partial => tab[:partial], :locals => {:tab => tab}) if tab[:partial]) ,
                        :id => "tab-content-#{tab[:name]}",
                        :style => (tab[:name] != selected_tab ? 'display:none' : nil),
-                       :class => 'tab-content') if tab[:partial] %>
+                       :class => 'tab-content') if tab[:partial] || tab[:remote] %>
 <% end -%>
+
+<%= javascript_tag default_action if default_action %>

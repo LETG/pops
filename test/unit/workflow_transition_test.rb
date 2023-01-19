@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,11 +23,13 @@ class WorkflowTransitionTest < ActiveSupport::TestCase
   fixtures :roles, :trackers, :issue_statuses
 
   def setup
+    User.current = nil
     WorkflowTransition.delete_all
   end
 
   def test_replace_transitions_should_create_enabled_transitions
-    w = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2)
+    w = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                                   :old_status_id => 1, :new_status_id => 2)
 
     transitions = {'1' => {
       '2' => {'always' => '1'},
@@ -34,12 +38,16 @@ class WorkflowTransitionTest < ActiveSupport::TestCase
     assert_difference 'WorkflowTransition.count' do
       WorkflowTransition.replace_transitions(Tracker.find(1), Role.find(1), transitions)
     end
-    assert WorkflowTransition.where(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 3).exists?
+    assert WorkflowTransition.where(:role_id => 1, :tracker_id => 1,
+                                    :old_status_id => 1,
+                                    :new_status_id => 3).exists?
   end
 
   def test_replace_transitions_should_delete_disabled_transitions
-    w1 = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2)
-    w2 = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 3)
+    w1 = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                                    :old_status_id => 1, :new_status_id => 2)
+    w2 = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                                    :old_status_id => 1, :new_status_id => 3)
 
     transitions = {'1' => {
       '2' => {'always' => '0'},
@@ -58,14 +66,17 @@ class WorkflowTransitionTest < ActiveSupport::TestCase
     assert_difference 'WorkflowTransition.count' do
       WorkflowTransition.replace_transitions(Tracker.find(1), Role.find(1), transitions)
     end
-    w = WorkflowTransition.where(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2).first
+    w = WorkflowTransition.where(:role_id => 1, :tracker_id => 1,
+                                 :old_status_id => 1, :new_status_id => 2).first
     assert w
     assert_equal false, w.assignee
     assert_equal true, w.author
   end
 
   def test_replace_transitions_should_delete_disabled_additional_transitions
-    w = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2, :assignee => true)
+    w = WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                                   :old_status_id => 1, :new_status_id => 2,
+                                   :assignee => true)
 
     transitions = {'1' => {
       '2' => {'always' => '0', 'assignee' => '0', 'author' => '0'}
@@ -77,7 +88,9 @@ class WorkflowTransitionTest < ActiveSupport::TestCase
   end
 
   def test_replace_transitions_should_update_additional_transitions
-    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2, :assignee => true)
+    WorkflowTransition.create!(:role_id => 1, :tracker_id => 1,
+                               :old_status_id => 1, :new_status_id => 2,
+                               :assignee => true)
 
     transitions = {'1' => {
       '2' => {'always' => '0', 'assignee' => '0', 'author' => '1'}
@@ -85,7 +98,8 @@ class WorkflowTransitionTest < ActiveSupport::TestCase
     assert_no_difference 'WorkflowTransition.count' do
       WorkflowTransition.replace_transitions(Tracker.find(1), Role.find(1), transitions)
     end
-    w = WorkflowTransition.where(:role_id => 1, :tracker_id => 1, :old_status_id => 1, :new_status_id => 2).first
+    w = WorkflowTransition.where(:role_id => 1, :tracker_id => 1,
+                                 :old_status_id => 1, :new_status_id => 2).first
     assert w
     assert_equal false, w.assignee
     assert_equal true, w.author

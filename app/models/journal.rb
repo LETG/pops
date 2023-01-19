@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,38 +28,56 @@ class Journal < ActiveRecord::Base
   belongs_to :user
   has_many :details, :class_name => "JournalDetail", :dependent => :delete_all, :inverse_of => :journal
   attr_accessor :indice
-  attr_protected :id
 
-  acts_as_event :title => Proc.new {|o| status = ((s = o.new_status) ? " (#{s})" : nil); "#{o.issue.tracker} ##{o.issue.id}#{status}: #{o.issue.subject}" },
-                :description => :notes,
-                :author => :user,
-                :group => :issue,
-                :type => Proc.new {|o| (s = o.new_status) ? (s.is_closed? ? 'issue-closed' : 'issue-edit') : 'issue-note' },
-                :url => Proc.new {|o| {:controller => 'issues', :action => 'show', :id => o.issue.id, :anchor => "change-#{o.id}"}}
-
-  acts_as_activity_provider :type => 'issues',
-                            :author_key => :user_id,
-                            :scope => preload({:issue => :project}, :user).
-                                      joins("LEFT OUTER JOIN #{JournalDetail.table_name} ON #{JournalDetail.table_name}.journal_id = #{Journal.table_name}.id").
-                                      where("#{Journal.table_name}.journalized_type = 'Issue' AND" +
-                                            " (#{JournalDetail.table_name}.prop_key = 'status_id' OR #{Journal.table_name}.notes <> '')").distinct
-
+  acts_as_event(
+    :title =>
+       Proc.new do |o|
+         status = ((s = o.new_status) ? " (#{s})" : nil)
+         "#{o.issue.tracker} ##{o.issue.id}#{status}: #{o.issue.subject}"
+       end,
+    :description => :notes,
+    :author => :user,
+    :group => :issue,
+    :type =>
+      Proc.new do |o|
+        (s = o.new_status) ? (s.is_closed? ? 'issue-closed' : 'issue-edit') : 'issue-note'
+      end,
+    :url =>
+      Proc.new do |o|
+        {:controller => 'issues', :action => 'show', :id => o.issue.id, :anchor => "change-#{o.id}"}
+      end
+  )
+  acts_as_activity_provider(
+    :type => 'issues',
+    :author_key => :user_id,
+    :scope =>
+      proc do
+        preload({:issue => :project}, :user).
+          joins("LEFT OUTER JOIN #{JournalDetail.table_name} ON #{JournalDetail.table_name}.journal_id = #{Journal.table_name}.id").
+            where("#{Journal.table_name}.journalized_type = 'Issue' AND" +
+                  " (#{JournalDetail.table_name}.prop_key = 'status_id' OR #{Journal.table_name}.notes <> '')").distinct
+      end
+  )
+  acts_as_mentionable :attributes => ['notes']
   before_create :split_private_notes
-  after_commit :send_notification, :on => :create
+  before_create :add_watcher
+  after_create_commit :send_notification
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     user = args.shift || User.current
     options = args.shift || {}
 
     joins(:issue => :project).
       where(Issue.visible_condition(user, options)).
       where(Journal.visible_notes_condition(user, :skip_pre_condition => true))
-  }
+  end)
 
-  safe_attributes 'notes',
-    :if => lambda {|journal, user| journal.new_record? || journal.editable_by?(user)}
-  safe_attributes 'private_notes',
-    :if => lambda {|journal, user| user.allowed_to?(:set_notes_private, journal.project)}
+  safe_attributes(
+    'notes',
+    :if => lambda {|journal, user| journal.new_record? || journal.editable_by?(user)})
+  safe_attributes(
+    'private_notes',
+    :if => lambda {|journal, user| user.allowed_to?(:set_notes_private, journal.project)})
 
   # Returns a SQL condition to filter out journals with notes that are not visible to user
   def self.visible_notes_condition(user=User.current, options={})
@@ -79,7 +99,7 @@ class Journal < ActiveRecord::Base
   def save(*args)
     journalize_changes
     # Do not save an empty journal
-    (details.empty? && notes.blank?) ? false : super
+    (details.empty? && notes.blank?) ? false : super()
   end
 
   # Returns journal details that are visible to user
@@ -91,19 +111,6 @@ class Journal < ActiveRecord::Base
         Issue.find_by_id(detail.value || detail.old_value).try(:visible?, user)
       else
         true
-      end
-    end
-  end
-
-  def each_notification(users, &block)
-    if users.any?
-      users_by_details_visibility = users.group_by do |user|
-        visible_details(user)
-      end
-      users_by_details_visibility.each do |visible_details, users|
-        if notes? || visible_details.any?
-          yield(users)
-        end
       end
     end
   end
@@ -133,12 +140,16 @@ class Journal < ActiveRecord::Base
   end
 
   def attachments
-    journalized.respond_to?(:attachments) ? journalized.attachments : []
+    details.select{ |d| d.property == 'attachment' }.map{ |d| Attachment.find_by(:id => d.prop_key) }.compact
+  end
+
+  def visible?(*args)
+    journalized.visible?(*args)
   end
 
   # Returns a string of css classes
   def css_classes
-    s = 'journal'
+    s = +'journal'
     s << ' has-notes' unless notes.blank?
     s << ' has-details' unless details.blank?
     s << ' private-notes' if private_notes?
@@ -167,10 +178,12 @@ class Journal < ActiveRecord::Base
 
   def notified_watchers
     notified = journalized.notified_watchers
-    if private_notes?
-      notified = notified.select {|user| user.allowed_to?(:view_private_notes, journalized.project)}
-    end
-    notified
+    select_journal_visible_user(notified)
+  end
+
+  def notified_mentions
+    notified = super
+    select_journal_visible_user(notified)
   end
 
   def watcher_recipients
@@ -185,7 +198,7 @@ class Journal < ActiveRecord::Base
       journals.each do |journal|
         journal.details.each do |detail|
           if detail.property == 'cf'
-            detail.instance_variable_set "@custom_field", fields_by_id[detail.prop_key.to_i]
+            detail.instance_variable_set :@custom_field, fields_by_id[detail.prop_key.to_i]
           end
         end
       end
@@ -211,7 +224,8 @@ class Journal < ActiveRecord::Base
   # Adds a journal detail for an attachment that was added or removed
   def journalize_attachment(attachment, added_or_removed)
     key = (added_or_removed == :removed ? :old_value : :value)
-    details << JournalDetail.new(
+    details <<
+      JournalDetail.new(
         :property => 'attachment',
         :prop_key => attachment.id,
         key => attachment.filename
@@ -221,7 +235,8 @@ class Journal < ActiveRecord::Base
   # Adds a journal detail for an issue relation that was added or removed
   def journalize_relation(relation, added_or_removed)
     key = (added_or_removed == :removed ? :old_value : :value)
-    details << JournalDetail.new(
+    details <<
+      JournalDetail.new(
         :property  => 'relation',
         :prop_key  => relation.relation_type_for(journalized),
         key => relation.other_issue(journalized).try(:id)
@@ -239,6 +254,7 @@ class Journal < ActiveRecord::Base
         before = @attributes_before_change[attribute]
         after = journalized.send(attribute)
         next if before == after || (before.blank? && after.blank?)
+
         add_attribute_detail(attribute, before, after)
       end
     end
@@ -288,7 +304,8 @@ class Journal < ActiveRecord::Base
 
   # Adds a journal detail
   def add_detail(property, prop_key, old_value, value)
-    details << JournalDetail.new(
+    details <<
+      JournalDetail.new(
         :property => property,
         :prop_key => prop_key,
         :old_value => old_value,
@@ -315,14 +332,33 @@ class Journal < ActiveRecord::Base
     true
   end
 
+  def add_watcher
+    if user &&
+        user.allowed_to?(:add_issue_watchers, project) &&
+        user.pref.auto_watch_on?('issue_contributed_to') &&
+        !Watcher.any_watched?(Array.wrap(journalized), user)
+      journalized.set_watcher(user, true)
+    end
+  end
+
   def send_notification
-    if notify? && (Setting.notified_events.include?('issue_updated') ||
-        (Setting.notified_events.include?('issue_note_added') && notes.present?) ||
-        (Setting.notified_events.include?('issue_status_updated') && new_status.present?) ||
-        (Setting.notified_events.include?('issue_assigned_to_updated') && detail_for_attribute('assigned_to_id').present?) ||
-        (Setting.notified_events.include?('issue_priority_updated') && new_value_for('priority_id').present?)
-      )
+    if notify? &&
+        (
+          Setting.notified_events.include?('issue_updated') ||
+          (Setting.notified_events.include?('issue_note_added') && notes.present?) ||
+          (Setting.notified_events.include?('issue_status_updated') && new_status.present?) ||
+          (Setting.notified_events.include?('issue_assigned_to_updated') && detail_for_attribute('assigned_to_id').present?) ||
+          (Setting.notified_events.include?('issue_priority_updated') && new_value_for('priority_id').present?) ||
+          (Setting.notified_events.include?('issue_fixed_version_updated') && detail_for_attribute('fixed_version_id').present?)
+        )
       Mailer.deliver_issue_edit(self)
     end
+  end
+
+  def select_journal_visible_user(notified)
+    if private_notes?
+      notified = notified.select {|user| user.allowed_to?(:view_private_notes, journalized.project)}
+    end
+    notified
   end
 end

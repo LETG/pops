@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest/md5'
 require 'cgi'
 
@@ -14,14 +16,14 @@ module GravatarHelper
     # The URL of a default image to display if the given email address does
     # not have a gravatar.
     :default => nil,
-    
+
     # The default size in pixels for the gravatar image (they're square).
-    :size => 50,
-    
-    # The maximum allowed MPAA rating for gravatars. This allows you to 
+    :size => 24,
+
+    # The maximum allowed MPAA rating for gravatars. This allows you to
     # exclude gravatars that may be out of character for your site.
     :rating => 'PG',
-    
+
     # The alt text to use in the img tag for the gravatar.  Since it's a
     # decorational picture, the alt text should be empty according to the
     # XHTML specs.
@@ -29,18 +31,15 @@ module GravatarHelper
 
     # The title text to use for the img tag for the gravatar.
     :title => '',
-    
+
     # The class to assign to the img tag for the gravatar.
     :class => 'gravatar',
-    
-    # Whether or not to display the gravatars using HTTPS instead of HTTP
-    :ssl => false,
   }
-  
+
   # The methods that will be made available to your views.
   module PublicMethods
-  
-    # Return the HTML img tag for the given user's gravatar. Presumes that 
+
+    # Return the HTML img tag for the given user's gravatar. Presumes that
     # the given user object will respond_to "email", and return the user's
     # email address.
     def gravatar_for(user, options={})
@@ -58,10 +57,10 @@ module GravatarHelper
 
       image_tag src, options.except(:rating, :size, :default, :ssl)
     end
-    
+
     # Returns the base Gravatar URL for the given email hash
     def gravatar_api_url(hash)
-      "//www.gravatar.com/avatar/#{hash}"
+      +"#{Redmine::Configuration['avatar_server_url']}/avatar/#{hash}"
     end
 
     # Return the gravatar URL for the given email address.
@@ -82,5 +81,5 @@ module GravatarHelper
     end
 
   end
-  
+
 end

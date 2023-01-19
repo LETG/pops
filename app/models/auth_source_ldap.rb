@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +23,7 @@ require 'timeout'
 
 class AuthSourceLdap < AuthSource
   NETWORK_EXCEPTIONS = [
-    Net::LDAP::LdapError,
+    Net::LDAP::Error,
     Errno::ECONNABORTED, Errno::ECONNREFUSED, Errno::ECONNRESET,
     Errno::EHOSTDOWN, Errno::EHOSTUNREACH,
     SocketError
@@ -36,6 +38,14 @@ class AuthSourceLdap < AuthSource
   validate :validate_filter
 
   before_validation :strip_ldap_attributes
+
+  safe_attributes 'ldap_mode'
+
+  LDAP_MODES = [
+    :ldap,
+    :ldaps_verify_none,
+    :ldaps_verify_peer
+  ]
 
   def initialize(attributes=nil, *args)
     super
@@ -53,22 +63,21 @@ class AuthSourceLdap < AuthSource
       end
     end
   rescue *NETWORK_EXCEPTIONS => e
-    raise AuthSourceException.new(e.message)
+    raise AuthSourceException.new("#{auth_method_name}: #{e.message}")
   end
 
   # Test the connection to the LDAP
   def test_connection
     with_timeout do
       ldap_con = initialize_ldap_con(self.account, self.account_password)
-      ldap_con.open { }
-
+      ldap_con.open {}
       if self.account.present? && !self.account.include?("$login") && self.account_password.present?
         ldap_auth = authenticate_dn(self.account, self.account_password)
         raise AuthSourceException.new(l(:error_ldap_bind_credentials)) if !ldap_auth
       end
     end
   rescue *NETWORK_EXCEPTIONS => e
-    raise AuthSourceException.new(e.message)
+    raise AuthSourceException.new("#{auth_method_name}: #{e.message}")
   end
 
   def auth_method_name
@@ -98,7 +107,32 @@ class AuthSourceLdap < AuthSource
     end
     results
   rescue *NETWORK_EXCEPTIONS => e
-    raise AuthSourceException.new(e.message)
+    raise AuthSourceException.new("#{auth_method_name}: #{e.message}")
+  end
+
+  def ldap_mode
+    case
+    when tls && verify_peer
+      :ldaps_verify_peer
+    when tls && !verify_peer
+      :ldaps_verify_none
+    else
+      :ldap
+    end
+  end
+
+  def ldap_mode=(ldap_mode)
+    case ldap_mode.try(:to_sym)
+    when :ldaps_verify_peer
+      self.tls = true
+      self.verify_peer = true
+    when :ldaps_verify_none
+      self.tls = true
+      self.verify_peer = false
+    else
+      self.tls = false
+      self.verify_peer = false
+    end
   end
 
   private
@@ -110,14 +144,14 @@ class AuthSourceLdap < AuthSource
       return yield
     end
   rescue Timeout::Error => e
-    raise AuthSourceTimeoutException.new(e.message)
+    raise AuthSourceTimeoutException.new("#{auth_method_name}: #{e.message}")
   end
 
   def ldap_filter
     if filter.present?
       Net::LDAP::Filter.construct(filter)
     end
-  rescue Net::LDAP::LdapError, Net::LDAP::FilterSyntaxInvalidError
+  rescue Net::LDAP::Error, Net::LDAP::FilterSyntaxInvalidError
     nil
   end
 
@@ -142,21 +176,29 @@ class AuthSourceLdap < AuthSource
   end
 
   def initialize_ldap_con(ldap_user, ldap_password)
-    options = { :host => self.host,
-                :port => self.port,
-                :encryption => (self.tls ? :simple_tls : nil)
-              }
-    options.merge!(:auth => { :method => :simple, :username => ldap_user, :password => ldap_password }) unless ldap_user.blank? && ldap_password.blank?
+    options = {:host => self.host, :port => self.port}
+    if tls
+      options[:encryption] = {
+        :method => :simple_tls,
+        # Always provide non-empty tls_options, to make sure, that all
+        # OpenSSL::SSL::SSLContext::DEFAULT_PARAMS as well as the default cert
+        # store are used.
+        :tls_options => {:verify_mode => verify_peer? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE}
+      }
+    end
+    unless ldap_user.blank? && ldap_password.blank?
+      options[:auth] = {:method => :simple, :username => ldap_user, :password => ldap_password}
+    end
     Net::LDAP.new options
   end
 
   def get_user_attributes_from_ldap_entry(entry)
     {
-     :dn => entry.dn,
-     :firstname => AuthSourceLdap.get_attr(entry, self.attr_firstname),
-     :lastname => AuthSourceLdap.get_attr(entry, self.attr_lastname),
-     :mail => AuthSourceLdap.get_attr(entry, self.attr_mail),
-     :auth_source_id => self.id
+      :dn => entry.dn,
+      :firstname => AuthSourceLdap.get_attr(entry, self.attr_firstname),
+      :lastname => AuthSourceLdap.get_attr(entry, self.attr_lastname),
+      :mail => AuthSourceLdap.get_attr(entry, self.attr_mail),
+      :auth_source_id => self.id
     }
   end
 
@@ -200,10 +242,13 @@ class AuthSourceLdap < AuthSource
     attrs
   end
 
-  def self.get_attr(entry, attr_name)
-    if !attr_name.blank?
-      value = entry[attr_name].is_a?(Array) ? entry[attr_name].first : entry[attr_name]
-      value.to_s.force_encoding('UTF-8')
+  # Singleton class method is public
+  class << self
+    def get_attr(entry, attr_name)
+      if !attr_name.blank?
+        value = entry[attr_name].is_a?(Array) ? entry[attr_name].first : entry[attr_name]
+        (+value.to_s).force_encoding('UTF-8')
+      end
     end
   end
 end

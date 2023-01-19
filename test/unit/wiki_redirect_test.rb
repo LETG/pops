@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,19 +23,43 @@ class WikiRedirectTest < ActiveSupport::TestCase
   fixtures :projects, :wikis, :wiki_pages
 
   def setup
+    User.current = nil
     @wiki = Wiki.find(1)
     @original = WikiPage.create(:wiki => @wiki, :title => 'Original title')
   end
 
-  def test_create_redirect
+  def test_create_redirect_on_rename
     @original.title = 'New title'
-    assert @original.save
-    @original.reload
+    @original.save!
 
-    assert_equal 'New_title', @original.title
-    assert @wiki.redirects.find_by_title('Original_title')
-    assert @wiki.find_page('Original title')
-    assert @wiki.find_page('ORIGINAL title')
+    redirect = @wiki.redirects.find_by_title('Original_title')
+    assert_not_nil redirect
+    assert_equal 1, redirect.redirects_to_wiki_id
+    assert_equal 'New_title', redirect.redirects_to
+    assert_equal @original, redirect.target_page
+  end
+
+  def test_create_redirect_on_move
+    @original.wiki_id = 2
+    @original.save!
+
+    redirect = @wiki.redirects.find_by_title('Original_title')
+    assert_not_nil redirect
+    assert_equal 2, redirect.redirects_to_wiki_id
+    assert_equal 'Original_title', redirect.redirects_to
+    assert_equal @original, redirect.target_page
+  end
+
+  def test_create_redirect_on_rename_and_move
+    @original.title = 'New title'
+    @original.wiki_id = 2
+    @original.save!
+
+    redirect = @wiki.redirects.find_by_title('Original_title')
+    assert_not_nil redirect
+    assert_equal 2, redirect.redirects_to_wiki_id
+    assert_equal 'New_title', redirect.redirects_to
+    assert_equal @original, redirect.target_page
   end
 
   def test_update_redirect
@@ -69,6 +95,6 @@ class WikiRedirectTest < ActiveSupport::TestCase
     assert WikiRedirect.create(:wiki => @wiki, :title => 'An_old_page', :redirects_to => 'Original_title')
 
     @original.destroy
-    assert_nil @wiki.redirects.first
+    assert_not @wiki.redirects.exists?
   end
 end

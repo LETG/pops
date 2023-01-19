@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: false
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -86,7 +88,7 @@ class RedmineMailHandler
                                               "user") { |v| self.no_notification = '1'}
       opts.separator("")
       opts.separator("Issue attributes control options:")
-      opts.on(      "--project-from-subaddress ADDR", "select project from subadress of ADDR found",
+      opts.on(      "--project-from-subaddress ADDR", "select project from subaddress of ADDR found",
                                               "in To, Cc, Bcc headers") {|v| self.project_from_subaddress = v}
       opts.on("-p", "--project PROJECT",      "identifier of the target project") {|v| self.issue_attributes['project'] = v}
       opts.on("-s", "--status STATUS",        "name of the target status") {|v| self.issue_attributes['status'] = v}
@@ -151,7 +153,10 @@ END_DESC
 
     headers = { 'User-Agent' => "Redmine mail handler/#{VERSION}" }
 
-    data = { 'key' => key, 'email' => email,
+    # MailHandlerController#index should permit all options set by
+    # RedmineMailHandler#submit in rdm-mailhandler.rb.
+    # It must be kept in sync.
+    data = { 'key' => key, 'email' => email.gsub(/(?<!\r)\n|\r(?!\n)/, "\r\n"),
                            'allow_override' => allow_override,
                            'unknown_user' => unknown_user,
                            'default_group' => default_group,
@@ -186,7 +191,7 @@ END_DESC
         warn "Failed to contact your Redmine server (#{response.code})."
         return 75
       when 201
-        debug "Proccessed successfully"
+        debug "Processed successfully"
         return 0
       else
         return 1
@@ -202,7 +207,7 @@ END_DESC
   def read_key_from_file(filename)
     begin
       self.key = File.read(filename).strip
-    rescue Exception => e
+    rescue => e
       $stderr.puts "Unable to read the key from #{filename}:\n#{e.message}"
       exit 1
     end
@@ -210,4 +215,4 @@ END_DESC
 end
 
 handler = RedmineMailHandler.new
-exit(handler.submit(STDIN.read))
+exit(handler.submit(STDIN.read.force_encoding('ASCII-8BIT')))

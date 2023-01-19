@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,5 +21,13 @@ class TimeEntryCustomField < CustomField
   def type_name
     :label_spent_time
   end
-end
 
+  def visible_by?(project, user=User.current)
+    super || (roles & user.roles_for_project(project)).present?
+  end
+
+  def validate_custom_field
+    super
+    errors.add(:base, l(:label_role_plural) + ' ' + l('activerecord.errors.messages.blank')) unless visible? || roles.present?
+  end
+end

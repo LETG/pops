@@ -3,26 +3,41 @@
 <%= form_tag({:controller => 'calendars', :action => 'show', :project_id => @project},
              :method => :get, :id => 'query_form') do %>
 <%= hidden_field_tag 'set_filter', '1' %>
-<fieldset id="filters" class="collapsible <%= @query.new_record? ? "" : "collapsed" %>">
-  <legend onclick="toggleFieldset(this);"><%= l(:label_filter_plural) %></legend>
-  <div style="<%= @query.new_record? ? "" : "display: none;" %>">
-    <%= render :partial => 'queries/filters', :locals => {:query => @query} %>
-  </div>
-</fieldset>
+<%= hidden_field_tag 'calendar', '1' %>
 
-<p style="float:right;">
+<div id="query_form_with_buttons" class="hide-when-print">
+<div id="query_form_content">
+  <fieldset id="filters" class="collapsible <%= @query.new_record? ? "" : "collapsed" %>">
+    <legend onclick="toggleFieldset(this);" class="icon icon-<%= @query.new_record? ? "expanded" : "collapsed" %>"><%= l(:label_filter_plural) %></legend>
+    <div style="<%= @query.new_record? ? "" : "display: none;" %>">
+      <%= render :partial => 'queries/filters', :locals => {:query => @query} %>
+    </div>
+  </fieldset>
+</div>
+
+<p class="contextual">
   <%= link_to_previous_month(@year, @month, :accesskey => accesskey(:previous)) %> | <%= link_to_next_month(@year, @month, :accesskey => accesskey(:next)) %>
 </p>
 
 <p class="buttons">
-<%= label_tag('month', l(:label_month)) %>
-<%= select_month(@month, :prefix => "month", :discard_type => true) %>
-<%= label_tag('year', l(:label_year)) %>
-<%= select_year(@year, :prefix => "year", :discard_type => true) %>
+  <%= label_tag('month', l(:label_month)) %>
+  <%= select_month(@month, :prefix => "month", :discard_type => true) %>
+  <%= label_tag('year', l(:label_year)) %>
+  <%= select_year(@year, :prefix => "year", :discard_type => true) %>
 
-<%= link_to_function l(:button_apply), '$("#query_form").submit()', :class => 'icon icon-checked' %>
-<%= link_to l(:button_clear), { :project_id => @project, :set_filter => 1 }, :class => 'icon icon-reload' %>
+  <%= link_to_function l(:button_apply), '$("#query_form").submit()', :class => 'icon icon-checked' %>
+  <%= link_to l(:button_clear), { :project_id => @project, :set_filter => 1 }, :class => 'icon icon-reload' %>
+  <% if @query.new_record? && User.current.allowed_to?(:save_queries, @project, :global => true) %>
+    <%= link_to_function l(:button_save_object, object_name: l(:label_query).downcase),
+                         "$('#query_form').attr('action', '#{ @project ? new_project_query_path(@project) : new_query_path }').submit();",
+                         :class => 'icon icon-save' %>
+  <% end %>
+  <% if !@query.new_record? && @query.editable_by?(User.current) %>
+    <%= link_to l(:button_edit_object, object_name: l(:label_query).downcase), edit_query_path(@query, :calendar => 1), :class => 'icon icon-edit' %>
+    <%= delete_link query_path(@query, :calendar => 1), {}, l(:button_delete_object, object_name: l(:label_query).downcase) %>
+  <% end %>
 </p>
+</div>
 <% end %>
 
 <%= error_messages_for 'query' %>

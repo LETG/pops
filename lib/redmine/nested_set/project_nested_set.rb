@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,7 +25,11 @@ module Redmine
           belongs_to :parent, :class_name => self.name
 
           before_create :add_to_nested_set
-          before_update :move_in_nested_set, :if => lambda {|project| project.parent_id_changed? || project.name_changed?}
+          before_update(
+            :move_in_nested_set,
+            :if =>
+              lambda {|project| project.parent_id_changed? || project.name_changed?}
+          )
           before_destroy :destroy_children
         end
         base.extend ClassMethods
@@ -33,12 +39,16 @@ module Redmine
       private
 
       def target_lft
-        siblings_rgt = self.class.where(:parent_id => parent_id).where("name < ?", name).maximum(:rgt)
+        siblings_rgt =
+          self.class.where(:parent_id => parent_id).where("name < ?", name).maximum(:rgt)
         if siblings_rgt
           siblings_rgt + 1
         elsif parent_id
-          parent_lft = self.class.where(:id => parent_id).pluck(:lft).first
-          raise "Project id=#{id} with parent_id=#{parent_id}: parent missing or without 'lft' value" unless parent_lft
+          parent_lft = self.class.where(:id => parent_id).pick(:lft)
+          unless parent_lft
+            raise "Project id=#{id} with parent_id=#{parent_id}: parent missing or without 'lft' value"
+          end
+
           parent_lft + 1
         else
           1
@@ -49,11 +59,13 @@ module Redmine
         lock_nested_set if lock
         self.lft = target_lft
         self.rgt = lft + 1
-        self.class.where("lft >= ? OR rgt >= ?", lft, lft).update_all([
-          "lft = CASE WHEN lft >= :lft THEN lft + 2 ELSE lft END, " +
-          "rgt = CASE WHEN rgt >= :lft THEN rgt + 2 ELSE rgt END",
-          {:lft => lft}
-        ])
+        self.class.where("lft >= ? OR rgt >= ?", lft, lft).update_all(
+          [
+            "lft = CASE WHEN lft >= :lft THEN lft + 2 ELSE lft END, " \
+              "rgt = CASE WHEN rgt >= :lft THEN rgt + 2 ELSE rgt END",
+            {:lft => lft}
+          ]
+        )
       end
 
       def move_in_nested_set
@@ -66,20 +78,36 @@ module Redmine
           if c > a
             # Moving to the right
             d = c - (b - a + 1)
-            scope = self.class.where(["lft BETWEEN :a AND :c - 1 OR rgt BETWEEN :a AND :c - 1", {:a => a, :c => c}])
-            scope.update_all([
-              "lft = CASE WHEN lft BETWEEN :a AND :b THEN lft + (:d - :a) WHEN lft BETWEEN :b + 1 AND :c - 1 THEN lft - (:b - :a + 1) ELSE lft END, " +
-              "rgt = CASE WHEN rgt BETWEEN :a AND :b THEN rgt + (:d - :a) WHEN rgt BETWEEN :b + 1 AND :c - 1 THEN rgt - (:b - :a + 1) ELSE rgt END",
-              {:a => a, :b => b, :c => c, :d => d}
-            ])
+            scope =
+              self.class.where(
+                ["lft BETWEEN :a AND :c - 1 OR rgt BETWEEN :a AND :c - 1",
+                 {:a => a, :c => c}]
+              )
+            scope.update_all(
+              [
+                "lft = CASE WHEN lft BETWEEN :a AND :b THEN lft + (:d - :a) " \
+                  "WHEN lft BETWEEN :b + 1 AND :c - 1 THEN lft - (:b - :a + 1) ELSE lft END, " \
+                  "rgt = CASE WHEN rgt BETWEEN :a AND :b THEN rgt + (:d - :a) " \
+                  "WHEN rgt BETWEEN :b + 1 AND :c - 1 THEN rgt - (:b - :a + 1) ELSE rgt END",
+                {:a => a, :b => b, :c => c, :d => d}
+              ]
+            )
           elsif c < a
             # Moving to the left
-            scope = self.class.where("lft BETWEEN :c AND :b OR rgt BETWEEN :c AND :b", {:a => a, :b => b, :c => c})
-            scope.update_all([
-              "lft = CASE WHEN lft BETWEEN :a AND :b THEN lft - (:a - :c) WHEN lft BETWEEN :c AND :a - 1 THEN lft + (:b - :a + 1) ELSE lft END, " +
-              "rgt = CASE WHEN rgt BETWEEN :a AND :b THEN rgt - (:a - :c) WHEN rgt BETWEEN :c AND :a - 1 THEN rgt + (:b - :a + 1) ELSE rgt END",
-              {:a => a, :b => b, :c => c, :d => d}
-            ])
+            scope =
+              self.class.where(
+                "lft BETWEEN :c AND :b OR rgt BETWEEN :c AND :b",
+                {:a => a, :b => b, :c => c}
+              )
+            scope.update_all(
+              [
+                "lft = CASE WHEN lft BETWEEN :a AND :b THEN lft - (:a - :c) " \
+                  "WHEN lft BETWEEN :c AND :a - 1 THEN lft + (:b - :a + 1) ELSE lft END, " \
+                  "rgt = CASE WHEN rgt BETWEEN :a AND :b THEN rgt - (:a - :c) " \
+                  "WHEN rgt BETWEEN :c AND :a - 1 THEN rgt + (:b - :a + 1) ELSE rgt END",
+                {:a => a, :b => b, :c => c, :d => d}
+              ]
+            )
           end
           reload_nested_set_values
         end
@@ -92,11 +120,13 @@ module Redmine
         end
         children.each {|c| c.send :destroy_without_nested_set_update}
         unless @without_nested_set_update
-          self.class.where("lft > ? OR rgt > ?", lft, lft).update_all([
-            "lft = CASE WHEN lft > :lft THEN lft - :shift ELSE lft END, " +
-            "rgt = CASE WHEN rgt > :lft THEN rgt - :shift ELSE rgt END",
-            {:lft => lft, :shift => rgt - lft + 1}
-          ])
+          self.class.where("lft > ? OR rgt > ?", lft, lft).update_all(
+            [
+              "lft = CASE WHEN lft > :lft THEN lft - :shift ELSE lft END, " \
+                "rgt = CASE WHEN rgt > :lft THEN rgt - :shift ELSE rgt END",
+              {:lft => lft, :shift => rgt - lft + 1}
+            ]
+          )
         end
       end
 
@@ -106,7 +136,7 @@ module Redmine
       end
 
       def reload_nested_set_values
-        self.lft, self.rgt = Project.where(:id => id).pluck(:lft, :rgt).first
+        self.lft, self.rgt = Project.where(:id => id).pick(:lft, :rgt)
       end
 
       def save_nested_set_values
@@ -119,7 +149,7 @@ module Redmine
 
       def lock_nested_set
         lock = true
-        if self.class.connection.adapter_name =~ /sqlserver/i
+        if /sqlserver/i.match?(self.class.connection.adapter_name)
           lock = "WITH (ROWLOCK HOLDLOCK UPDLOCK)"
         end
         self.class.order(:id).lock(lock).ids

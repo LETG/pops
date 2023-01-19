@@ -1,5 +1,5 @@
 /* Redmine - project management software
-   Copyright (C) 2006-2017  Jean-Philippe Lang */
+   Copyright (C) 2006-2022  Jean-Philippe Lang */
 
 function addFile(inputEl, file, eagerUpload) {
   var attachmentsFields = $(inputEl).closest('.attachments_form').find('.attachments_fields');
@@ -103,7 +103,7 @@ function uploadBlob(blob, uploadUrl, attachmentId, options) {
   }, options);
 
   uploadUrl = uploadUrl + '?attachment_id=' + attachmentId;
-  if (blob instanceof window.File) {
+  if (blob instanceof window.Blob) {
     uploadUrl += '&filename=' + encodeURIComponent(blob.name);
     uploadUrl += '&content_type=' + encodeURIComponent(blob.type);
   }
@@ -159,6 +159,7 @@ function uploadAndAttachFiles(files, inputEl) {
   var maxFileSizeExceeded = $(inputEl).data('max-file-size-message');
 
   var sizeExceeded = false;
+  var filesLength = $(inputEl).closest('.attachments_form').find('.attachments_fields').children().length + files.length
   $.each(files, function() {
     if (this.size && maxFileSize != null && this.size > parseInt(maxFileSize)) {sizeExceeded=true;}
   });
@@ -166,6 +167,10 @@ function uploadAndAttachFiles(files, inputEl) {
     window.alert(maxFileSizeExceeded);
   } else {
     $.each(files, function() {addFile(inputEl, this, true);});
+  }
+
+  if (filesLength > ($(inputEl).attr('multiple') == 'multiple' ? 10 : 1)) {
+    window.alert($(inputEl).data('max-number-of-files-message'));
   }
   return sizeExceeded;
 }
@@ -177,7 +182,11 @@ function handleFileDropEvent(e) {
 
   if ($.inArray('Files', e.dataTransfer.types) > -1) {
     handleFileDropEvent.target = e.target;
-    uploadAndAttachFiles(e.dataTransfer.files, $('input:file.filedrop').first());
+    if ($(this).hasClass('custom-field-filedroplistner')){
+      uploadAndAttachFiles(e.dataTransfer.files, $(this).find('input:file.custom-field-filedrop').first());
+    } else {
+      uploadAndAttachFiles(e.dataTransfer.files, $(this).find('input:file.filedrop').first());
+    }
   }
 }
 handleFileDropEvent.target = '';
@@ -185,6 +194,7 @@ handleFileDropEvent.target = '';
 function dragOverHandler(e) {
   $(this).addClass('fileover');
   blockEventPropagation(e);
+  e.dataTransfer.dropEffect = 'copy';
 }
 
 function dragOutHandler(e) {
@@ -195,14 +205,23 @@ function dragOutHandler(e) {
 function setupFileDrop() {
   if (window.File && window.FileList && window.ProgressEvent && window.FormData) {
 
-    $.event.fixHooks.drop = { props: [ 'dataTransfer' ] };
+    $.event.addProp('dataTransfer');
 
     $('form div.box:not(.filedroplistner)').has('input:file.filedrop').each(function() {
       $(this).on({
           dragover: dragOverHandler,
           dragleave: dragOutHandler,
-          drop: handleFileDropEvent
+          drop: handleFileDropEvent,
+          paste: copyImageFromClipboard
       }).addClass('filedroplistner');
+    });
+
+    $('form div.box input:file.custom-field-filedrop').closest('p').not('.custom-field-filedroplistner').each(function() {
+      $(this).on({
+          dragover: dragOverHandler,
+          dragleave: dragOutHandler,
+          drop: handleFileDropEvent
+      }).addClass('custom-field-filedroplistner');
     });
   }
 }
@@ -237,8 +256,7 @@ function addInlineAttachmentMarkup(file) {
       'selectionStart': cursorPosition + newLineBefore,
       'selectionEnd': cursorPosition + inlineFilename.length + newLineBefore
     });
-    $textarea.closest('.jstEditor')
-      .siblings('.jstElements')
+    $textarea.parents('.jstBlock')
       .find('.jstb_img').click();
 
     // move cursor into next line
@@ -248,6 +266,34 @@ function addInlineAttachmentMarkup(file) {
       'selectionEnd': cursorPosition + 1
     });
 
+  }
+}
+
+function copyImageFromClipboard(e) {
+  if (!$(e.target).hasClass('wiki-edit')) { return; }
+  var clipboardData = e.clipboardData || e.originalEvent.clipboardData
+  if (!clipboardData) { return; }
+  if (clipboardData.types.some(function(t){ return /^text\/plain$/.test(t); })) { return; }
+
+  var files = clipboardData.files
+  for (var i = 0 ; i < files.length ; i++) {
+    var file = files[i];
+    if (file.type.indexOf("image") != -1) {
+      var date = new Date();
+      var filename = 'clipboard-'
+        + date.getFullYear()
+        + ('0'+(date.getMonth()+1)).slice(-2)
+        + ('0'+date.getDate()).slice(-2)
+        + ('0'+date.getHours()).slice(-2)
+        + ('0'+date.getMinutes()).slice(-2)
+        + '-' + randomKey(5).toLocaleLowerCase()
+        + '.' + file.name.split('.').pop();
+
+      // get input file in the closest form
+      var inputEl = $(this).closest("form").find('input:file.filedrop');
+      handleFileDropEvent.target = e.target;
+      addFile(inputEl, new File([file], filename, { type: file.type }), true);
+    }
   }
 }
 

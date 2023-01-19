@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +27,10 @@ class IssueScopesTest < ActiveSupport::TestCase
            :versions, :issue_statuses, :issue_categories, :enumerations,
            :issues,
            :custom_fields, :custom_fields_projects, :custom_fields_trackers, :custom_values
+
+  def setup
+    User.current = nil
+  end
 
   def test_cross_project_scope_without_project_should_return_all_issues
     ids = Issue.cross_project_scope(nil).pluck(:id).sort

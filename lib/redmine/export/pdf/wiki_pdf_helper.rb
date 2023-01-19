@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,12 +28,12 @@ module Redmine
           pdf.alias_nb_pages
           pdf.footer_date = format_date(User.current.today)
           pdf.add_page
-          pdf.SetFontStyle('B',11)
-          pdf.RDMMultiCell(190,5, project.name)
+          pdf.SetFontStyle('B', 11)
+          pdf.RDMMultiCell(190, 5, project.name)
           pdf.ln
           # Set resize image scale
           pdf.set_image_scale(1.6)
-          pdf.SetFontStyle('',9)
+          pdf.SetFontStyle('', 9)
           write_page_hierarchy(pdf, pages.group_by(&:parent_id))
           pdf.output
         end
@@ -45,13 +45,16 @@ module Redmine
           pdf.alias_nb_pages
           pdf.footer_date = format_date(User.current.today)
           pdf.add_page
-          pdf.SetFontStyle('B',11)
-          pdf.RDMMultiCell(190,5,
-               "#{project} - #{page.title} - # #{page.content.version}")
+          pdf.SetFontStyle('B', 11)
+          pdf.
+            RDMMultiCell(
+              190, 5,
+              "#{project} - #{page.title} - # #{page.content.version}"
+            )
           pdf.ln
           # Set resize image scale
           pdf.set_image_scale(1.6)
-          pdf.SetFontStyle('',9)
+          pdf.SetFontStyle('', 9)
           write_wiki_page(pdf, page)
           pdf.output
         end
@@ -70,24 +73,26 @@ module Redmine
         end
 
         def write_wiki_page(pdf, page)
-          text = textilizable(page.content, :text,
-            :only_path => false,
-            :edit_section_links => false,
-            :headings => false,
-            :inline_attachments => false
-          )
-          pdf.RDMwriteFormattedCell(190,5,'','', text, page.attachments, 0)
+          text =
+            textilizable(
+              page.content, :text,
+              :only_path => false,
+              :edit_section_links => false,
+              :headings => false,
+              :inline_attachments => false
+            )
+          pdf.RDMwriteFormattedCell(190, 5, '', '', text, page.attachments, 0)
           if page.attachments.any?
             pdf.ln(5)
-            pdf.SetFontStyle('B',9)
-            pdf.RDMCell(190,5, l(:label_attachment_plural), "B")
+            pdf.SetFontStyle('B', 9)
+            pdf.RDMCell(190, 5, l(:label_attachment_plural), "B")
             pdf.ln
-            for attachment in page.attachments
-              pdf.SetFontStyle('',8)
-              pdf.RDMCell(80,5, attachment.filename)
-              pdf.RDMCell(20,5, number_to_human_size(attachment.filesize),0,0,"R")
-              pdf.RDMCell(25,5, format_date(attachment.created_on),0,0,"R")
-              pdf.RDMCell(65,5, attachment.author.name,0,0,"R")
+            page.attachments.each do |attachment|
+              pdf.SetFontStyle('', 8)
+              pdf.RDMCell(80, 5, attachment.filename)
+              pdf.RDMCell(20, 5, number_to_human_size(attachment.filesize), 0, 0, "R")
+              pdf.RDMCell(25, 5, format_date(attachment.created_on), 0, 0, "R")
+              pdf.RDMCell(65, 5, attachment.author.name, 0, 0, "R")
               pdf.ln
             end
           end

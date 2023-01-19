@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,14 +32,14 @@ class Redmine::ApiTest::SearchTest < Redmine::ApiTest::Base
     get '/search.xml'
 
     assert_response :success
-    assert_equal 'application/xml', @response.content_type
+    assert_equal 'application/xml', @response.media_type
   end
 
   test "GET /search.json should return json content" do
     get '/search.json'
 
     assert_response :success
-    assert_equal 'application/json', @response.content_type
+    assert_equal 'application/json', @response.media_type
 
     json = ActiveSupport::JSON.decode(response.body)
     assert_kind_of Hash, json
@@ -88,5 +90,10 @@ class Redmine::ApiTest::SearchTest < Redmine::ApiTest::Base
     assert_equal 8, json['offset']
     assert_equal 4, json['limit']
     assert_equal issue[8..10], json['results'].map {|r| r['id']}
+  end
+
+  test "GET /search.xml should not quick jump to the issue with given id" do
+    get '/search.xml', :params => {:q => '3'}
+    assert_response :success
   end
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,14 +38,29 @@ class ProjectCopyTest < ActiveSupport::TestCase
            :boards, :messages,
            :repositories,
            :news, :comments,
-           :documents
+           :documents, :attachments
 
   def setup
+    User.current = nil
     ProjectCustomField.destroy_all
     @source_project = Project.find(2)
     @project = Project.new(:name => 'Copy Test', :identifier => 'copy-test')
     @project.trackers = @source_project.trackers
     @project.enabled_module_names = @source_project.enabled_modules.collect(&:name)
+  end
+
+  def test_copy_should_return_false_if_save_fails
+    project = Project.new(:name => 'Copy', :identifier => nil)
+    assert_equal false, project.copy(@source_project)
+  end
+
+  test "#copy should copy project attachments" do
+    set_tmp_attachments_directory
+    Attachment.create!(:container => @source_project, :file => uploaded_test_file("testfile.txt", "text/plain"), :author_id => 1)
+    assert @project.copy(@source_project)
+
+    assert_equal 1, @project.attachments.count, "Attachment not copied"
+    assert_equal "testfile.txt", @project.attachments.first.filename
   end
 
   test "#copy should copy issues" do
@@ -134,42 +151,64 @@ class ProjectCopyTest < ActiveSupport::TestCase
     assert_equal assigned_version, copied_issue.fixed_version
   end
 
-  test "#copy should copy issue relations" do
-    Setting.cross_project_issue_relations = '1'
+  def test_copy_issues_should_reassign_version_custom_fields_to_copied_versions
+    User.current = User.find(1)
+    CustomField.destroy_all
+    field = IssueCustomField.generate!(:field_format => 'version', :is_for_all => true, :trackers => Tracker.all)
+    source_project = Project.generate!(:trackers => Tracker.all)
+    source_version = Version.generate!(:project => source_project)
+    source_issue = Issue.generate!(:project => source_project) do |issue|
+      issue.custom_field_values = {field.id.to_s => source_version.id.to_s}
+    end
+    assert_equal source_version.id.to_s, source_issue.custom_field_value(field)
 
-    second_issue = Issue.generate!(:status_id => 5,
-                                   :subject => "copy issue relation",
-                                   :tracker_id => 1,
-                                   :assigned_to_id => 2,
-                                   :project_id => @source_project.id)
-    source_relation = IssueRelation.create!(:issue_from => Issue.find(4),
+    project = Project.new(:name => 'Copy Test', :identifier => 'copy-test', :trackers => Tracker.all)
+    assert project.copy(source_project)
+    assert_equal 1, project.issues.count
+    issue = project.issues.first
+    assert_equal 1, project.versions.count
+    version = project.versions.first
+
+    assert_equal version.id.to_s, issue.custom_field_value(field)
+  end
+
+  test "#copy should copy issue relations" do
+    with_settings :cross_project_issue_relations => '1' do
+      second_issue = Issue.generate!(:status_id => 5,
+                                     :subject => "copy issue relation",
+                                     :tracker_id => 1,
+                                     :assigned_to_id => 2,
+                                     :project_id => @source_project.id)
+      source_relation = IssueRelation.create!(:issue_from => Issue.find(4),
                                               :issue_to => second_issue,
                                               :relation_type => "relates")
-    source_relation_cross_project = IssueRelation.create!(:issue_from => Issue.find(1),
+      source_relation_cross_project = IssueRelation.create!(:issue_from => Issue.find(1),
                                                             :issue_to => second_issue,
                                                             :relation_type => "duplicates")
 
-    assert @project.copy(@source_project)
-    assert_equal @source_project.issues.count, @project.issues.count
-    copied_issue = @project.issues.find_by_subject("Issue on project 2") # Was #4
-    copied_second_issue = @project.issues.find_by_subject("copy issue relation")
+      assert @project.copy(@source_project)
+      assert_equal @source_project.issues.count, @project.issues.count
+      copied_issue = @project.issues.find_by_subject("Issue on project 2") # Was #4
+      copied_second_issue = @project.issues.find_by_subject("copy issue relation")
 
-    # First issue with a relation on project
-    assert_equal 1, copied_issue.relations.size, "Relation not copied"
-    copied_relation = copied_issue.relations.first
-    assert_equal "relates", copied_relation.relation_type
-    assert_equal copied_second_issue.id, copied_relation.issue_to_id
-    assert_not_equal source_relation.id, copied_relation.id
+      # First issue with a relation on project
+      assert_equal 1, copied_issue.relations.size, "Relation not copied"
+      copied_relation = copied_issue.relations.first
+      assert_equal "relates", copied_relation.relation_type
+      assert_equal copied_second_issue.id, copied_relation.issue_to_id
+      assert_not_equal source_relation.id, copied_relation.id
 
-    # Second issue with a cross project relation
-    assert_equal 2, copied_second_issue.relations.size, "Relation not copied"
-    copied_relation = copied_second_issue.relations.select {|r| r.relation_type == 'duplicates'}.first
-    assert_equal "duplicates", copied_relation.relation_type
-    assert_equal 1, copied_relation.issue_from_id, "Cross project relation not kept"
-    assert_not_equal source_relation_cross_project.id, copied_relation.id
+      # Second issue with a cross project relation
+      assert_equal 2, copied_second_issue.relations.size, "Relation not copied"
+      copied_relation = copied_second_issue.relations.find {|r| r.relation_type == 'duplicates'}
+      assert_equal "duplicates", copied_relation.relation_type
+      assert_equal 1, copied_relation.issue_from_id, "Cross project relation not kept"
+      assert_not_equal source_relation_cross_project.id, copied_relation.id
+    end
   end
 
   test "#copy should copy issue attachments" do
+    set_tmp_attachments_directory
     issue = Issue.generate!(:subject => "copy with attachment", :tracker_id => 1, :project_id => @source_project.id)
     Attachment.create!(:container => issue, :file => uploaded_test_file("testfile.txt", "text/plain"), :author_id => 1)
     @source_project.issues << issue
@@ -209,17 +248,28 @@ class ProjectCopyTest < ActiveSupport::TestCase
     assert_equal [1, 2], member.role_ids.sort
   end
 
-  test "#copy should copy project specific queries" do
-    assert @project.valid?
-    assert @project.queries.empty?
-    assert @project.copy(@source_project)
+  def test_copy_should_copy_project_specific_issue_queries
+    source = Project.generate!
+    target = Project.new(:name => 'Copy Test', :identifier => 'copy-test')
+    IssueQuery.generate!(:project => source, :user => User.find(2))
+    assert target.copy(source)
 
-    assert_equal @source_project.queries.size, @project.queries.size
-    @project.queries.each do |query|
-      assert query
-      assert_equal @project, query.project
-    end
-    assert_equal @source_project.queries.map(&:user_id).sort, @project.queries.map(&:user_id).sort
+    assert_equal 1, target.queries.size
+    query = target.queries.first
+    assert_kind_of IssueQuery, query
+    assert_equal 2, query.user_id
+  end
+
+  def test_copy_should_copy_project_specific_time_entry_queries
+    source = Project.generate!
+    target = Project.new(:name => 'Copy Test', :identifier => 'copy-test')
+    TimeEntryQuery.generate!(:project => source, :user => User.find(2))
+    assert target.copy(source)
+
+    assert_equal 1, target.queries.size
+    query = target.queries.first
+    assert_kind_of TimeEntryQuery, query
+    assert_equal 2, query.user_id
   end
 
   def test_copy_should_copy_queries_roles_visibility
@@ -231,6 +281,19 @@ class ProjectCopyTest < ActiveSupport::TestCase
     assert_equal 1, target.queries.size
     query = target.queries.first
     assert_equal [1, 3], query.role_ids.sort
+  end
+
+  test "#copy should copy default issue query assignment" do
+    source = Project.generate!
+    query = IssueQuery.generate!(:project => source, :user => User.find(2))
+    source.update_column :default_issue_query_id, query.id
+
+    target = Project.new(:name => 'Copy Test', :identifier => 'copy-test')
+    assert target.copy(source)
+
+    assert target.default_issue_query.present?
+    assert_equal 1, target.queries.size
+    assert_equal query.name, target.default_issue_query.name
   end
 
   test "#copy should copy versions" do
@@ -245,6 +308,19 @@ class ProjectCopyTest < ActiveSupport::TestCase
       assert version
       assert_equal @project, version.project
     end
+  end
+
+  test "#copy should copy version attachments" do
+    set_tmp_attachments_directory
+    version = Version.generate!(:name => "copy with attachment")
+    Attachment.create!(:container => version, :file => uploaded_test_file("testfile.txt", "text/plain"), :author_id => 1)
+    @source_project.versions << version
+    assert @project.copy(@source_project)
+
+    copied_version = @project.versions.where(:name => "copy with attachment").first
+    assert_not_nil copied_version
+    assert_equal 1, copied_version.attachments.count, "Attachment not copied"
+    assert_equal "testfile.txt", copied_version.attachments.first.filename
   end
 
   test "#copy should copy wiki" do
@@ -266,13 +342,16 @@ class ProjectCopyTest < ActiveSupport::TestCase
     assert project.wiki
   end
 
-  test "#copy should copy wiki pages and content with hierarchy" do
+  test "#copy should copy wiki pages, attachment and content with hierarchy" do
+    @source_project.wiki.pages.first.attachments << Attachment.first.copy
     assert_difference 'WikiPage.count', @source_project.wiki.pages.size do
       assert @project.copy(@source_project)
     end
 
     assert @project.wiki
     assert_equal @source_project.wiki.pages.size, @project.wiki.pages.size
+
+    assert_equal @source_project.wiki.pages.first.attachments.first.filename, @project.wiki.pages.first.attachments.first.filename
 
     @project.wiki.pages.each do |wiki_page|
       assert wiki_page.content
@@ -302,6 +381,29 @@ class ProjectCopyTest < ActiveSupport::TestCase
     @project.boards.each do |board|
       assert !@source_project.boards.include?(board)
     end
+  end
+
+  test "#copy should copy documents" do
+    source_project = Project.find(1)
+    assert @project.copy(source_project)
+
+    assert_equal 3, @project.documents.size
+    @project.documents.each do |document|
+      assert !source_project.documents.include?(document)
+    end
+  end
+
+  test "#copy should copy document attachments" do
+    set_tmp_attachments_directory
+    document = Document.generate!(:title => "copy with attachment", :category_id => 1, :project_id => @source_project.id)
+    Attachment.create!(:container => document, :file => uploaded_test_file("testfile.txt", "text/plain"), :author_id => 1)
+    @source_project.documents << document
+    assert @project.copy(@source_project)
+
+    copied_document = @project.documents.where(:title => "copy with attachment").first
+    assert_not_nil copied_document
+    assert_equal 1, copied_document.attachments.count, "Attachment not copied"
+    assert_equal "testfile.txt", copied_document.attachments.first.filename
   end
 
   test "#copy should change the new issues to use the copied issue categories" do

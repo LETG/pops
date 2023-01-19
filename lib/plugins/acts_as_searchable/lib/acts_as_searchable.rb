@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+require 'redmine/database'
 
 module Redmine
   module Acts
@@ -94,10 +98,8 @@ module Redmine
                 options[:limit]
               )
               queries += 1
-
               if !options[:titles_only] && searchable_options[:search_custom_fields]
                 searchable_custom_fields = CustomField.where(:type => "#{self.name}CustomField", :searchable => true).to_a
-  
                 if searchable_custom_fields.any?
                   fields_by_visibility = searchable_custom_fields.group_by {|field|
                     field.visibility_by_project_condition(searchable_options[:project_key], user, "#{CustomValue.table_name}.custom_field_id")
@@ -107,7 +109,6 @@ module Redmine
                     clauses << "(#{CustomValue.table_name}.custom_field_id IN (#{fields.map(&:id).join(',')}) AND (#{visibility}))"
                   end
                   visibility = clauses.join(' OR ')
-  
                   r |= fetch_ranks_and_ids(
                     search_scope(user, projects, options).
                     joins(:custom_values).
@@ -154,7 +155,7 @@ module Redmine
           def search_tokens_condition(columns, tokens, all_words)
             token_clauses = columns.map {|column| "(#{search_token_match_statement(column)})"}
             sql = (['(' + token_clauses.join(' OR ') + ')'] * tokens.size).join(all_words ? ' AND ' : ' OR ')
-            [sql, * (tokens.collect {|w| "%#{w}%"} * token_clauses.size).sort]
+            [sql, * (tokens.collect {|w| "%#{ActiveRecord::Base.sanitize_sql_like w}%"} * token_clauses.size).sort]
           end
           private :search_tokens_condition
 

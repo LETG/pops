@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,6 +37,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
            :attachments
 
   def setup
+    User.current = nil
     set_tmp_attachments_directory
     @field = IssueCustomField.generate!(:name => "File", :field_format => "attachment")
     log_user "jsmith", "jsmith"
@@ -51,7 +54,9 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
   def test_create_with_attachment
     issue = new_record(Issue) do
       assert_difference 'Attachment.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "Subject",
               :custom_field_values => {
@@ -62,6 +67,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response 302
       end
     end
@@ -78,20 +84,22 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
     assert_response :success
 
     # link to the attachment
-    link = css_select(".cf_#{@field.id} .value a")
+    link = css_select(".cf_#{@field.id} .value a:not(.icon-download)")
     assert_equal 1, link.size
-    assert_equal "testfile.txt", link.text
+    assert_equal "testfile.txt", link.first.text
 
     # preview the attachment
-    get link.attr('href')
+    get link.first.attr(:href)
     assert_response :success
-    assert_template :file
+    assert_select 'h2', :text => "#{issue.tracker} ##{issue.id} » testfile.txt"
   end
 
   def test_create_without_attachment
     issue = new_record(Issue) do
       assert_no_difference 'Attachment.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "Subject",
               :custom_field_values => {
@@ -99,6 +107,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response 302
       end
     end
@@ -117,7 +126,9 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
   def test_failure_on_create_should_preserve_attachment
     attachment = new_record(Attachment) do
       assert_no_difference 'Issue.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "",
               :custom_field_values => {
@@ -125,18 +136,28 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response :success
         assert_select_error /Subject cannot be blank/
       end
     end
 
     assert_nil attachment.container_id
-    assert_select 'input[name=?][value=?][type=hidden]', "issue[custom_field_values][#{@field.id}][p0][token]", attachment.token
-    assert_select 'input[name=?][value=?]', "issue[custom_field_values][#{@field.id}][p0][filename]", 'testfile.txt'
-
+    assert_select(
+      'input[name=?][value=?][type=hidden]',
+      "issue[custom_field_values][#{@field.id}][p0][token]",
+      attachment.token
+    )
+    assert_select(
+      'input[name=?][value=?]',
+      "issue[custom_field_values][#{@field.id}][p0][filename]",
+      'testfile.txt'
+    )
     issue = new_record(Issue) do
       assert_no_difference 'Attachment.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "Subject",
               :custom_field_values => {
@@ -144,6 +165,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response 302
       end
     end
@@ -160,7 +182,9 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
 
     attachment = new_record(Attachment) do
       assert_difference 'Issue.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "Blank",
               :custom_field_values => {
@@ -168,6 +192,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response 302
       end
     end
@@ -179,7 +204,9 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
 
     attachment = new_record(Attachment) do
       assert_no_difference 'Issue.count' do
-        post '/projects/ecookbook/issues', :params => {
+        post(
+          '/projects/ecookbook/issues',
+          :params => {
             :issue => {
               :subject => "Blank",
               :custom_field_values => {
@@ -187,6 +214,7 @@ class AttachmentFieldFormatTest < Redmine::IntegrationTest
               }
             }
           }
+        )
         assert_response :success
       end
     end

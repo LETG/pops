@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,23 +18,24 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module GanttHelper
-
   def gantt_zoom_link(gantt, in_or_out)
     case in_or_out
     when :in
       if gantt.zoom < 4
-        link_to l(:text_zoom_in),
+        link_to(
+          l(:text_zoom_in),
           {:params => request.query_parameters.merge(gantt.params.merge(:zoom => (gantt.zoom + 1)))},
-          :class => 'icon icon-zoom-in'
+          :class => 'icon icon-zoom-in')
       else
         content_tag(:span, l(:text_zoom_in), :class => 'icon icon-zoom-in').html_safe
       end
 
     when :out
       if gantt.zoom > 1
-        link_to l(:text_zoom_out),
+        link_to(
+          l(:text_zoom_out),
           {:params => request.query_parameters.merge(gantt.params.merge(:zoom => (gantt.zoom - 1)))},
-          :class => 'icon icon-zoom-out'
+          :class => 'icon icon-zoom-out')
       else
         content_tag(:span, l(:text_zoom_out), :class => 'icon icon-zoom-out').html_safe
       end

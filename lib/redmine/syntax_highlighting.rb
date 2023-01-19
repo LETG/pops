@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,6 @@
 
 module Redmine
   module SyntaxHighlighting
-
     class << self
       attr_reader :highlighter
 
@@ -50,44 +51,87 @@ module Redmine
       rescue
         false
       end
+
+      def filename_supported?(filename)
+        if highlighter.respond_to? :filename_supported?
+          highlighter.filename_supported? filename
+        else
+          false
+        end
+      end
     end
 
-    module CodeRay
-      require 'coderay'
+    module Rouge
+      require 'rouge'
 
-      def self.retrieve_supported_languages
-        ::CodeRay::Scanners.list +
-        # Add CodeRay scanner aliases
-        ::CodeRay::Scanners.plugin_hash.keys.map(&:to_sym) -
-        # Remove internal CodeRay scanners
-        %w(debug default raydebug scanner).map(&:to_sym)
+      # Customized formatter based on Rouge::Formatters::HTMLLinewise
+      # Syntax highlighting is completed within each line.
+      class CustomHTMLLinewise < ::Rouge::Formatter
+        def initialize(formatter)
+          @formatter = formatter
+        end
+
+        def stream(tokens, &b)
+          token_lines(tokens) do |line|
+            line.each do |tok, val|
+              yield @formatter.span(tok, val)
+            end
+            yield "\n"
+          end
+        end
       end
-      private_class_method :retrieve_supported_languages
-
-      SUPPORTED_LANGUAGES = retrieve_supported_languages
 
       class << self
         # Highlights +text+ as the content of +filename+
         # Should not return line numbers nor outer pre tag
         def highlight_by_filename(text, filename)
-          language = ::CodeRay::FileType[filename]
-          language ? ::CodeRay.scan(text, language).html(:break_lines => true) : ERB::Util.h(text)
+          # TODO: Delete the following workaround for #30434 and
+          # test_syntax_highlight_should_normalize_line_endings in
+          # application_helper_test.rb when Rouge is improved to
+          # handle CRLF properly.
+          # See also: https://github.com/jneen/rouge/pull/1078
+          text = text.gsub(/\r\n?/, "\n")
+
+          lexer =::Rouge::Lexer.guess(:source => text, :filename => filename)
+          formatter = ::Rouge::Formatters::HTML.new
+          ::Rouge.highlight(text, lexer, CustomHTMLLinewise.new(formatter))
         end
 
         # Highlights +text+ using +language+ syntax
         # Should not return outer pre tag
         def highlight_by_language(text, language)
-          ::CodeRay.scan(text, language).html(:wrap => :span)
+          lexer =
+            find_lexer(language.to_s.downcase) || ::Rouge::Lexers::PlainText
+          ::Rouge.highlight(text, lexer, ::Rouge::Formatters::HTML)
         end
 
         def language_supported?(language)
-          SUPPORTED_LANGUAGES.include?(language.to_s.downcase.to_sym)
-        rescue
-          false
+          find_lexer(language.to_s.downcase) ? true : false
+        end
+
+        def filename_supported?(filename)
+          !::Rouge::Lexer.guesses(:filename => filename).empty?
+        end
+
+        private
+
+        # Alias names used by CodeRay and not supported by Rouge
+        LANG_ALIASES = {
+          'delphi' => 'pascal',
+          'cplusplus' => 'cpp',
+          'ecmascript' => 'javascript',
+          'ecma_script' => 'javascript',
+          'java_script' => 'javascript',
+          'xhtml' => 'html'
+        }
+
+        def find_lexer(language)
+          ::Rouge::Lexer.find(language) ||
+            ::Rouge::Lexer.find(LANG_ALIASES[language])
         end
       end
     end
   end
 
-  SyntaxHighlighting.highlighter = 'CodeRay'
+  SyntaxHighlighting.highlighter = 'Rouge'
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,9 +21,14 @@ module Redmine
   # Helper module to get information about the Redmine database
   module Database
     class << self
+      # Returns true if the database is SQLite
+      def sqlite?
+        ActiveRecord::Base.connection.adapter_name =~ /sqlite/i
+      end
+
       # Returns true if the database is PostgreSQL
       def postgresql?
-        (ActiveRecord::Base.connection.adapter_name =~ /postgresql/i).present?
+        /postgresql/i.match?(ActiveRecord::Base.connection.adapter_name)
       end
 
       # Returns the PostgreSQL version or nil if another DBMS is used
@@ -33,9 +40,14 @@ module Redmine
       def postgresql_unaccent?
         if postgresql?
           return @postgresql_unaccent unless @postgresql_unaccent.nil?
+
           begin
-            sql = "SELECT name FROM pg_available_extensions WHERE installed_version IS NOT NULL and name = 'unaccent'"
-            @postgresql_unaccent = postgresql_version >= 90000 && ActiveRecord::Base.connection.select_value(sql).present?
+            sql =
+              "SELECT name FROM pg_available_extensions " \
+                "WHERE installed_version IS NOT NULL and name = 'unaccent'"
+            @postgresql_unaccent =
+              postgresql_version >= 90000 &&
+                ActiveRecord::Base.connection.select_value(sql).present?
           rescue
             false
           end
@@ -46,7 +58,7 @@ module Redmine
 
       # Returns true if the database is MySQL
       def mysql?
-        (ActiveRecord::Base.connection.adapter_name =~ /mysql/i).present?
+        /mysql/i.match?(ActiveRecord::Base.connection.adapter_name)
       end
 
       # Returns a SQL statement for case/accent (if possible) insensitive match
@@ -59,8 +71,31 @@ module Redmine
           else
             "#{left} #{neg}ILIKE #{right}"
           end
-        else
+        elsif mysql?
           "#{left} #{neg}LIKE #{right}"
+        else
+          "#{left} #{neg}LIKE #{right} ESCAPE '\\'"
+        end
+      end
+
+      # Returns a SQL statement to cast a timestamp column to a date given a time zone
+      # Returns nil if not implemented for the current database
+      def timestamp_to_date(column, time_zone)
+        if postgresql?
+          if time_zone
+            identifier = ActiveSupport::TimeZone.find_tzinfo(time_zone.name).identifier
+            "(#{column}::timestamptz AT TIME ZONE '#{identifier}')::date"
+          else
+            "#{column}::date"
+          end
+        elsif mysql?
+          if time_zone
+            user_identifier = ActiveSupport::TimeZone.find_tzinfo(time_zone.name).identifier
+            local_identifier = ActiveSupport::TimeZone.find_tzinfo(Time.zone.name).identifier
+            "DATE(CONVERT_TZ(#{column},'#{local_identifier}', '#{user_identifier}'))"
+          else
+            "DATE(#{column})"
+          end
         end
       end
 

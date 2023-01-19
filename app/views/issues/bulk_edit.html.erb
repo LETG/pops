@@ -28,6 +28,7 @@
 <fieldset class="attributes">
 <legend><%= l(:label_change_properties) %></legend>
 
+<div class="splitcontent">
 <div class="splitcontentleft">
 <% if @allowed_projects.present? %>
 <p>
@@ -91,13 +92,6 @@
                                    content_tag('option', l(:label_none), :value => 'none', :selected => (@issue_params[:fixed_version_id] == 'none')) +
                                    version_options_for_select(@versions.sort, @issue_params[:fixed_version_id])) %>
 </p>
-<% end %>
-
-<% @custom_fields.each do |custom_field| %>
-  <p>
-    <label><%= custom_field.name %></label>
-    <%= custom_field_tag_for_bulk_edit('issue', custom_field, @issues, @issue_params[:custom_field_values][custom_field.id.to_s]) %>
-  </p>
 <% end %>
 
 <% if @copy && Setting.link_copied_issue == 'ask' %>
@@ -188,18 +182,66 @@
 </p>
 <% end %>
 </div>
+</div>
+
+<% custom_fields = @custom_fields %>
+<% custom_fields_full_width = custom_fields.select { |value| value.full_width_layout? } %>
+<% custom_fields -= custom_fields_full_width %>
+
+<% if custom_fields.present? %>
+<div class="splitcontent">
+  <div class="splitcontentleft">
+   <% i = 0 %>
+   <% split_on = (custom_fields.size / 2.0).ceil - 1 %>
+   <% custom_fields.each do |custom_field| %>
+     <p>
+       <label><%= custom_field.name %></label>
+       <%= custom_field_tag_for_bulk_edit('issue', custom_field, @issues, @issue_params[:custom_field_values][custom_field.id.to_s]) %>
+     </p>
+     <% if i == split_on %>
+       </div><div class="splitcontentright">
+     <% end %>
+     <% i += 1 %>
+   <% end %>
+  </div>
+</div>
+<% end %>
+
+<% custom_fields_full_width.each do |custom_field| %>
+  <p>
+    <label><%= custom_field.name %></label>
+    <%= custom_field_tag_for_bulk_edit('issue', custom_field, @issues, @issue_params[:custom_field_values][custom_field.id.to_s]) %>
+  </p>
+  <%= wikitoolbar_for "issue_custom_field_values_#{custom_field.id}", preview_issue_path(:project_id => @project, :issue_id => nil) if custom_field.full_text_formatting? %>
+<% end %>
+
 </fieldset>
 
 <fieldset>
 <legend><%= l(:field_notes) %></legend>
-<%= text_area_tag 'notes', @notes, :cols => 60, :rows => 10, :class => 'wiki-edit' %>
+<%= text_area_tag 'notes', @notes, :cols => 60, :rows => 10, :class => 'wiki-edit',
+                  :data => {
+                      :auto_complete => true
+                  }
+%>
 <%= wikitoolbar_for 'notes' %>
+
+<% if User.current.allowed_to?(:add_issue_watchers, nil, global: true)%>
+  <%= update_data_sources_for_auto_complete({users: watchers_autocomplete_for_mention_path(q: '', object_type: 'issue', object_id: @issues.map(&:id) )}) %>
+<% end %>
+
+<% if @safe_attributes.include?('private_notes') %>
+  <label class="inline">
+  	<%= check_box_tag 'issue[private_notes]', 1, false %>
+  	<%= l(:field_private_notes) %>
+  </label>
+<% end %>
 </fieldset>
 </div>
 
 <% if @values_by_custom_field.present? %>
 <div class="flash warning">
-  <%= l(:warning_fields_cleared_on_bulk_edit) %>:<br /> 
+  <%= l(:warning_fields_cleared_on_bulk_edit) %>:<br />
   <%= safe_join(@values_by_custom_field.map {|field, ids| content_tag "span", "#{field.name} (#{ids.size})"}, ', ') %>
 </div>
 <% end %>
@@ -220,7 +262,7 @@
 <% end %>
 
 <%= javascript_tag do %>
-$(window).load(function(){
+$(window).on('load', function(){
   $(document).on('change', 'input[data-disables]', function(){
     if ($(this).prop('checked')){
       $($(this).data('disables')).attr('disabled', true).val('');

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,13 +30,13 @@ module Redmine
       }
 
       def self.to_text(html)
-        html = html.gsub(/[\n\r]/, '').squeeze(' ')
-    
+        html = html.gsub(/[\n\r]/, ' ')
+
         doc = Loofah.document(html)
         doc.scrub!(WikiTags.new(tags))
         doc.scrub!(:newline_block_elements)
-    
-        Loofah::Helpers.remove_extraneous_whitespace(doc.text).strip
+
+        Loofah.remove_extraneous_whitespace(doc.text(:encode_special_chars => false)).strip.squeeze(' ').gsub(/^ +/, '')
       end
 
       class WikiTags < ::Loofah::Scrubber
@@ -42,7 +44,7 @@ module Redmine
           @direction = :bottom_up
           @tags_to_text = tags_to_text || {}
         end
-    
+
         def scrub(node)
           formatting = @tags_to_text[node.name]
           case formatting
@@ -51,6 +53,9 @@ module Redmine
             node.remove
           when String
             node.add_next_sibling Nokogiri::XML::Text.new(formatting, node.document)
+            node.remove
+          when Proc
+            node.add_next_sibling formatting.call(node)
             node.remove
           else
             CONTINUE

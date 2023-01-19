@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +25,7 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
   include Redmine::I18n
 
   def setup
+    User.current = nil
     set_language_if_valid 'en'
   end
 
@@ -35,6 +38,16 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
     group = Group.order('id DESC').first
     assert_equal ['Foo', 'Bar', 'Baz'], field.possible_custom_value_options(group.custom_value_for(field))
     assert group.valid?
+  end
+
+  def test_non_existing_value_should_be_invalid
+    field = GroupCustomField.create!(:name => 'List', :field_format => 'list', :possible_values => ['Foo', 'Bar'])
+    group = Group.new(:name => 'Group')
+    group.custom_field_values = {field.id => 'Baz'}
+
+    assert_not_include 'Baz', field.possible_custom_value_options(group.custom_value_for(field))
+    assert_equal false, group.valid?
+    assert_include "List #{::I18n.t('activerecord.errors.messages.inclusion')}", group.errors.full_messages.first
   end
 
   def test_edit_tag_should_have_id_and_name
@@ -52,7 +65,7 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
     tag = field.format.edit_tag(self, 'id', 'name', value)
     assert_select_in tag, 'select' do
       assert_select 'option', 3
-      assert_select 'option[value=]'
+      assert_select 'option[value=""]'
       assert_select 'option[value=Foo]', :text => 'Foo'
       assert_select 'option[value=Bar]', :text => 'Bar'
     end
@@ -91,7 +104,7 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
     assert_select_in tag, 'span' do
       assert_select 'input[type=radio]', 3
       assert_select 'label', :text => '(none)' do
-        assert_select 'input[value=]'
+        assert_select 'input[value=""]'
       end
       assert_select 'label', :text => 'Foo' do
         assert_select 'input[value=Foo]'
@@ -131,14 +144,14 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
   def test_field_with_url_pattern_should_link_value
     field = IssueCustomField.new(:field_format => 'list', :url_pattern => 'http://localhost/%value%')
     formatted = field.format.formatted_value(self, field, 'foo', Issue.new, true)
-    assert_equal '<a href="http://localhost/foo">foo</a>', formatted
+    assert_equal '<a class="external" href="http://localhost/foo">foo</a>', formatted
     assert formatted.html_safe?
   end
 
   def test_field_with_url_pattern_and_multiple_values_should_link_values
     field = IssueCustomField.new(:field_format => 'list', :url_pattern => 'http://localhost/%value%')
     formatted = field.format.formatted_value(self, field, ['foo', 'bar'], Issue.new, true)
-    assert_equal '<a href="http://localhost/bar">bar</a>, <a href="http://localhost/foo">foo</a>', formatted
+    assert_equal '<a class="external" href="http://localhost/bar">bar</a>, <a class="external" href="http://localhost/foo">foo</a>', formatted
     assert formatted.html_safe?
   end
 
@@ -164,5 +177,25 @@ class Redmine::ListFieldFormatTest < ActionView::TestCase
         assert_select 'input[value=Baz][checked=checked]'
       end
     end
+  end
+
+  def test_value_from_keyword_should_return_value
+    field = GroupCustomField.create!(:name => 'List', :field_format => 'list', :possible_values => ['Foo', 'Bar', 'Baz,qux'])
+
+    assert_equal 'Foo', field.value_from_keyword('foo', nil)
+    assert_equal 'Baz,qux', field.value_from_keyword('baz,qux', nil)
+    assert_nil field.value_from_keyword('invalid', nil)
+  end
+
+  def test_value_from_keyword_for_multiple_custom_field_should_return_values
+    field = GroupCustomField.create!(:name => 'List', :field_format => 'list', :possible_values => ['Foo', 'Bar', 'Baz,qux'], :multiple => true)
+
+    assert_equal ['Foo', 'Bar'], field.value_from_keyword('foo,bar', nil)
+    assert_equal ['Baz,qux'], field.value_from_keyword('baz,qux', nil)
+    assert_equal ['Baz,qux', 'Foo'], field.value_from_keyword('baz,qux,foo', nil)
+    assert_equal ['Foo'], field.value_from_keyword('foo,invalid', nil)
+    assert_equal ['Foo'], field.value_from_keyword(',foo,', nil)
+    assert_equal ['Foo'], field.value_from_keyword(',foo, ,,', nil)
+    assert_equal [], field.value_from_keyword('invalid', nil)
   end
 end

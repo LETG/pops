@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # redMine - project management software
-# Copyright (C) 2006-2007  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,14 +45,14 @@ module Redmine
           end
 
           def scm_command_version
-            scm_version = scm_version_from_command_line.dup.force_encoding('ASCII-8BIT')
+            scm_version = scm_version_from_command_line.b
             if m = scm_version.match(%r{\A(.*?)((\d+\.)+\d+)}m)
               m[2].scan(%r{\d+}).collect(&:to_i)
             end
           end
 
           def scm_version_from_command_line
-            shellout("#{sq_bin} --version") { |io| io.read }.to_s
+            shellout("#{sq_bin} --version") {|io| io.read}.to_s
           end
         end
 
@@ -61,10 +63,11 @@ module Redmine
         #  password -> unnecessary too
         def initialize(url, root_url=nil, login=nil, password=nil,
                        path_encoding=nil)
-          @path_encoding = path_encoding.blank? ? 'UTF-8' : path_encoding
+          @path_encoding = path_encoding.presence || 'UTF-8'
           @url      = url
           # TODO: better Exception here (IllegalArgumentException)
           raise CommandFailed if root_url.blank?
+
           @root_url  = root_url
 
           # These are unused.
@@ -91,7 +94,7 @@ module Redmine
         def entries(path=nil, identifier=nil, options={})
           logger.debug "<cvs> entries '#{path}' with identifier '#{identifier}'"
           path_locale = scm_iconv(@path_encoding, 'UTF-8', path)
-          path_locale.force_encoding("ASCII-8BIT")
+          path_locale = path_locale.b
           entries = Entries.new
           cmd_args = %w|-q rls -e|
           cmd_args << "-D" << time_to_cvstime_rlog(identifier) if identifier
@@ -106,35 +109,43 @@ module Redmine
                 time_l = fields[-3].split(' ')
                 if time_l.size == 5 && time_l[4].length == 4
                   begin
-                    time = Time.parse(
-                             "#{time_l[1]} #{time_l[2]} #{time_l[3]} GMT #{time_l[4]}")
+                    time =
+                      Time.parse(
+                        "#{time_l[1]} #{time_l[2]} #{time_l[3]} GMT #{time_l[4]}"
+                      )
                   rescue
                   end
                 end
-                entries << Entry.new(
-                 {
-                  :name => scm_iconv('UTF-8', @path_encoding, fields[-5]),
-                  #:path => fields[-4].include?(path)?fields[-4]:(path + "/"+ fields[-4]),
-                  :path => scm_iconv('UTF-8', @path_encoding, "#{path_locale}/#{fields[-5]}"),
-                  :kind => 'file',
-                  :size => nil,
-                  :lastrev => Revision.new(
-                      {
-                        :revision => fields[-4],
-                        :name     => scm_iconv('UTF-8', @path_encoding, fields[-4]),
-                        :time     => time,
-                        :author   => ''
-                      })
-                  })
+                entries <<
+                  Entry.new(
+                    {
+                      :name => scm_iconv('UTF-8', @path_encoding, fields[-5]),
+                      #:path => fields[-4].include?(path)?fields[-4]:(path + "/"+ fields[-4]),
+                      :path => scm_iconv('UTF-8', @path_encoding, "#{path_locale}/#{fields[-5]}"),
+                      :kind => 'file',
+                      :size => nil,
+                      :lastrev =>
+                        Revision.new(
+                          {
+                            :revision => fields[-4],
+                            :name     => scm_iconv('UTF-8', @path_encoding, fields[-4]),
+                            :time     => time,
+                            :author   => ''
+                          }
+                        )
+                    }
+                  )
               else
-                entries << Entry.new(
-                 {
-                  :name    => scm_iconv('UTF-8', @path_encoding, fields[1]),
-                  :path    => scm_iconv('UTF-8', @path_encoding, "#{path_locale}/#{fields[1]}"),
-                  :kind    => 'dir',
-                  :size    => nil,
-                  :lastrev => nil
-                 })
+                entries <<
+                  Entry.new(
+                    {
+                      :name    => scm_iconv('UTF-8', @path_encoding, fields[1]),
+                      :path    => scm_iconv('UTF-8', @path_encoding, "#{path_locale}/#{fields[1]}"),
+                      :kind    => 'dir',
+                      :size    => nil,
+                      :lastrev => nil
+                    }
+                  )
               end
             end
           end
@@ -159,7 +170,7 @@ module Redmine
           cmd_args << path_with_project_utf8
           scm_cmd(*cmd_args) do |io|
             state      = "entry_start"
-            commit_log = String.new
+            commit_log = ""
             revision   = nil
             date       = nil
             author     = nil
@@ -168,23 +179,23 @@ module Redmine
             file_state = nil
             branch_map = nil
             io.each_line() do |line|
-              if state != "revision" && /^#{ENDLOG}/ =~ line
-                commit_log = String.new
+              if state != "revision" && /^#{ENDLOG}/.match?(line)
+                commit_log = ""
                 revision   = nil
                 state      = "entry_start"
               end
               if state == "entry_start"
-                branch_map = Hash.new
+                branch_map = {}
                 if /^RCS file: #{Regexp.escape(root_url_path)}\/#{Regexp.escape(path_with_project_locale)}(.+),v$/ =~ line
                   entry_path = normalize_cvs_path($1)
                   entry_name = normalize_path(File.basename($1))
                   logger.debug("Path #{entry_path} <=> Name #{entry_name}")
                 elsif /^head: (.+)$/ =~ line
-                  entry_headRev = $1 #unless entry.nil?
-                elsif /^symbolic names:/ =~ line
-                  state = "symbolic" #unless entry.nil?
-                elsif /^#{STARTLOG}/ =~ line
-                  commit_log = String.new
+                  entry_headRev = $1
+                elsif /^symbolic names:/.match?(line)
+                  state = "symbolic"
+                elsif /^#{STARTLOG}/.match?(line)
+                  commit_log = ""
                   state      = "revision"
                 end
                 next
@@ -196,10 +207,10 @@ module Redmine
                   next
                 end
               elsif state == "tags"
-                if /^#{STARTLOG}/ =~ line
+                if /^#{STARTLOG}/.match?(line)
                   commit_log = ""
                   state = "revision"
-                elsif /^#{ENDLOG}/ =~ line
+                elsif /^#{ENDLOG}/.match?(line)
                   state = "head"
                 end
                 next
@@ -214,42 +225,45 @@ module Redmine
                       end
                     end
                     logger.debug("********** YIELD Revision #{revision}::#{revBranch}")
-                    yield Revision.new({
-                      :time    => date,
-                      :author  => author,
-                      :message => commit_log.chomp,
-                      :paths => [{
-                        :revision => revision.dup,
-                        :branch   => revBranch.dup,
-                        :path     => scm_iconv('UTF-8', @path_encoding, entry_path),
-                        :name     => scm_iconv('UTF-8', @path_encoding, entry_name),
-                        :kind     => 'file',
-                        :action   => file_state
-                           }]
-                         })
+                    yield Revision.new(
+                      {
+                        :time    => date,
+                        :author  => author,
+                        :message => commit_log.chomp,
+                        :paths => [
+                          {
+                            :revision => revision.dup,
+                            :branch   => revBranch.dup,
+                            :path     => scm_iconv('UTF-8', @path_encoding, entry_path),
+                            :name     => scm_iconv('UTF-8', @path_encoding, entry_name),
+                            :kind     => 'file',
+                            :action   => file_state
+                          }
+                        ]
+                      }
+                    )
                   end
-                  commit_log = String.new
+                  commit_log = ""
                   revision   = nil
-                  if /^#{ENDLOG}/ =~ line
+                  if /^#{ENDLOG}/.match?(line)
                     state = "entry_start"
                   end
                   next
                 end
 
-                if /^branches: (.+)$/ =~ line
+                if /^branches: (.+)$/.match?(line)
                   # TODO: version.branch = $1
                 elsif /^revision (\d+(?:\.\d+)+).*$/ =~ line
                   revision = $1
                 elsif /^date:\s+(\d+.\d+.\d+\s+\d+:\d+:\d+)/ =~ line
-                  date       = Time.parse($1)
+                  date         = Time.parse($1)
                   line_utf8    = scm_iconv('UTF-8', options[:log_encoding], line)
                   author_utf8  = /author: ([^;]+)/.match(line_utf8)[1]
                   author       = scm_iconv(options[:log_encoding], 'UTF-8', author_utf8)
                   file_state   = /state: ([^;]+)/.match(line)[1]
-                  # TODO:
-                  #    linechanges only available in CVS....
-                  #    maybe a feature our SVN implementation.
-                  #    I'm sure, they are useful for stats or something else
+                  # TODO: linechanges only available in CVS....
+                  #       maybe a feature our SVN implementation.
+                  #       I'm sure, they are useful for stats or something else
                   #                linechanges =/lines: \+(\d+) -(\d+)/.match(line)
                   #                unless linechanges.nil?
                   #                  version.line_plus  = linechanges[1]
@@ -259,7 +273,7 @@ module Redmine
                   #                  version.line_minus = 0
                   #                end
                 else
-                  commit_log << line unless line =~ /^\*\*\* empty log message \*\*\*/
+                  commit_log += line unless /^\*\*\* empty log message \*\*\*/.match?(line)
                 end
               end
             end
@@ -312,13 +326,15 @@ module Redmine
           scm_cmd(*cmd_args) do |io|
             io.each_line do |line|
               next unless line =~ %r{^([\d\.]+)\s+\(([^\)]+)\s+[^\)]+\):\s(.*)$}
+
               blame.add_line(
-                  $3.rstrip,
-                  Revision.new(
-                    :revision   => $1,
-                    :identifier => nil,
-                    :author     => $2.strip
-                    ))
+                $3.rstrip,
+                Revision.new(
+                  :revision   => $1,
+                  :identifier => nil,
+                  :author     => $2.strip
+                )
+              )
             end
           end
           blame
@@ -338,18 +354,19 @@ module Redmine
         # convert a date/time into the CVS-format
         def time_to_cvstime(time)
           return nil if time.nil?
-          time = Time.now if (time.kind_of?(String) && time == 'HEAD')
 
-          unless time.kind_of? Time
+          time = Time.now if (time.is_a?(String) && time == 'HEAD')
+          unless time.is_a?(Time)
             time = Time.parse(time)
           end
-          return time_to_cvstime_rlog(time)
+          time_to_cvstime_rlog(time)
         end
 
         def time_to_cvstime_rlog(time)
           return nil if time.nil?
+
           t1 = time.clone.localtime
-          return t1.strftime("%Y-%m-%d %H:%M:%S")
+          t1.strftime("%Y-%m-%d %H:%M:%S")
         end
 
         def normalize_cvs_path(path)
@@ -379,13 +396,16 @@ module Redmine
           full_args.map do |e|
             full_args_locale << scm_iconv(@path_encoding, 'UTF-8', e)
           end
-          ret = shellout(
-                   self.class.sq_bin + ' ' + full_args_locale.map { |e| shell_quote e.to_s }.join(' '),
-                   &block
-                   )
+          ret =
+            shellout(
+              self.class.sq_bin + ' ' +
+                full_args_locale.map {|e| shell_quote e.to_s}.join(' '),
+              &block
+            )
           if $? && $?.exitstatus != 0
             raise ScmCommandAborted, "cvs exited with non-zero status: #{$?.exitstatus}"
           end
+
           ret
         end
         private :scm_cmd
@@ -399,15 +419,12 @@ module Redmine
           parseRevision()
         end
 
-        def branchPoint
-          return @base
-        end
-
         def branchVersion
           if isBranchRevision
-            return @base+"."+@branchid
+            return @base + "." + @branchid
           end
-          return @base
+
+          @base
         end
 
         def isBranchRevision
@@ -416,18 +433,20 @@ module Redmine
 
         def prevRev
           unless @revision == 0
-            return buildRevision( @revision - 1 )
+            return buildRevision(@revision - 1)
           end
-          return buildRevision( @revision )
+
+          buildRevision(@revision)
         end
 
         def is_in_branch_with_symbol(branch_symbol)
           bpieces = branch_symbol.split(".")
           branch_start = "#{bpieces[0..-3].join(".")}.#{bpieces[-1]}"
-          return ( branchVersion == branch_start )
+          (branchVersion == branch_start)
         end
 
         private
+
         def buildRevision(rev)
           if rev == 0
             if @branchid.nil?
@@ -443,7 +462,7 @@ module Redmine
         end
 
         # Interpretiert die cvs revisionsnummern wie z.b. 1.14 oder 1.3.0.15
-        def parseRevision()
+        def parseRevision
           pieces = @complete_rev.split(".")
           @revision = pieces.last.to_i
           baseSize = 1

@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,9 +32,18 @@ module RepositoriesHelper
     end
   end
 
+  def render_pagination
+    pagination_links_each @paginator do |text, parameters, options|
+      if entry = @entries[parameters[:page] - 1]
+        ent_path = Redmine::CodesetUtil.replace_invalid_utf8(entry.path)
+        link_to text, {action: 'entry', id: @project, repository_id: @repository.identifier_param, path: to_path_param(ent_path), rev: @rev}
+      end
+    end if @paginator
+  end
+
   def render_properties(properties)
     unless properties.nil? || properties.empty?
-      content = ''
+      content = +''
       properties.keys.sort.each do |property|
         content << content_tag('li', "<b>#{h property}</b>: <span>#{h properties[property]}</span>".html_safe)
       end
@@ -49,7 +58,7 @@ module RepositoriesHelper
         # Detects moved/copied files
         if !change.from_path.blank?
           change.action =
-             @changeset.filechanges.detect {|c| c.action == 'D' && c.path == change.from_path} ? 'R' : 'C'
+            @changeset.filechanges.detect {|c| c.action == 'D' && c.path == change.from_path} ? 'R' : 'C'
         end
         change
       when 'D'
@@ -59,7 +68,7 @@ module RepositoriesHelper
       end
     end.compact
 
-    tree = { }
+    tree = {}
     changes.each do |change|
       p = tree
       dirs = change.path.to_s.split('/').select {|d| !d.blank?}
@@ -78,10 +87,11 @@ module RepositoriesHelper
 
   def render_changes_tree(tree)
     return '' if tree.nil?
-    output = ''
+
+    output = +''
     output << '<ul>'
     tree.keys.sort.each do |file|
-      style = 'change'
+      style = +'change'
       text = File.basename(h(file))
       if s = tree[file][:s]
         style << ' folder'
@@ -130,7 +140,7 @@ module RepositoriesHelper
   def scm_select_tag(repository)
     scm_options = [["--- #{l(:actionview_instancetag_blank_option)} ---", '']]
     Redmine::Scm::Base.all.each do |scm|
-    if Setting.enabled_scm.include?(scm) ||
+      if Setting.enabled_scm.include?(scm) ||
           (repository && repository.class.name.demodulize == scm)
         scm_options << ["Repository::#{scm}".constantize.scm_name, scm]
       end
@@ -146,82 +156,90 @@ module RepositoriesHelper
   end
 
   def subversion_field_tags(form, repository)
-      content_tag('p', form.text_field(:url, :size => 60, :required => true,
-                       :disabled => !repository.safe_attribute?('url')) +
-                       scm_path_info_tag(repository)) +
-      content_tag('p', form.text_field(:login, :size => 30)) +
-      content_tag('p', form.password_field(
-                            :password, :size => 30, :name => 'ignore',
-                            :value => ((repository.new_record? || repository.password.blank?) ? '' : ('x'*15)),
-                            :onfocus => "this.value=''; this.name='repository[password]';",
-                            :onchange => "this.name='repository[password]';"))
-  end
-
-  def darcs_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                     :url, :label => l(:field_path_to_repository),
-                     :size => 60, :required => true,
-                     :disabled => !repository.safe_attribute?('url')) +
-                     scm_path_info_tag(repository)) +
-    scm_log_encoding_tag(form, repository)
+    content_tag('p',
+                form.text_field(:url, :size => 60, :required => true,
+                :disabled => !repository.safe_attribute?('url')) +
+                scm_path_info_tag(repository)) +
+    content_tag('p', form.text_field(:login, :size => 30)) +
+    content_tag(
+      'p',
+      form.password_field(
+        :password, :size => 30, :name => 'ignore',
+        :value => ((repository.new_record? || repository.password.blank?) ? '' : ('x' * 15)),
+        :onfocus => "this.value=''; this.name='repository[password]';",
+        :onchange => "this.name='repository[password]';")
+    )
   end
 
   def mercurial_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                       :url, :label => l(:field_path_to_repository),
-                       :size => 60, :required => true,
-                       :disabled => !repository.safe_attribute?('url')
-                         ) +
-                     scm_path_info_tag(repository)) +
-    scm_path_encoding_tag(form, repository)
+    content_tag(
+      'p',
+      form.text_field(
+        :url, :label => l(:field_path_to_repository),
+        :size => 60, :required => true,
+        :disabled => !repository.safe_attribute?('url')
+      ) + scm_path_info_tag(repository)
+    ) + scm_path_encoding_tag(form, repository)
   end
 
   def git_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                       :url, :label => l(:field_path_to_repository),
-                       :size => 60, :required => true,
-                       :disabled => !repository.safe_attribute?('url')
-                         ) +
-                      scm_path_info_tag(repository)) +
+    content_tag(
+      'p',
+      form.text_field(
+        :url, :label => l(:field_path_to_repository),
+        :size => 60, :required => true,
+        :disabled => !repository.safe_attribute?('url')
+      ) + scm_path_info_tag(repository)) +
     scm_path_encoding_tag(form, repository) +
-    content_tag('p', form.check_box(
-                        :report_last_commit,
-                        :label => l(:label_git_report_last_commit)
-                         ))
+    content_tag('p',
+                form.check_box(
+                  :report_last_commit,
+                  :label => l(:label_git_report_last_commit)
+                ))
   end
 
   def cvs_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                     :root_url,
-                     :label => l(:field_cvsroot),
-                     :size => 60, :required => true,
-                     :disabled => !repository.safe_attribute?('root_url')) +
-                     scm_path_info_tag(repository)) +
-    content_tag('p', form.text_field(
-                     :url,
-                     :label => l(:field_cvs_module),
-                     :size => 30, :required => true,
-                     :disabled => !repository.safe_attribute?('url'))) +
-    scm_log_encoding_tag(form, repository) +
-    scm_path_encoding_tag(form, repository)
+    content_tag(
+      'p',
+      form.text_field(
+        :root_url,
+        :label => l(:field_cvsroot),
+        :size => 60, :required => true,
+        :disabled => !repository.safe_attribute?('root_url')
+      ) + scm_path_info_tag(repository)
+    ) +
+    content_tag(
+      'p',
+      form.text_field(
+        :url,
+        :label => l(:field_cvs_module),
+        :size => 30, :required => true,
+        :disabled => !repository.safe_attribute?('url')
+      )
+    ) + scm_log_encoding_tag(form, repository) +
+          scm_path_encoding_tag(form, repository)
   end
 
   def bazaar_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                     :url, :label => l(:field_path_to_repository),
-                     :size => 60, :required => true,
-                     :disabled => !repository.safe_attribute?('url')) +
-                     scm_path_info_tag(repository)) +
-    scm_log_encoding_tag(form, repository)
+    content_tag(
+      'p',
+      form.text_field(
+        :url, :label => l(:field_path_to_repository),
+        :size => 60, :required => true,
+        :disabled => !repository.safe_attribute?('url')
+      ) + scm_path_info_tag(repository)
+    ) + scm_log_encoding_tag(form, repository)
   end
 
   def filesystem_field_tags(form, repository)
-    content_tag('p', form.text_field(
-                     :url, :label => l(:field_root_directory),
-                     :size => 60, :required => true,
-                     :disabled => !repository.safe_attribute?('url')) +
-                     scm_path_info_tag(repository)) +
-    scm_path_encoding_tag(form, repository)
+    content_tag(
+      'p',
+      form.text_field(
+        :url, :label => l(:field_root_directory),
+        :size => 60, :required => true,
+        :disabled => !repository.safe_attribute?('url')
+      ) + scm_path_info_tag(repository)
+    ) + scm_path_encoding_tag(form, repository)
   end
 
   def scm_path_info_tag(repository)
@@ -263,6 +281,7 @@ module RepositoriesHelper
 
   def index_commits(commits, heads)
     return nil if commits.nil? or commits.first.parents.nil?
+
     refs_map = {}
     heads.each do |head|
       refs_map[head.scmid] ||= []
@@ -271,15 +290,15 @@ module RepositoriesHelper
     commits_by_scmid = {}
     commits.reverse.each_with_index do |commit, commit_index|
       commits_by_scmid[commit.scmid] = {
-        :parent_scmids => commit.parents.collect { |parent| parent.scmid },
+        :parent_scmids => commit.parents.collect {|parent| parent.scmid},
         :rdmid => commit_index,
         :refs  => refs_map.include?(commit.scmid) ? refs_map[commit.scmid].join(" ") : nil,
         :scmid => commit.scmid,
         :href  => block_given? ? yield(commit.scmid) : commit.scmid
       }
     end
-    heads.sort! { |head1, head2| head1.to_s <=> head2.to_s }
-    space = nil  
+    heads.sort_by!(&:to_s)
+    space = nil
     heads.each do |head|
       if commits_by_scmid.include? head.scmid
         space = index_head((space || -1) + 1, head, commits_by_scmid)

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,13 +20,12 @@
 class CustomValue < ActiveRecord::Base
   belongs_to :custom_field
   belongs_to :customized, :polymorphic => true
-  attr_protected :id
 
   after_save :custom_field_after_save_custom_value
 
   def initialize(attributes=nil, *args)
     super
-    if new_record? && custom_field && !attributes.key?(:value)
+    if new_record? && custom_field && !attributes.key?(:value) && (customized.nil? || customized.set_custom_field_default?(self))
       self.value ||= custom_field.default_value
     end
   end

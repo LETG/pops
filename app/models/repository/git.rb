@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 # Copyright (C) 2007  Patrick Aljord patcito@ŋmail.com
 #
 # This program is free software; you can redistribute it and/or
@@ -19,7 +21,6 @@
 require 'redmine/scm/adapters/git_adapter'
 
 class Repository::Git < Repository
-  attr_protected :root_url
   validates_presence_of :url
 
   safe_attributes 'report_last_commit'
@@ -42,11 +43,13 @@ class Repository::Git < Repository
 
   def report_last_commit
     return false if extra_info.nil?
+
     v = extra_info["extra_report_last_commit"]
     return false if v.nil?
+
     v.to_s != '0'
   end
- 
+
   def report_last_commit=(arg)
     merge_extra_info "extra_report_last_commit" => arg
   end
@@ -83,14 +86,14 @@ class Repository::Git < Repository
 
   def default_branch
     scm.default_branch
-  rescue Exception => e
+  rescue => e
     logger.error "git: error during get default branch: #{e.message}"
     nil
   end
 
   def find_changeset_by_name(name)
     if name.present?
-      changesets.where(:revision => name.to_s).first ||
+      changesets.find_by(:revision => name.to_s) ||
         changesets.where('scmid LIKE ?', "#{name}%").first
     end
   end
@@ -134,7 +137,7 @@ class Repository::Git < Repository
 
     h1 = extra_info || {}
     h  = h1.dup
-    repo_heads = scm_brs.map{ |br| br.scmid }
+    repo_heads = scm_brs.map{|br| br.scmid}
     h["heads"] ||= []
     prev_db_heads = h["heads"].dup
     if prev_db_heads.empty?
@@ -217,17 +220,18 @@ class Repository::Git < Repository
 
   def save_revision(rev)
     parents = (rev.parents || []).collect{|rp| find_changeset_by_name(rp)}.compact
-    changeset = Changeset.create(
-              :repository   => self,
-              :revision     => rev.identifier,
-              :scmid        => rev.scmid,
-              :committer    => rev.author,
-              :committed_on => rev.time,
-              :comments     => rev.message,
-              :parents      => parents
-              )
+    changeset =
+      Changeset.create(
+        :repository   => self,
+        :revision     => rev.identifier,
+        :scmid        => rev.scmid,
+        :committer    => rev.author,
+        :committed_on => rev.time,
+        :comments     => rev.message,
+        :parents      => parents
+      )
     unless changeset.new_record?
-      rev.paths.each { |change| changeset.create_change(change) }
+      rev.paths.each {|change| changeset.create_change(change)}
     end
     changeset
   end
@@ -240,14 +244,16 @@ class Repository::Git < Repository
     h['branches'].map{|br, hs| hs['last_scmid']}
   end
 
-  def latest_changesets(path,rev,limit=10)
+  def latest_changesets(path, rev, limit=10)
     revisions = scm.revisions(path, nil, rev, :limit => limit, :all => false)
     return [] if revisions.nil? || revisions.empty?
+
     changesets.where(:scmid => revisions.map {|c| c.scmid}).to_a
   end
 
   def clear_extra_info_of_changesets
     return if extra_info.nil?
+
     v = extra_info["extra_report_last_commit"]
     write_attribute(:extra_info, nil)
     h = {}

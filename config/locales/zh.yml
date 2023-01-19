@@ -136,6 +136,10 @@ zh:
         earlier_than_minimum_start_date: "不能早于 %{date} 由于有前置问题"
         not_a_regexp: "不是一个合法的正则表达式"
         open_issue_with_closed_parent: "无法将一个打开的问题关联至一个被关闭的父任务"
+        must_contain_uppercase: "必须包含大写字母 (A-Z)"
+        must_contain_lowercase: "必须包含小写字母 (a-z)"
+        must_contain_digits: "必须包含数字 (0-9)"
+        must_contain_special_chars: "必须包含特殊字符 (!, $, %, ...)"
 
   actionview_instancetag_blank_option: 请选择
 
@@ -143,10 +147,10 @@ zh:
   general_text_Yes: '是'
   general_text_no: '否'
   general_text_yes: '是'
-  general_lang_name: 'Simplified Chinese (简体中文)'
+  general_lang_name: 'Chinese/Simplified (简体中文)'
   general_csv_separator: ','
   general_csv_decimal_separator: '.'
-  general_csv_encoding: gb18030
+  general_csv_encoding: GB18030
   general_pdf_fontname: stsongstdlight
   general_pdf_monospaced_fontname: stsongstdlight
   general_first_day_of_week: '7'
@@ -174,7 +178,6 @@ zh:
   notice_api_access_key_reseted: 您的API访问键已被重置。
   notice_failed_to_save_issues: "%{count} 个问题保存失败（共选择 %{total} 个问题）：%{ids}."
   notice_failed_to_save_members: "成员保存失败: %{errors}."
-  notice_no_issue_selected: "未选择任何问题！请选择您要编辑的问题。"
   notice_account_pending: "您的帐号已被成功创建，正在等待管理员的审核。"
   notice_default_data_loaded: 成功载入默认设置。
   notice_unable_delete_version: 无法删除版本
@@ -197,7 +200,7 @@ zh:
   error_issue_done_ratios_not_updated: 问题完成度未能被更新。
   error_workflow_copy_source: 请选择一个源跟踪标签或者角色
   error_workflow_copy_target: 请选择目标跟踪标签和角色
-  error_unable_delete_issue_status: '无法删除问题状态'
+  error_unable_delete_issue_status: '无法删除问题状态 (%{value})'
   error_unable_to_connect: "无法连接 (%{value})"
   warning_attachments_not_saved: "%{count} 个文件保存失败"
 
@@ -304,8 +307,7 @@ zh:
   field_comments_sorting: 显示注释
   field_parent_title: 上级页面
   field_editable: 可编辑
-  field_watcher: 跟踪者
-  field_identity_url: OpenID URL
+  field_watcher: 关注者
   field_content: 内容
   field_group_by: 根据此条件分组
   field_sharing: 共享
@@ -316,7 +318,6 @@ zh:
   field_visible: 可见的
 
   setting_app_title: 应用程序标题
-  setting_app_subtitle: 应用程序子标题
   setting_welcome_text: 欢迎文字
   setting_default_language: 默认语言
   setting_login_required: 要求认证
@@ -324,7 +325,6 @@ zh:
   setting_attachment_max_size: 附件大小限制
   setting_issues_export_limit: 问题导出条目的限制
   setting_mail_from: 邮件发件人地址
-  setting_bcc_recipients: 使用密件抄送 (bcc)
   setting_plain_text_mail: 纯文本（无HTML）
   setting_host_name: 主机名称
   setting_text_formatting: 文本格式
@@ -357,7 +357,6 @@ zh:
   setting_diff_max_lines_displayed: 查看差别页面上显示的最大行数
   setting_file_max_size_displayed: 允许直接显示的最大文本文件
   setting_repository_log_display_limit: 在文件变更记录页面上显示的最大修订版本数量
-  setting_openid: 允许使用OpenID登录和注册
   setting_password_min_length: 最短密码长度
   setting_new_project_user_role_id: 非管理员用户新建项目时将被赋予的（在该项目中的）角色
   setting_default_projects_modules: 新建项目默认启用的模块
@@ -387,15 +386,14 @@ zh:
   permission_add_issue_notes: 添加说明
   permission_edit_issue_notes: 编辑说明
   permission_edit_own_issue_notes: 编辑自己的说明
-  permission_move_issues: 移动问题
   permission_delete_issues: 删除问题
   permission_manage_public_queries: 管理公开的查询
   permission_save_queries: 保存查询
   permission_view_gantt: 查看甘特图
   permission_view_calendar: 查看日历
-  permission_view_issue_watchers: 查看跟踪者列表
-  permission_add_issue_watchers: 添加跟踪者
-  permission_delete_issue_watchers: 删除跟踪者
+  permission_view_issue_watchers: 查看关注者列表
+  permission_add_issue_watchers: 添加关注者
+  permission_delete_issue_watchers: 删除关注者
   permission_log_time: 登记工时
   permission_view_time_entries: 查看耗时
   permission_edit_time_entries: 编辑耗时
@@ -486,9 +484,7 @@ zh:
   label_enumeration_new: 新建枚举值
   label_information: 信息
   label_information_plural: 信息
-  label_please_login: 请登录
   label_register: 注册
-  label_login_with_open_id_option: 或使用OpenID登录
   label_password_lost: 忘记密码
   label_home: 主页
   label_my_page: 我的工作台
@@ -503,7 +499,6 @@ zh:
   label_last_login: 最后登录
   label_registered_on: 注册于
   label_activity: 活动
-  label_overall_activity: 活动概览
   label_user_activity: "%{value} 的活动"
   label_new: 新建
   label_logged_as: 登录为
@@ -603,7 +598,6 @@ zh:
   label_less_or_equal: '<='
   label_in: 剩余天数
   label_today: 今天
-  label_all_time: 全部时间
   label_yesterday: 昨天
   label_this_week: 本周
   label_last_week: 上周
@@ -661,7 +655,6 @@ zh:
   label_changes_details: 所有变更的详情
   label_issue_tracking: 问题跟踪
   label_spent_time: 耗时
-  label_overall_spent_time: 总体耗时
   label_f_hour: "%{value} 小时"
   label_f_hour_plural: "%{value} 小时"
   label_time_tracking: 时间跟踪
@@ -675,7 +668,7 @@ zh:
   label_options: 选项
   label_copy_workflow_from: 从以下选项复制工作流程
   label_permissions_report: 权限报表
-  label_watched_issues: 跟踪的问题
+  label_watched_issues: 关注的问题
   label_related_issues: 相关的问题
   label_applied_status: 应用后的状态
   label_loading: 载入中...
@@ -731,7 +724,7 @@ zh:
   label_user_mail_option_all: "收取我的项目的所有通知"
   label_user_mail_option_selected: "收取选中项目的所有通知..."
   label_user_mail_option_none: "不收取任何通知"
-  label_user_mail_option_only_my_events: "只收取我跟踪或参与的项目的通知"
+  label_user_mail_option_only_my_events: "只收取我关注或参与的项目的通知"
   label_user_mail_no_self_notified: "不要发送对我自己提交的修改的通知"
   label_registration_activation_by_email: 通过邮件认证激活帐号
   label_registration_manual_activation: 手动激活帐号
@@ -751,7 +744,7 @@ zh:
   label_reverse_chronological_order: 按时间顺序（倒序）
   label_incoming_emails: 接收邮件
   label_generate_key: 生成一个key
-  label_issue_watchers: 跟踪者
+  label_issue_watchers: 关注者
   label_example: 示例
   label_display: 显示
   label_sort: 排序
@@ -811,8 +804,8 @@ zh:
   button_sort: 排序
   button_log_time: 登记工时
   button_rollback: 恢复到这个版本
-  button_watch: 跟踪
-  button_unwatch: 取消跟踪
+  button_watch: 关注
+  button_unwatch: 取消关注
   button_reply: 回复
   button_archive: 存档
   button_unarchive: 取消存档
@@ -825,7 +818,6 @@ zh:
   button_update: 更新
   button_configure: 配置
   button_quote: 引用
-  button_duplicate: 副本
   button_show: 显示
 
   status_active: 活动的
@@ -840,7 +832,6 @@ zh:
 
   text_select_mail_notifications: 选择需要发送邮件通知的动作
   text_regexp_info: 例如：^[A-Z0-9]+$
-  text_min_max_length_info: 0 表示没有限制
   text_project_destroy_confirmation: 您确信要删除这个项目以及所有相关的数据吗？
   text_subprojects_destroy_warning: "以下子项目也将被同时删除：%{value}"
   text_workflow_edit: 选择角色和跟踪标签来编辑工作流程
@@ -866,7 +857,7 @@ zh:
   text_issue_category_destroy_question: "有一些问题（%{count} 个）属于此类别。您想进行哪种操作？"
   text_issue_category_destroy_assignments: 删除问题的所属类别（问题变为无类别）
   text_issue_category_reassign_to: 为问题选择其它类别
-  text_user_mail_option: "对于没有选中的项目，您将只会收到您跟踪或参与的项目的通知（比如说，您是问题的报告者, 或被指派解决此问题）。"
+  text_user_mail_option: "对于没有选中的项目，您将只会收到您关注或参与的项目的通知（比如说，您是问题的报告者, 或被指派解决此问题）。"
   text_no_configuration_data: "角色、跟踪标签、问题状态和工作流程还没有设置。\n强烈建议您先载入默认设置，然后在此基础上进行修改。"
   text_load_default_configuration: 载入默认设置
   text_status_changed_by_changeset: "已应用到变更列表 %{value}."
@@ -876,12 +867,13 @@ zh:
   text_default_administrator_account_changed: 默认的管理员帐号已改变
   text_file_repository_writable: 附件路径可写
   text_plugin_assets_writable: 插件的附件路径可写
-  text_rmagick_available: RMagick 可用（可选的）
+  text_minimagick_available: MiniMagick 可用（可选的）
   text_destroy_time_entries_question: 您要删除的问题已经上报了 %{hours} 小时的工作量。您想进行那种操作？
   text_destroy_time_entries: 删除上报的工作量
   text_assign_time_entries_to_project: 将已上报的工作量提交到项目中
   text_reassign_time_entries: '将已上报的工作量指定到此问题：'
   text_user_wrote: "%{value} 写到："
+  text_user_wrote_in: "%{value} 在 %{link} 中写到："
   text_enumeration_destroy_question: "%{count} 个对象被关联到了这个枚举值。"
   text_enumeration_category_reassign_to: '将它们关联到新的枚举值：'
   text_email_delivery_not_configured: "邮件参数尚未配置，因此邮件通知功能已被禁用。\n请在config/configuration.yml中配置您的SMTP服务器信息并重新启动以使其生效。"
@@ -1008,7 +1000,7 @@ zh:
   text_issue_conflict_resolution_cancel: 取消我所有的变更并重新刷新显示 %{link} 。
   permission_manage_related_issues: 相关问题管理
   field_auth_source_ldap_filter: LDAP 过滤器
-  label_search_for_watchers: 通过查找方式添加跟踪者
+  label_search_for_watchers: 通过查找方式添加关注者
   notice_account_deleted: 您的账号已被永久删除（账号已无法恢复）。
   setting_unsubscribe: 允许用户退订
   button_delete_my_account: 删除我的账号
@@ -1021,7 +1013,6 @@ zh:
   setting_session_timeout: 会话闲置超时
   label_session_expiration: 会话过期
   permission_close_project: 关闭/重开项目
-  label_show_closed_projects: 查看已关闭的项目
   button_close: 关闭
   button_reopen: 重开
   project_status_active: 已激活
@@ -1140,7 +1131,7 @@ zh:
   notice_import_finished: 成功导入 %{count} 个项目
   notice_import_finished_with_errors: 有 %{count} 个项目无法导入(共计 %{total} 个)
   error_invalid_file_encoding: 这不是一个有效的 %{encoding} 编码文件
-  error_invalid_csv_file_or_settings: 这不是一个CSV文件或者不符合以下设置
+  error_invalid_csv_file_or_settings: 这不是一个CSV文件或者不符合以下设置 (%{value})
   error_can_not_read_import_file: 读取导入文件时发生错误
   permission_import_issues: 问题导入
   label_import_issues: 问题导入
@@ -1199,7 +1190,7 @@ zh:
   setting_timespan_format: 时间格式设置
   label_table_of_contents: 目录
   setting_commit_logs_formatting: 在提交日志消息时，应用文本格式
-  setting_mail_handler_enable_regex_delimiters: 启用正则表达式
+  setting_mail_handler_enable_regex: 启用正则表达式
   error_move_of_child_not_possible: '子任务 %{child} 不能移动到新项目：%{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: 已用耗时不能重新分配到即将被删除的任务里。
   setting_timelog_required_fields: 工时登记必填字段
@@ -1217,3 +1208,197 @@ zh:
   permission_view_news: 查看新闻
   label_no_preview_alternative_html: 无法预览。请使用文件 %{link} 查阅。
   label_no_preview_download: 下载
+  setting_close_duplicate_issues: 自动关闭重复的问题
+  error_exceeds_maximum_hours_per_day: 当日内无法计入超过 %{max_hours} 的工时 (%{logged_hours} 工时已被记录)
+  setting_time_entry_list_defaults: 默认日志一览
+  setting_timelog_accept_0_hours: 允许计入0小时工时
+  setting_timelog_max_hours_per_day: 每用户每天最大可计入工时上限
+  label_x_revisions: "%{count} 修订"
+  error_can_not_delete_auth_source: 此认证模式正在使用，不能删除。
+  button_actions: 行为
+  mail_body_lost_password_validity: 请注意您只能使用此链接更改一次密码。
+  text_login_required_html: 当不需要认证时，公开项目和它们的内容将会在网络上公开访问。你可以<a href="%{anonymous_role_path}">编辑合适的权限</a>。
+  label_login_required_yes: '是'
+  label_login_required_no: 否，允许任何人访问公开项目
+  text_project_is_public_non_member: 所有已登录的用户都可以访问公共项目和内容。
+  text_project_is_public_anonymous: 公共项目及其内容将在网络上公开。
+  label_version_and_files: 版本 (%{count}) 文件
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (无证书检查)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: 建议使用带有证书检查的加密LDAPS连接，以防止在身份验证过程中的任何篡改伪造。
+  label_nothing_to_preview: 无预览
+  error_token_expired: 此密码恢复链接已过期，请再试一次。
+  error_spent_on_future_date: 无法记录为将来的工时。
+  setting_timelog_accept_future_dates: 接受将来工时。
+  label_delete_link_to_subtask: 删除关联
+  error_not_allowed_to_log_time_for_other_users: 不允许为其他用户记录时间
+  permission_log_time_for_other_users: 记录其他用户的工时
+  label_tomorrow: 明天
+  label_next_week: 下周
+  label_next_month: 下月
+  text_role_no_workflow: 没有为此角色定义工作流程
+  text_status_no_workflow: 在工作流程中没有跟踪程序使用此状态
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: 邮件通知的标题中显示更改状态
+  label_inherited_from_parent_project: 继承自父项目
+  label_inherited_from_group: 继承自 %{name} 组
+  label_trackers_description: 工作描述
+  label_open_trackers_description: 查看全部跟踪标签描述
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (实验功能)
+  field_parent_issue_subject: 父任务主题
+  permission_edit_own_issues: 更新自己的问题
+  text_select_apply_tracker: 选择跟踪标签
+  label_updated_issues: 更新的问题
+  text_avatar_server_config_html: 当前的Gravatar头像服务器是 <a href="%{url}">%{url}</a> 。您可以在 config/configuration.yml 配置它。
+  setting_gantt_months_limit: 甘特图上显示的最大月数
+  permission_import_time_entries: 导入工时条目
+  label_import_notifications: 在导入期间发送电子邮件通知
+  text_gs_available: ImageMagick PDF 支持 (可选)
+  field_recently_used_projects: 跳转框中最近使用的项目数量
+  label_optgroup_bookmarks: 书签
+  label_optgroup_others: 其他项目
+  label_optgroup_recents: 最近使用
+  button_project_bookmark: 添加书签
+  button_project_bookmark_delete: 移除书签
+  field_history_default_tab: 问题的历史默认标签
+  label_issue_history_properties: 更改属性
+  label_issue_history_notes: 说明
+  label_last_tab_visited: 最近访问标签
+  field_unique_id: 唯一ID
+  text_no_subject: 无主题
+  setting_password_required_char_classes: 密码需要这些特征
+  label_password_char_class_uppercase: 大写字母
+  label_password_char_class_lowercase: 小写字母
+  label_password_char_class_digits: 数字
+  label_password_char_class_special_chars: 特殊字符
+  text_characters_must_contain: 必须包含字符 %{character_classes}。
+  label_starts_with: 开始于
+  label_ends_with: 结束于
+  label_issue_fixed_version_updated: 更新目标版本
+  setting_project_list_defaults: 项目列表默认值
+  label_display_type: 显示结果到
+  label_display_type_list: 列表
+  label_display_type_board: 面板
+  label_my_bookmarks: 我的书签
+  label_import_time_entries: 导入工时条目
+  field_toolbar_language_options: 代码工具栏语言突出显示
+  label_user_mail_notify_about_high_priority_issues_html: 请通知我优先级高于<em>%{prio}</em>的问题
+  label_assign_to_me: 指派给我
+  notice_issue_not_closable_by_open_tasks: 此问题无法被关闭，因为它至少还有一个尚在打开的子任务。
+  notice_issue_not_closable_by_blocking_issue: 此问题无法被关闭，因为它被至少一个尚在打开的问题所阻挡。
+  notice_issue_not_reopenable_by_closed_parent_issue: 此问题無法被重开，因为它的父任务已关闭。
+  error_bulk_download_size_too_big: 这些附件无法被批量下载，因为其附件大小总计超过允许的最大值 (%{max_size})
+  setting_bulk_download_max_size: 批量下载附件大小总计大小限制
+  label_download_all_attachments: 下载所有附件
+  error_attachments_too_many: 该文件无法上传，因为超过同时上传附件数量的限制 (%{max_number_of_files})
+  setting_email_domains_allowed: 允许的邮件网域
+  setting_email_domains_denied: 禁止的邮件网域
+  field_passwd_changed_on: 密码上次变更于
+  label_relations_mapping: 关联对应
+  label_import_users: 导入用戶
+  label_days_to_html: "%{days} 天，最多至 %{date}"
+  setting_twofa: 双因素验证
+  label_optional: 选用项
+  label_required_lower: 必要項
+  button_disable: 关闭
+  twofa__totp__name: 验证器应用程序
+  twofa__totp__text_pairing_info_html: 扫描这个二维码或将纯文本键输入至 TOTP 应用程序
+    (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) 并将其显示的代码输入至下面的字段中, 以启用双因素验证。
+  twofa__totp__label_plain_text_key: 纯文本键
+  twofa__totp__label_activate: 啟用验证器应用程序
+  twofa_currently_active: '当前使用中: %{twofa_scheme_name}'
+  twofa_not_active: 尚未啟用
+  twofa_label_code: 代码
+  twofa_hint_disabled_html: 设定为 <strong>%{label}</strong> 将会停用并解除所有用户已配对之双因素验证装置。
+  twofa_hint_required_html: 设定为 <strong>%{label}</strong> 将会要求所有用户于下次登录时, 设置双因素验证。
+  twofa_label_setup: 啟用双因素验证
+  twofa_label_deactivation_confirmation: 关闭双因素验证
+  twofa_notice_select: '请选择您想要使用的双因素配置方式:'
+  twofa_warning_require: 管理员要求您啟用双因素验证。
+  twofa_activated: 双因素验证已啟用成功。建议您为自己的帐号 <a data-method="post" href="%{bc_path}">生成备用代码</a>。
+  twofa_deactivated: 双因素验证已关闭。
+  twofa_mail_body_security_notification_paired: 雙因素驗證已使用 %{field} 開啟成功。
+  twofa_mail_body_security_notification_unpaired: 双因素验证已关闭。
+  twofa_mail_body_backup_codes_generated: 新双因素验证的备用代码已生成。
+  twofa_mail_body_backup_code_used: 有个双因素验证的备用代码被使用。
+  twofa_invalid_code: 代码是无效的或过期的。
+  twofa_label_enter_otp: 请输入您的双因素验证代码。
+  twofa_too_many_tries: 重试次数过多。
+  twofa_resend_code: 重送代码
+  twofa_code_sent: 有个验证代码已经传送给您。
+  twofa_generate_backup_codes: 生成备用代码
+  twofa_text_generate_backup_codes_confirmation: 这会将所有现存的备用代码设为无效，并产生新的备用代码。您要继续吗？
+  twofa_notice_backup_codes_generated: 您的备用代码已生成。
+  twofa_warning_backup_codes_generated_invalidated: 新的备用代码已生成。您现存的备用代码，从 %{time} 起已经失效。
+  twofa_label_backup_codes: 双因素验证备用代码
+  twofa_text_backup_codes_hint: 当您无法存取双因素配置方式取得单次密码时，使用这些替代备用代码。每个代码仅能被使用一次。建议您将备用代码打印出来，并存放于安全的地点。
+  twofa_text_backup_codes_created_at: 备用代码生成于 %{datetime}.
+  twofa_backup_codes_already_shown: 这些备用代码不会再次出现, 再次需要时请重新 <a data-method="post"
+    href="%{bc_path}">生成新的备用代码</a>。
+  error_can_not_execute_macro_html: 执行 <strong>%{name}</strong> 宏时，发生错误 (%{error})
+  error_macro_does_not_accept_block: 此宏不接受文本块
+  error_childpages_macro_no_argument: 缺少引数, 此宏只能从 wiki 页面中被呼叫
+  error_circular_inclusion: 侦测到循环引用内容
+  error_page_not_found: 找不到页面
+  error_filename_required: 必须填入文件名称
+  error_invalid_size_parameter: 无效的尺寸大小参数
+  error_attachment_not_found: 找不到文件 %{name}
+  permission_delete_project: 删除项目
+  field_twofa_scheme: 双因素验证配置
+  text_user_destroy_confirmation: 您是否确定要删除这个用户并且移除该用户所有的参照？ 这是无法被复原的动作。通常锁定一个用户是比较好的方案，而非将用户删除。若要确认，请在下面输入用户的帐号名称 (%{login})。
+  text_project_destroy_enter_identifier: 若要确认, 请在下面输入项目的标识 (%{identifier})。
+  button_add_subtask: 新建子任务
+  notice_invalid_watcher: 'Invalid watcher: User will not receive any notifications
+    because it does not have access to view this object.'
+  button_fetch_changesets: Fetch commits
+  permission_view_message_watchers: View message watchers list
+  permission_add_message_watchers: Add message watchers
+  permission_delete_message_watchers: Delete message watchers
+  label_message_watchers: Watchers
+  button_copy_link: Copy link
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.
+  permission_view_wiki_page_watchers: View wiki page watchers list
+  permission_add_wiki_page_watchers: Add wiki page watchers
+  permission_delete_wiki_page_watchers: Delete wiki page watchers
+  label_wiki_page_watchers: Watchers
+  label_attachment_description: File description
+  error_no_data_in_file: The file does not contain any data
+  field_twofa_required: Require two factor authentication
+  twofa_hint_optional_html: Setting <strong>%{label}</strong> will let users set up
+    two-factor authentication at will, unless it is required by one of their groups.
+  twofa_text_group_required: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is required for all users.
+  twofa_text_group_disabled: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is disabled.
+  field_default_issue_query: Default issue query
+  label_default_queries:
+    for_all_projects: For all projects
+    for_current_project: For current project
+    for_all_users: For all users
+    for_this_user: For this user
+  text_allowed_queries_to_select: Public (to any users) queries only selectable
+  text_all_migrations_have_been_run: All database migrations have been run
+  button_save_object: Save %{object_name}
+  button_edit_object: Edit %{object_name}
+  button_delete_object: Delete %{object_name}
+  text_setting_config_change: You can configure the behaviour in config/configuration.yml.
+    Please restart the application after editing it.
+  label_bulk_edit: Bulk edit
+  button_create_and_follow: Create and follow
+  label_subtask: Subtask
+  label_default_query: Default query
+  field_default_project_query: Default project query
+  label_required_administrators: required for administrators
+  twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> behaves
+    like optional, but will require all users with administration rights to set up two-factor
+    authentication at their next login.
+  label_auto_watch_on: Auto watch
+  label_auto_watch_on_issue_contributed_to: Issues I contributed to

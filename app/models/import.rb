@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,9 +33,23 @@ class Import < ActiveRecord::Base
     '%Y-%m-%d',
     '%d/%m/%Y',
     '%m/%d/%Y',
+    '%Y/%m/%d',
     '%d.%m.%Y',
     '%d-%m-%Y'
   ]
+  AUTO_MAPPABLE_FIELDS = {}
+
+  def self.menu_item
+    nil
+  end
+
+  def self.layout
+    'base'
+  end
+
+  def self.authorized?(user)
+    user.admin?
+  end
 
   def initialize(*args)
     super
@@ -47,17 +63,25 @@ class Import < ActiveRecord::Base
     Redmine::Utils.save_upload(arg, filepath)
   end
 
-  def set_default_settings
+  def set_default_settings(options={})
     separator = lu(user, :general_csv_separator)
+    encoding = lu(user, :general_csv_encoding)
     if file_exists?
       begin
         content = File.read(filepath, 256)
-        separator = [',', ';'].sort_by {|sep| content.count(sep) }.last
-      rescue Exception => e
+
+        separator = [',', ';'].max_by {|sep| content.count(sep)}
+
+        guessed_encoding = Redmine::CodesetUtil.guess_encoding(content)
+        encoding =
+          (guessed_encoding && (
+            Setting::ENCODINGS.detect {|e| e.casecmp?(guessed_encoding)} ||
+            Setting::ENCODINGS.detect {|e| Encoding.find(e) == Encoding.find(guessed_encoding)}
+          )) || lu(user, :general_csv_encoding)
+      rescue => e
       end
     end
     wrapper = '"'
-    encoding = lu(user, :general_csv_encoding)
 
     date_format = lu(user, "date.formats.default", :default => "foo")
     date_format = DATE_FORMATS.first unless DATE_FORMATS.include?(date_format)
@@ -66,8 +90,17 @@ class Import < ActiveRecord::Base
       'separator' => separator,
       'wrapper' => wrapper,
       'encoding' => encoding,
-      'date_format' => date_format
+      'date_format' => date_format,
+      'notifications' => '0'
     )
+
+    if options.key?(:project_id) && !options[:project_id].blank?
+      # Do not fail if project doesn't exist
+      begin
+        project = Project.find(options[:project_id])
+        self.settings.merge!('mapping' => {'project_id' => project.id})
+      rescue; end
+    end
   end
 
   def to_param
@@ -77,7 +110,7 @@ class Import < ActiveRecord::Base
   # Returns the full path of the file to import
   # It is stored in tmp/imports with a random hex as filename
   def filepath
-    if filename.present? && filename =~ /\A[0-9a-f]+\z/
+    if filename.present? && /\A[0-9a-f]+\z/.match?(filename)
       File.join(Rails.root, "tmp", "imports", filename)
     else
       nil
@@ -86,7 +119,7 @@ class Import < ActiveRecord::Base
 
   # Returns true if the file to import exists
   def file_exists?
-    filepath.present? && File.exists?(filepath)
+    filepath.present? && File.exist?(filepath)
   end
 
   # Returns the headers as an array that
@@ -141,8 +174,8 @@ class Import < ActiveRecord::Base
   # Adds a callback that will be called after the item at given position is imported
   def add_callback(position, name, *args)
     settings['callbacks'] ||= {}
-    settings['callbacks'][position.to_i] ||= []
-    settings['callbacks'][position.to_i] << [name, args]
+    settings['callbacks'][position] ||= []
+    settings['callbacks'][position] << [name, args]
     save!
   end
 
@@ -174,6 +207,7 @@ class Import < ActiveRecord::Base
       if position > resume_after
         item = items.build
         item.position = position
+        item.unique_id = row_value(row, 'unique_id') if use_unique_id?
 
         if object = build_object(row, item)
           if object.save
@@ -186,7 +220,8 @@ class Import < ActiveRecord::Base
         item.save!
         imported += 1
 
-        do_callbacks(item.position, object)
+        extend_object(row, item, object) if object.persisted?
+        do_callbacks(use_unique_id? ? item.unique_id : item.position, object)
       end
       current = position
     end
@@ -217,12 +252,13 @@ class Import < ActiveRecord::Base
 
     csv_options = {:headers => false}
     csv_options[:encoding] = settings['encoding'].to_s.presence || 'UTF-8'
+    csv_options[:encoding] = 'bom|UTF-8' if csv_options[:encoding] == 'UTF-8'
     separator = settings['separator'].to_s
     csv_options[:col_sep] = separator if separator.size == 1
     wrapper = settings['wrapper'].to_s
     csv_options[:quote_char] = wrapper if wrapper.size == 1
 
-    CSV.foreach(filepath, csv_options) do |row|
+    CSV.foreach(filepath, **csv_options) do |row|
       yield row if block_given?
     end
   end
@@ -243,7 +279,12 @@ class Import < ActiveRecord::Base
 
   # Builds a record for the given row and returns it
   # To be implemented by subclasses
-  def build_object(row)
+  def build_object(row, item)
+  end
+
+  # Extends object with properties, that may only be handled after it's been
+  # persisted.
+  def extend_object(row, item, object)
   end
 
   # Generates a filename used to store the import file
@@ -256,7 +297,7 @@ class Import < ActiveRecord::Base
     if file_exists?
       begin
         File.delete filepath
-      rescue Exception => e
+      rescue => e
         logger.error "Unable to delete file #{filepath}: #{e.message}" if logger
       end
     end
@@ -265,5 +306,9 @@ class Import < ActiveRecord::Base
   # Returns true if value is a string that represents a true value
   def yes?(value)
     value == lu(user, :general_text_yes) || value == '1'
+  end
+
+  def use_unique_id?
+    mapping['unique_id'].present?
   end
 end

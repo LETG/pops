@@ -132,6 +132,10 @@ mn:
         earlier_than_minimum_start_date: "cannot be earlier than %{date} because of preceding issues"
         not_a_regexp: "is not a valid regular expression"
         open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Сонгоно уу
 
@@ -168,7 +172,6 @@ mn:
   notice_feeds_access_key_reseted: Таны Atom хандалтын түлхүүрийг дахин эхлүүллээ.
   notice_api_access_key_reseted: Your API access key was reset.
   notice_failed_to_save_issues: "%{total} асуудал сонгогдсоноос %{count} асуудлыг нь хадгалахад алдаа гарлаа: %{ids}."
-  notice_no_issue_selected: "Ямар ч асуудал сонгогдоогүй байна! Засварлах асуудлуудаа сонгоно уу."
   notice_account_pending: "Таны дансыг үүсгэж дууслаа, администратор баталгаажуулах хүртэл хүлээнэ үү."
   notice_default_data_loaded: Стандарт тохиргоог амжилттай ачааллаа.
   notice_unable_delete_version: Хувилбарыг устгах боломжгүй.
@@ -230,7 +233,7 @@ mn:
   field_project: Төсөл
   field_issue: Асуудал
   field_status: Төлөв
-  field_notes: Тэмдэглэлүүд
+  field_notes: Тэмдэглэл
   field_is_closed: Асуудал хаагдсан
   field_is_default: Стандарт утга
   field_tracker: Чиглэл
@@ -266,7 +269,7 @@ mn:
   field_attr_mail: Имэйл аттрибут
   field_onthefly: Хүссэн үедээ хэрэглэгч үүсгэх
   field_start_date: Эхлэл
-  field_done_ratio: "%% Гүйцэтгэсэн"
+  field_done_ratio: "Гүйцэтгэл %"
   field_auth_source: Нэвтрэх арга
   field_hide_mail: Миний имэйл хаягийг нуу
   field_comments: Тайлбар
@@ -291,13 +294,11 @@ mn:
   field_parent_title: Эцэг хуудас
   field_editable: Засварлагдана
   field_watcher: Харна
-  field_identity_url: OpenID URL
   field_content: Агуулга
   field_group_by: Үр дүнгээр бүлэглэх
   field_sharing: Sharing
 
   setting_app_title: Программын гарчиг
-  setting_app_subtitle: Программын дэд гарчиг
   setting_welcome_text: Мэндчилгээ
   setting_default_language: Стандарт хэл
   setting_login_required: Нэвтрэх шаардлагатай
@@ -305,7 +306,6 @@ mn:
   setting_attachment_max_size: Хавсралт файлын дээд хэмжээ
   setting_issues_export_limit: Асуудал экспортлох хязгаар
   setting_mail_from: Ямар имэйл хаяг үүсгэх
-  setting_bcc_recipients: BCC талбарын хаягууд (bcc)
   setting_plain_text_mail: дан текст мэйл (HTML биш)
   setting_host_name: Хостын нэр болон зам
   setting_text_formatting: Текст хэлбэржүүлэлт
@@ -337,7 +337,6 @@ mn:
   setting_diff_max_lines_displayed: Ялгаатай мөрүүдийн тоо (дээд тал нь)
   setting_file_max_size_displayed: Max size of text files displayed inline
   setting_repository_log_display_limit: Maximum number of revisions displayed on file log
-  setting_openid: Allow OpenID login and registration
   setting_password_min_length: Minimum password length
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
   setting_default_projects_modules: Default enabled modules for new projects
@@ -363,7 +362,6 @@ mn:
   permission_add_issue_notes: Тэмдэглэл нэмэх
   permission_edit_issue_notes: Тэмдэглэлүүд засварлах
   permission_edit_own_issue_notes: Өөрийн үлдээсэн тэмдэглэлүүдийг засварлах
-  permission_move_issues: Асуудлуудыг зөөх
   permission_delete_issues: Асуудлуудыг устгах
   permission_manage_public_queries: Олон нийтийн асуултууд
   permission_save_queries: Асуултуудыг хадгалах
@@ -459,9 +457,7 @@ mn:
   label_enumeration_new: Шинэ утга
   label_information: Мэдээлэл
   label_information_plural: Мэдээллүүд
-  label_please_login: Нэвтэрч орно уу
   label_register: Бүртгүүлэх
-  label_login_with_open_id_option: or login with OpenID
   label_password_lost: Нууц үгээ алдсан
   label_home: Нүүр
   label_my_page: Миний хуудас
@@ -476,7 +472,6 @@ mn:
   label_last_login: Сүүлийн холболт
   label_registered_on: Бүртгүүлсэн огноо
   label_activity: Үйл ажиллагаа
-  label_overall_activity: Ерөнхий үйл ажиллагаа
   label_user_activity: "%{value}-ийн үйл ажиллагаа"
   label_new: Шинэ
   label_logged_as: Холбогдсон нэр
@@ -576,7 +571,6 @@ mn:
   label_less_or_equal: '<='
   label_in: дотор
   label_today: өнөөдөр
-  label_all_time: бүх хугацаа
   label_yesterday: өчигдөр
   label_this_week: энэ долоо хоног
   label_last_week: өнгөрсөн долоо хоног
@@ -789,7 +783,6 @@ mn:
   button_update: Шинэчлэх
   button_configure: Тохируулах
   button_quote: Ишлэл
-  button_duplicate: Хуулбар
   button_show: Үзэх
 
   status_active: идэвхтэй
@@ -804,7 +797,6 @@ mn:
 
   text_select_mail_notifications: Ямар үед имэйлээр мэдэгдэл илгээхийг сонгоно уу.
   text_regexp_info: eg. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 гэвэл ямар ч хязгааргүй гэсэн үг
   text_project_destroy_confirmation: Та энэ төсөл болоод бусад мэдээллийг нь үнэхээр устгамаар байна уу ?
   text_subprojects_destroy_warning: "Уг төслийн дэд төслүүд : %{value} нь бас устгагдах болно."
   text_workflow_edit: Ажлын дарааллыг өөрчлөхийн тулд хандалтын эрх болон асуудлын чиглэлийг сонгоно уу
@@ -839,12 +831,13 @@ mn:
   text_default_administrator_account_changed: Стандарт администраторын бүртгэл өөрчлөгдлөө
   text_file_repository_writable: Хавсралт файл хадгалах хавтас руу бичих эрхтэй
   text_plugin_assets_writable: Плагин модулийн ассет хавтас руу бичих эрхтэй
-  text_rmagick_available: RMagick суулгагдсан (заавал биш)
+  text_minimagick_available: MiniMagick суулгагдсан (заавал биш)
   text_destroy_time_entries_question: "Таны устгах гэж байгаа асуудлууд дээр нийт %{hours} цаг зарцуулсан юм байна, та яах вэ ?"
   text_destroy_time_entries: Мэдэгдсэн цагуудыг устгах
   text_assign_time_entries_to_project: Мэдэгдсэн асуудлуудыг төсөлд оноох
   text_reassign_time_entries: 'Мэдэгдсэн асуудлуудыг энэ асуудалд дахин оноо:'
   text_user_wrote: "%{value} бичихдээ:"
+  text_user_wrote_in: "%{value} бичихдээ (%{link}):"
   text_enumeration_destroy_question: "Энэ утгад %{count} обьект оноогдсон байна."
   text_enumeration_category_reassign_to: 'Тэдгээрийг энэ утгад дахин оноо:'
   text_email_delivery_not_configured: "Имэйлийн тохиргоог хараахан тохируулаагүй байна, тиймээс имэйл мэдэгдэл явуулах боломжгүй байна.\nSMTP сервэрээ config/configuration.yml файл дотор тохируулаад төслийн менежерээ дахиад эхлүүлээрэй."
@@ -865,7 +858,6 @@ mn:
   default_tracker_support: Тусламж
   default_issue_status_new: Шинэ
   default_issue_status_in_progress: Ахицтай
-  default_issue_status_assigned: Оноогдсон
   default_issue_status_resolved: Шийдвэрлэгдсэн
   default_issue_status_feedback: Feedback
   default_issue_status_closed: Хаагдсан
@@ -888,7 +880,7 @@ mn:
   permission_manage_subtasks: Manage subtasks
   label_profile: Profile
   field_parent_issue: Parent task
-  error_unable_delete_issue_status: Unable to delete issue status
+  error_unable_delete_issue_status: Unable to delete issue status (%{value})
   label_subtask_plural: Subtasks
   label_project_copy_notifications: Send email notifications during the project copy
   error_can_not_delete_custom_field: Unable to delete custom field
@@ -900,7 +892,6 @@ mn:
   text_zoom_out: Zoom out
   text_zoom_in: Zoom in
   notice_unable_delete_time_entry: Unable to delete time log entry.
-  label_overall_spent_time: Overall spent time
   field_time_entries: Log time
   project_module_gantt: Gantt
   project_module_calendar: Calendar
@@ -968,7 +959,7 @@ mn:
   description_available_columns: Available Columns
   description_issue_category_reassign: Choose issue category
   description_search: Searchfield
-  description_notes: Notes
+  description_notes: Тэмдэглэл
   description_choose_project: Projects
   description_query_sort_criteria_attribute: Sort attribute
   description_wiki_subpages_reassign: Choose new parent page
@@ -1015,7 +1006,6 @@ mn:
   setting_session_timeout: Session inactivity timeout
   label_session_expiration: Session expiration
   permission_close_project: Close / reopen the project
-  label_show_closed_projects: View closed projects
   button_close: Close
   button_reopen: Reopen
   project_status_active: active
@@ -1042,7 +1032,7 @@ mn:
   label_copied_from: copied from
   label_any_issues_in_project: any issues in project
   label_any_issues_not_in_project: any issues not in project
-  field_private_notes: Private notes
+  field_private_notes: Хувийн тэмдэглэл
   permission_view_private_notes: View private notes
   permission_set_notes_private: Set notes as private
   label_no_issues_in_project: no issues in project
@@ -1145,7 +1135,7 @@ mn:
   notice_import_finished_with_errors: "%{count} out of %{total} items could not be imported"
   error_invalid_file_encoding: The file is not a valid %{encoding} encoded file
   error_invalid_csv_file_or_settings: The file is not a CSV file or does not match the
-    settings below
+    settings below (%{value})
   error_can_not_read_import_file: An error occurred while reading the file to import
   permission_import_issues: Import issues
   label_import_issues: Import issues
@@ -1163,7 +1153,7 @@ mn:
   button_import: Import
   field_total_estimated_hours: Total estimated time
   label_api: API
-  label_total_plural: Totals
+  label_total_plural: Нийлбэр
   label_assigned_issues: Assigned issues
   label_field_format_enumeration: Key/value list
   label_f_hour_short: '%{value} h'
@@ -1208,7 +1198,7 @@ mn:
   setting_timespan_format: Time span format
   label_table_of_contents: Table of contents
   setting_commit_logs_formatting: Apply text formatting to commit messages
-  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  setting_mail_handler_enable_regex: Enable regular expressions
   error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
@@ -1222,10 +1212,238 @@ mn:
   field_updated_by: Updated by
   field_last_updated_by: Last updated by
   field_full_width_layout: Full width layout
-  label_last_notes: Last notes
+  label_last_notes: Сүүлчийн тэмдэглэл
   field_digest: Checksum
   field_default_assigned_to: Default assignee
   setting_show_custom_fields_on_registration: Show custom fields on registration
   permission_view_news: View news
   label_no_preview_alternative_html: No preview available. %{link} the file instead.
   label_no_preview_download: Download
+  setting_close_duplicate_issues: Close duplicate issues automatically
+  error_exceeds_maximum_hours_per_day: Cannot log more than %{max_hours} hours on the
+    same day (%{logged_hours} hours have already been logged)
+  setting_time_entry_list_defaults: Timelog list defaults
+  setting_timelog_accept_0_hours: Accept time logs with 0 hours
+  setting_timelog_max_hours_per_day: Maximum hours that can be logged per day and user
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: This authentication mode is in use and cannot be
+    deleted.
+  button_actions: Actions
+  mail_body_lost_password_validity: Please be aware that you may change the password
+    only once using this link.
+  text_login_required_html: When not requiring authentication, public projects and their
+    contents are openly available on the network. You can <a href="%{anonymous_role_path}">edit
+    the applicable permissions</a>.
+  label_login_required_yes: 'Yes'
+  label_login_required_no: No, allow anonymous access to public projects
+  text_project_is_public_non_member: Public projects and their contents are available
+    to all logged-in users.
+  text_project_is_public_anonymous: Public projects and their contents are openly available
+    on the network.
+  label_version_and_files: Versions (%{count}) and Files
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (without certificate check)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: It is recommended to use an encrypted LDAPS connection with certificate
+    check to prevent any manipulation during the authentication process.
+  label_nothing_to_preview: Nothing to preview
+  error_token_expired: This password recovery link has expired, please try again.
+  error_spent_on_future_date: Cannot log time on a future date
+  setting_timelog_accept_future_dates: Accept time logs on future dates
+  label_delete_link_to_subtask: Хамаарлыг устгах
+  error_not_allowed_to_log_time_for_other_users: You are not allowed to log time
+    for other users
+  permission_log_time_for_other_users: Log spent time for other users
+  label_tomorrow: tomorrow
+  label_next_week: next week
+  label_next_month: next month
+  text_role_no_workflow: No workflow defined for this role
+  text_status_no_workflow: No tracker uses this status in the workflows
+  setting_mail_handler_preferred_body_part: Preferred part of multipart (HTML) emails
+  setting_show_status_changes_in_mail_subject: Show status changes in issue mail notifications
+    subject
+  label_inherited_from_parent_project: Inherited from parent project
+  label_inherited_from_group: Inherited from group %{name}
+  label_trackers_description: Trackers description
+  label_open_trackers_description: View all trackers description
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimental)
+  field_parent_issue_subject: Parent task subject
+  permission_edit_own_issues: Edit own issues
+  text_select_apply_tracker: Select tracker
+  label_updated_issues: Updated issues
+  text_avatar_server_config_html: The current avatar server is <a href="%{url}">%{url}</a>.
+    You can configure it in config/configuration.yml.
+  setting_gantt_months_limit: Maximum number of months displayed on the gantt chart
+  permission_import_time_entries: Import time entries
+  label_import_notifications: Send email notifications during the import
+  text_gs_available: ImageMagick PDF support available (optional)
+  field_recently_used_projects: Number of recently used projects in jump box
+  label_optgroup_bookmarks: Bookmarks
+  label_optgroup_others: Other projects
+  label_optgroup_recents: Recently used
+  button_project_bookmark: Add bookmark
+  button_project_bookmark_delete: Remove bookmark
+  field_history_default_tab: Issue's history default tab
+  label_issue_history_properties: Property changes
+  label_issue_history_notes: Тэмдэглэл
+  label_last_tab_visited: Last visited tab
+  field_unique_id: Unique ID
+  text_no_subject: no subject
+  setting_password_required_char_classes: Required character classes for passwords
+  label_password_char_class_uppercase: uppercase letters
+  label_password_char_class_lowercase: lowercase letters
+  label_password_char_class_digits: digits
+  label_password_char_class_special_chars: special characters
+  text_characters_must_contain: Must contain %{character_classes}.
+  label_starts_with: starts with
+  label_ends_with: ends with
+  label_issue_fixed_version_updated: Target version updated
+  setting_project_list_defaults: Projects list defaults
+  label_display_type: Display results as
+  label_display_type_list: List
+  label_display_type_board: Board
+  label_my_bookmarks: My bookmarks
+  label_import_time_entries: Import time entries
+  field_toolbar_language_options: Code highlighting toolbar languages
+  label_user_mail_notify_about_high_priority_issues_html: Also notify me about issues
+    with a priority of <em>%{prio}</em> or higher
+  label_assign_to_me: Assign to me
+  notice_issue_not_closable_by_open_tasks: This issue cannot be closed because it has
+    at least one open subtask.
+  notice_issue_not_closable_by_blocking_issue: This issue cannot be closed because it
+    is blocked by at least one open issue.
+  notice_issue_not_reopenable_by_closed_parent_issue: This issue cannot be reopened
+    because its parent issue is closed.
+  error_bulk_download_size_too_big: These attachments cannot be bulk downloaded because
+    the total file size exceeds the maximum allowed size (%{max_size})
+  setting_bulk_download_max_size: Maximum total size for bulk download
+  label_download_all_attachments: Download all files
+  error_attachments_too_many: This file cannot be uploaded because it exceeds the maximum
+    number of files that can be attached simultaneously (%{max_number_of_files})
+  setting_email_domains_allowed: Allowed email domains
+  setting_email_domains_denied: Disallowed email domains
+  field_passwd_changed_on: Password last changed
+  label_relations_mapping: Relations mapping
+  label_import_users: Import users
+  label_days_to_html: "%{days} days up to %{date}"
+  setting_twofa: Two-factor authentication
+  label_optional: optional
+  label_required_lower: required
+  button_disable: Disable
+  twofa__totp__name: Authenticator app
+  twofa__totp__text_pairing_info_html: Scan this QR code or enter the plain text key
+    into a TOTP app (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) and enter the code in the field below to activate two-factor authentication.
+  twofa__totp__label_plain_text_key: Plain text key
+  twofa__totp__label_activate: Enable authenticator app
+  twofa_currently_active: 'Currently active: %{twofa_scheme_name}'
+  twofa_not_active: Not activated
+  twofa_label_code: Code
+  twofa_hint_disabled_html: Setting <strong>%{label}</strong> will deactivate and unpair
+    two-factor authentication devices for all users.
+  twofa_hint_required_html: Setting <strong>%{label}</strong> will require all users
+    to set up two-factor authentication at their next login.
+  twofa_label_setup: Enable two-factor authentication
+  twofa_label_deactivation_confirmation: Disable two-factor authentication
+  twofa_notice_select: 'Please select the two-factor scheme you would like to use:'
+  twofa_warning_require: The administrator requires you to enable two-factor authentication.
+  twofa_activated: Two-factor authentication successfully enabled. It is recommended
+    to <a data-method="post" href="%{bc_path}">generate backup codes</a> for your account.
+  twofa_deactivated: Two-factor authentication disabled.
+  twofa_mail_body_security_notification_paired: Two-factor authentication successfully
+    enabled using %{field}.
+  twofa_mail_body_security_notification_unpaired: Two-factor authentication disabled
+    for your account.
+  twofa_mail_body_backup_codes_generated: New two-factor authentication backup codes
+    generated.
+  twofa_mail_body_backup_code_used: A two-factor authentication backup code has been
+    used.
+  twofa_invalid_code: Code is invalid or outdated.
+  twofa_label_enter_otp: Please enter your two-factor authentication code.
+  twofa_too_many_tries: Too many tries.
+  twofa_resend_code: Resend code
+  twofa_code_sent: An authentication code has been sent to you.
+  twofa_generate_backup_codes: Generate backup codes
+  twofa_text_generate_backup_codes_confirmation: This will invalidate all existing backup
+    codes and generate new ones. Would you like to continue?
+  twofa_notice_backup_codes_generated: Your backup codes have been generated.
+  twofa_warning_backup_codes_generated_invalidated: New backup codes have been generated.
+    Your existing codes from %{time} are now invalid.
+  twofa_label_backup_codes: Two-factor authentication backup codes
+  twofa_text_backup_codes_hint: Use these codes instead of a one-time password should
+    you not have access to your second factor. Each code can only be used once. It is
+    recommended to print and store them in a safe place.
+  twofa_text_backup_codes_created_at: Backup codes generated %{datetime}.
+  twofa_backup_codes_already_shown: Backup codes cannot be shown again, please <a data-method="post"
+    href="%{bc_path}">generate new backup codes</a> if required.
+  error_can_not_execute_macro_html: Error executing the <strong>%{name}</strong> macro
+    (%{error})
+  error_macro_does_not_accept_block: This macro does not accept a block of text
+  error_childpages_macro_no_argument: With no argument, this macro can be called from
+    wiki pages only
+  error_circular_inclusion: Circular inclusion detected
+  error_page_not_found: Page not found
+  error_filename_required: Filename required
+  error_invalid_size_parameter: Invalid size parameter
+  error_attachment_not_found: Attachment %{name} not found
+  permission_delete_project: Delete the project
+  field_twofa_scheme: Two-factor authentication scheme
+  text_user_destroy_confirmation: Are you sure you want to delete this user and remove
+    all references to them? This cannot be undone. Often, locking a user instead of
+    deleting them is the better solution. To confirm, please enter their login (%{login})
+    below.
+  text_project_destroy_enter_identifier: To confirm, please enter the project's identifier
+    (%{identifier}) below.
+  button_add_subtask: Add subtask
+  notice_invalid_watcher: 'Invalid watcher: User will not receive any notifications
+    because it does not have access to view this object.'
+  button_fetch_changesets: Fetch commits
+  permission_view_message_watchers: View message watchers list
+  permission_add_message_watchers: Add message watchers
+  permission_delete_message_watchers: Delete message watchers
+  label_message_watchers: Watchers
+  button_copy_link: Copy link
+  error_invalid_authenticity_token: Invalid form authenticity token.
+  error_query_statement_invalid: An error occurred while executing the query and has
+    been logged. Please report this error to your Redmine administrator.
+  permission_view_wiki_page_watchers: View wiki page watchers list
+  permission_add_wiki_page_watchers: Add wiki page watchers
+  permission_delete_wiki_page_watchers: Delete wiki page watchers
+  label_wiki_page_watchers: Watchers
+  label_attachment_description: File description
+  error_no_data_in_file: The file does not contain any data
+  field_twofa_required: Require two factor authentication
+  twofa_hint_optional_html: Setting <strong>%{label}</strong> will let users set up
+    two-factor authentication at will, unless it is required by one of their groups.
+  twofa_text_group_required: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is required for all users.
+  twofa_text_group_disabled: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is disabled.
+  field_default_issue_query: Default issue query
+  label_default_queries:
+    for_all_projects: For all projects
+    for_current_project: For current project
+    for_all_users: For all users
+    for_this_user: For this user
+  text_allowed_queries_to_select: Public (to any users) queries only selectable
+  text_all_migrations_have_been_run: All database migrations have been run
+  button_save_object: Save %{object_name}
+  button_edit_object: Edit %{object_name}
+  button_delete_object: Delete %{object_name}
+  text_setting_config_change: You can configure the behaviour in config/configuration.yml.
+    Please restart the application after editing it.
+  label_bulk_edit: Bulk edit
+  button_create_and_follow: Create and follow
+  label_subtask: Subtask
+  label_default_query: Default query
+  field_default_project_query: Default project query
+  label_required_administrators: required for administrators
+  twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> behaves
+    like optional, but will require all users with administration rights to set up two-factor
+    authentication at their next login.
+  label_auto_watch_on: Auto watch
+  label_auto_watch_on_issue_contributed_to: Issues I contributed to

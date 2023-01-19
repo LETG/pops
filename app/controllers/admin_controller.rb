@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -52,7 +54,7 @@ class AdminController < ApplicationController
       begin
         Redmine::DefaultData::Loader::load(params[:lang])
         flash[:notice] = l(:notice_default_data_loaded)
-      rescue Exception => e
+      rescue => e
         flash[:error] = l(:error_can_t_load_default_data, ERB::Util.h(e.message))
       end
     end
@@ -60,16 +62,12 @@ class AdminController < ApplicationController
   end
 
   def test_email
-    raise_delivery_errors = ActionMailer::Base.raise_delivery_errors
-    # Force ActionMailer to raise delivery errors so we can catch it
-    ActionMailer::Base.raise_delivery_errors = true
     begin
-      @test = Mailer.test_email(User.current).deliver
+      Mailer.deliver_test_email(User.current)
       flash[:notice] = l(:notice_email_sent, ERB::Util.h(User.current.mail))
-    rescue Exception => e
+    rescue => e
       flash[:error] = l(:notice_email_error, ERB::Util.h(Redmine::CodesetUtil.replace_invalid_utf8(e.message.dup)))
     end
-    ActionMailer::Base.raise_delivery_errors = raise_delivery_errors
     redirect_to settings_path(:tab => 'notifications')
   end
 
@@ -78,8 +76,10 @@ class AdminController < ApplicationController
       [:text_default_administrator_account_changed, User.default_admin_account_changed?],
       [:text_file_repository_writable, File.writable?(Attachment.storage_path)],
       ["#{l :text_plugin_assets_writable} (./public/plugin_assets)",   File.writable?(Redmine::Plugin.public_directory)],
-      [:text_rmagick_available,        Object.const_defined?(:Magick)],
-      [:text_convert_available,        Redmine::Thumbnail.convert_available?]
+      [:text_all_migrations_have_been_run, !ActiveRecord::Base.connection.migration_context.needs_migration?],
+      [:text_minimagick_available,     Object.const_defined?(:MiniMagick)],
+      [:text_convert_available,        Redmine::Thumbnail.convert_available?],
+      [:text_gs_available,             Redmine::Thumbnail.gs_available?]
     ]
   end
 end

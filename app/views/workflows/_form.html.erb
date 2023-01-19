@@ -2,9 +2,9 @@
 <thead>
   <tr>
     <th>
-      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox]')",
+      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox]:not(:disabled)')",
                            :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}",
-                           :class => 'icon-only icon-checked') %>
+                           :class => 'no-tooltip icon-only icon-checked') %>
       <%=l(:label_current_status)%>
     </th>
     <th colspan="<%= @statuses.length %>"><%=l(:label_new_statuses_allowed)%></th>
@@ -13,22 +13,23 @@
     <td></td>
     <% for new_status in @statuses %>
     <td style="width:<%= 75 / @statuses.size %>%;">
-      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox].new-status-#{new_status.id}')",
+      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox]:not(:disabled).new-status-#{new_status.id}')",
                            :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}",
-                           :class => 'icon-only icon-checked') %>
+                           :class => 'no-tooltip icon-only icon-checked') %>
       <%= new_status.name %>
     </td>
     <% end %>
   </tr>
 </thead>
+<% transition_counts = workflows.each_with_object(Hash.new(0)) {|w,memo| memo[[w.old_status, w.new_status]] += 1} %>
 <tbody>
   <% for old_status in [nil] + @statuses %>
   <% next if old_status.nil? && name != 'always' %>
   <tr>
     <td class="name">
-      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox].old-status-#{old_status.try(:id) || 0}')",
+      <%= link_to_function('', "toggleCheckboxesBySelector('table.transitions-#{name} input[type=checkbox]:not(:disabled).old-status-#{old_status.try(:id) || 0}')",
                            :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}",
-                           :class => 'icon-only icon-checked') %>
+                           :class => 'no-tooltip icon-only icon-checked') %>
       <% if old_status %>
         <% old_status_name = old_status.name %>
         <%= old_status_name %>
@@ -38,9 +39,9 @@
       <% end %>
     </td>
     <% for new_status in @statuses -%>
-    <% checked = workflows.detect {|w| w.old_status == old_status && w.new_status == new_status} %>
-    <td class="<%= checked ? 'enabled' : '' %>" title="<%= old_status_name %> &#187; <%= new_status.name %>">
-      <%= transition_tag workflows, old_status, new_status, name %>
+    <% checked = (old_status == new_status) || (transition_counts[[old_status, new_status]] > 0) %>
+    <td class="no-tooltip <%= checked ? 'enabled' : '' %>" title="<%= old_status_name %> &#187; <%= new_status.name %>">
+      <%= transition_tag transition_counts[[old_status, new_status]], old_status, new_status, name %>
     </td>
     <% end -%>
   </tr>

@@ -9,6 +9,26 @@
 <body>
 <h1><a name="1" class="wiki-page"></a>Mise en page Wiki</h1>
 
+    <ul class='toc'>
+        <li><a href='#2'>Liens</a></li>
+        <ul>
+            <li><a href='#3'>Liens Redmine</a></li>
+            <li><a href='#4'>Liens externes</a></li>
+        </ul>
+        <li><a href='#5'>Formatage du texte</a></li>
+        <ul>
+            <li><a href='#6'>Police d'écriture</a></li>
+            <li><a href='#7'>Afficher une image</a></li>
+            <li><a href='#8'>Titre</a></li>
+            <li><a href='#9'>Paragraphes</a></li>
+            <li><a href='#10'>Blockquotes</a></li>
+            <li><a href='#11'>Table des matières</a></li>
+            <li><a href='#14'>Règle horizontale</a></li>
+        </ul>
+        <li><a href='#12'>Macros</a></li>
+        <li><a href='#13'>Coloration syntaxique</a></li>
+    </ul>
+
     <h2><a name="2" class="wiki-page"></a>Liens</h2>
 
         <h3><a name="3" class="wiki-page"></a>Liens Redmine</h3>
@@ -16,7 +36,9 @@
         <p>Redmine autorise les hyperliens entre différentes ressources (Demandes, révisions, pages wiki...) n'importe où la mise en page Wiki est utilisée.</p>
         <ul>
             <li>Lien vers une demande: <strong>#124</strong> (affiche <del><a href="#" class="issue" title="bulk edit doesn't change the category or fixed version properties (Closed)">#124</a></del>, le lien est barré si la demande est fermée)</li>
+            <li>Link to an issue including tracker name and subject: <strong>##124</strong> (displays <a href="#" class="issue" title="bulk edit doesn't change the category or fixed version properties (New)">Bug #124</a>: bulk edit doesn't change the category or fixed version properties)</li>
             <li>Lien vers une note d'une demande: <strong>#124-6</strong>, ou <strong>#124#note-6</strong></li>
+            <li>Link to an issue note within the same issue: <strong>#note-6</strong></li>
         </ul>
 
         <p>Liens entre Wiki:</p>
@@ -24,6 +46,7 @@
         <ul>
             <li><strong>[[Guide]]</strong> affiche un lien vers la page nommé 'Guide': <a href="#" class="wiki-page">Guide</a></li>
             <li><strong>[[Guide#balise-avancée]]</strong> vous emmène à la balise "balise-avancée". Les titres ont automatiquement une balise assignée afin de pouvoir s'y référer: <a href="#" class="wiki-page">Guide</a></li>
+            <li><strong>[[#further-reading]]</strong> link to the anchor "further-reading" of the current page: <a href="#" class="wiki-page">#further-reading</a></li>
             <li><strong>[[Guide|Manuel Utilisateur]]</strong> affiche un lien vers la même page mais avec un texte différent: <a href="#" class="wiki-page">Manuel Utilisateur</a></li>
         </ul>
 
@@ -194,13 +217,17 @@ http://www.redmine.org, someone@foo.bar
             <li><strong>!url_de_l_image!</strong> affiche une image situé à l'adresse displays an image located at url_de_l_image (syntaxe Textile)</li>
             <li><strong>!&gt;url_de_l_image!</strong> Image affichée à droite</li>
             <li>Si vous avez une image en pièce jointe de votre page Wiki, elle peut être affiché en utilisant simplement sont nom: <strong>!image_en_piece_jointe.png!</strong></li>
+            <li>Images in your computer's clipboard can be pasted directly using Ctrl-v or Command-v (note that Internet Explorer is not supported).</li>
+            <li>Image files can be dragged onto the text area in order to be uploaded and embedded.</li>
         </ul>
 
         <h3><a name="8" class="wiki-page"></a>Titre</h3>
 
 <pre>
 h1. Titre
+
 h2. Sous-titre
+
 h3. Sous-sous-titre
 </pre>
 
@@ -285,7 +312,7 @@ Il peut être déroulé en cliquant sur le lien.
 
     <h2><a name="13" class="wiki-page"></a>Coloration syntaxique</h2>
 
-    <p>La coloration syntaxique par défaut repose sur <a href="http://coderay.rubychan.de/" class="external">CodeRay</a>, une librairie rapide de coloration syntaxique complètement codée en Ruby. It currently supports c, clojure, cpp (c++, cplusplus), css, delphi (pascal), diff (patch), erb (eruby, rhtml), go, groovy, haml, html (xhtml), java, javascript (ecmascript, ecma_script, java_script, js), json, lua, php, python, ruby (irb), sass, sql, taskpaper, text (plain, plaintext), xml and yaml (yml) languages, where the names inside parentheses are aliases.</p>
+    <p>Default code highlighting relies on <a href="http://rouge.jneen.net/" class="external">Rouge</a>, a pure Ruby code highlighter. Rouge supports many commonly used languages such as <strong>c</strong>, <strong>cpp</strong> (c++), <strong>csharp</strong> (c#, cs), <strong>css</strong>, <strong>diff</strong> (patch, udiff), <strong>go</strong> (golang), <strong>groovy</strong>, <strong>html</strong>, <strong>java</strong>, <strong>javascript</strong> (js), <strong>kotlin</strong>, <strong>objective_c</strong> (objc), <strong>perl</strong> (pl), <strong>php</strong>, <strong>python</strong> (py), <strong>r</strong>, <strong>ruby</strong> (rb), <strong>sass</strong>, <strong>scala</strong>, <strong>shell</strong> (bash, zsh, ksh, sh), <strong>sql</strong>, <strong>swift</strong>, <strong>xml</strong> and <strong>yaml</strong> (yml) languages - the names inside parentheses are aliases. Please refer to the <a href="../code_highlighting_languages.html" target="_blank">list of languages supported by Redmine code highlighter</a>.</p>
 
     <p>You can highlight code at any place that supports wiki formatting using this syntax (note that the language name or alias is case-insensitive):</p>
 
@@ -297,16 +324,16 @@ Il peut être déroulé en cliquant sur le lien.
 
     <p>Exemple:</p>
 
-<pre><code class="ruby syntaxhl"><span class="CodeRay"><span class="comment"># The Greeter class</span>
-<span class="keyword">class</span> <span class="class">Greeter</span>
-  <span class="keyword">def</span> <span class="function">initialize</span>(name)
-    <span class="instance-variable">@name</span> = name.capitalize
-  <span class="keyword">end</span>
+<pre><code class="ruby syntaxhl"><span class="c1"># The Greeter class</span>
+<span class="k">class</span> <span class="nc">Greeter</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="nb">name</span><span class="p">.</span><span class="nf">capitalize</span>
+  <span class="k">end</span>
 
-  <span class="keyword">def</span> <span class="function">salute</span>
-    puts <span class="string"><span class="delimiter">"</span><span class="content">Hello </span><span class="inline"><span class="inline-delimiter">#{</span><span class="instance-variable">@name</span><span class="inline-delimiter">}</span></span><span class="content">!</span><span class="delimiter">"</span></span>
-  <span class="keyword">end</span>
-<span class="keyword">end</span></span></code>
-</pre>
+  <span class="k">def</span> <span class="nf">salute</span>
+    <span class="nb">puts</span> <span class="s2">"Hello </span><span class="si">#{</span><span class="vi">@name</span><span class="si">}</span><span class="s2">!"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
 </body>
 </html>

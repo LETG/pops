@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,21 +19,115 @@
 
 require File.expand_path('../../test_helper', __FILE__)
 
-class TimelogCustomFieldsVisibilityTest < ActionController::TestCase
+class TimelogCustomFieldsVisibilityTest < Redmine::ControllerTest
   tests TimelogController
   fixtures :projects,
-           :users,
+           :users, :email_addresses,
            :roles,
            :members,
            :member_roles,
-           :issue_statuses,
+           :issues, :issue_statuses,
            :trackers,
            :projects_trackers,
            :enabled_modules,
-           :enumerations,
-           :workflows
+           :time_entries, :enumerations,
+           :workflows,
+           :custom_fields, :custom_values, :custom_fields_trackers
 
-  def setup
+  def test_index_should_show_visible_custom_fields_only
+    prepare_test_data
+
+    @users_to_test.each do |user, fields|
+      @request.session[:user_id] = user.id
+      get :index, :params => {
+        :project_id => 1,
+        :issue_id => @issue.id,
+        :c => (['hours'] + @fields.map{|f| "issue.cf_#{f.id}"})
+      }
+      @fields.each_with_index do |field, i|
+        if fields.include?(field)
+          assert_select 'td', {:text => "Value#{i}", :count => 1}, "User #{user.id} was not able to view #{field.name}"
+        else
+          assert_select 'td', {:text => "Value#{i}", :count => 0}, "User #{user.id} was able to view #{field.name}"
+        end
+      end
+    end
+  end
+
+  def test_index_as_csv_should_show_visible_custom_fields_only
+    prepare_test_data
+
+    @users_to_test.each do |user, fields|
+      @request.session[:user_id] = user.id
+      get :index, :params => {
+        :project_id => 1,
+        :issue_id => @issue.id,
+        :c => (['hours'] + @fields.map{|f| "issue.cf_#{f.id}"}),
+        :format => 'csv'
+      }
+      @fields.each_with_index do |field, i|
+        if fields.include?(field)
+          assert_include "Value#{i}", response.body, "User #{user.id} was not able to view #{field.name} in CSV"
+        else
+          assert_not_include "Value#{i}", response.body, "User #{user.id} was able to view #{field.name} in CSV"
+        end
+      end
+    end
+  end
+
+  def test_index_with_partial_custom_field_visibility_should_show_visible_custom_fields_only
+    prepare_test_data
+
+    Issue.delete_all
+    TimeEntry.delete_all
+    CustomValue.delete_all
+    p1 = Project.generate!
+    p2 = Project.generate!
+    user = User.generate!
+    User.add_to_project(user, p1, Role.where(:id => [1, 3]).to_a)
+    User.add_to_project(user, p2, Role.where(:id => 3).to_a)
+    TimeEntry.generate!(
+      :issue => Issue.generate!(:project => p1, :tracker_id => 1,
+                                :custom_field_values => {@field2.id => 'ValueA'}))
+    TimeEntry.generate!(
+      :issue => Issue.generate!(:project => p2, :tracker_id => 1,
+                                :custom_field_values => {@field2.id => 'ValueB'}))
+    TimeEntry.generate!(
+      :issue => Issue.generate!(:project => p1, :tracker_id => 1,
+                                :custom_field_values => {@field2.id => 'ValueC'}))
+    @request.session[:user_id] = user.id
+
+    get :index, :params => {:c => ["hours", "issue.cf_#{@field2.id}"]}
+    assert_select 'td', {:text => 'ValueA'}, "ValueA not found in:\n#{response.body}"
+    assert_select 'td', :text => 'ValueB', :count => 0
+    assert_select 'td', {:text => 'ValueC'}, "ValueC not found in:\n#{response.body}"
+
+    get :index, :params => {:set_filter => '1', "issue.cf_#{@field2.id}" => '*', :c => ["issue.cf_#{@field2.id}"]}
+    assert_select 'td', :text => "ValueA"
+    assert_select 'td', :text => "ValueC"
+    assert_select 'td', :text => "ValueB", :count => 0
+  end
+
+  def test_edit_should_not_show_custom_fields_not_visible_for_user
+    time_entry_cf = TimeEntryCustomField.find(10)
+    time_entry_cf.visible = false
+    time_entry_cf.role_ids = [2]
+    time_entry_cf.save!
+
+    @request.session[:user_id] = 2
+
+    get :edit, :params => {
+      :id => 3,
+      :project_id => 1
+    }
+
+    assert_response :success
+    assert_select 'select#time_entry_custom_field_values_10', 0
+  end
+
+  private
+
+  def prepare_test_data
     field_attributes = {:field_format => 'string', :is_for_all => true, :is_filter => true, :trackers => Tracker.all}
     @fields = []
     @fields << (@field1 = IssueCustomField.create!(field_attributes.merge(:name => 'Field 1', :visible => true)))
@@ -57,62 +153,7 @@ class TimelogCustomFieldsVisibilityTest < ActionController::TestCase
     }
 
     Member.where(:project_id => 1).each do |member|
-      member.destroy unless @users_to_test.keys.include?(member.principal)
+      member.destroy unless @users_to_test.key?(member.principal)
     end
-  end
-
-  def test_index_should_show_visible_custom_fields_only
-    @users_to_test.each do |user, fields|
-      @request.session[:user_id] = user.id
-      get :index, :project_id => 1, :issue_id => @issue.id, :c => (['hours'] + @fields.map{|f| "issue.cf_#{f.id}"})
-      @fields.each_with_index do |field, i|
-        if fields.include?(field)
-          assert_select 'td', {:text => "Value#{i}", :count => 1}, "User #{user.id} was not able to view #{field.name}"
-        else
-          assert_select 'td', {:text => "Value#{i}", :count => 0}, "User #{user.id} was able to view #{field.name}"
-        end
-      end
-    end
-  end
-
-  def test_index_as_csv_should_show_visible_custom_fields_only
-    @users_to_test.each do |user, fields|
-      @request.session[:user_id] = user.id
-      get :index, :project_id => 1, :issue_id => @issue.id, :c => (['hours'] + @fields.map{|f| "issue.cf_#{f.id}"}), :format => 'csv'
-      @fields.each_with_index do |field, i|
-        if fields.include?(field)
-          assert_include "Value#{i}", response.body, "User #{user.id} was not able to view #{field.name} in CSV"
-        else
-          assert_not_include "Value#{i}", response.body, "User #{user.id} was able to view #{field.name} in CSV"
-        end
-      end
-    end
-  end
-
-  def test_index_with_partial_custom_field_visibility_should_show_visible_custom_fields_only
-    Issue.delete_all
-    TimeEntry.delete_all
-    p1 = Project.generate!
-    p2 = Project.generate!
-    user = User.generate!
-    User.add_to_project(user, p1, Role.where(:id => [1, 3]).all)
-    User.add_to_project(user, p2, Role.where(:id => 3).all)
-    TimeEntry.generate!(
-      :issue => Issue.generate!(:project => p1, :tracker_id => 1,
-                                :custom_field_values => {@field2.id => 'ValueA'}))
-    TimeEntry.generate!(
-      :issue => Issue.generate!(:project => p2, :tracker_id => 1,
-                                :custom_field_values => {@field2.id => 'ValueB'}))
-    TimeEntry.generate!(
-      :issue => Issue.generate!(:project => p1, :tracker_id => 1,
-                                :custom_field_values => {@field2.id => 'ValueC'}))
-    @request.session[:user_id] = user.id
-    get :index, :c => ["hours", "issue.cf_#{@field2.id}"]
-    assert_select 'td', :text => 'ValueA'
-    assert_select 'td', :text => 'ValueB', :count => 0
-    assert_select 'td', :text => 'ValueC'
-
-    get :index, :set_filter => '1', "issue.cf_#{@field2.id}" => '*'
-    assert_equal %w(ValueA ValueC), assigns(:entries).map{|i| i.issue.custom_field_value(@field2)}.sort
   end
 end

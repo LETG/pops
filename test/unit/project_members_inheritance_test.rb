@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,9 +20,11 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class ProjectMembersInheritanceTest < ActiveSupport::TestCase
-  fixtures :roles, :users
+  fixtures :roles, :users,
+           :projects, :trackers, :issue_statuses
 
   def setup
+    User.current = nil
     @parent = Project.generate!
     @member = Member.create!(:principal => User.find(2), :project => @parent, :role_ids => [1, 2])
     assert_equal 2, @member.reload.roles.size
@@ -241,7 +245,7 @@ class ProjectMembersInheritanceTest < ActiveSupport::TestCase
 
       member = project.reload.memberships.detect {|m| m.principal == user}
       assert_not_nil member
-      assert_equal [1, 2, 3], member.roles.uniq.sort.map(&:id)
+      assert_equal [1, 2, 3], member.roles.map(&:id).uniq.sort
     end
   end
 
@@ -257,7 +261,7 @@ class ProjectMembersInheritanceTest < ActiveSupport::TestCase
 
       member = project.reload.memberships.detect {|m| m.principal == user}
       assert_not_nil member
-      assert_equal [1, 2, 3], member.roles.uniq.sort.map(&:id)
+      assert_equal [1, 2, 3], member.roles.map(&:id).uniq.sort
     end
   end
 end

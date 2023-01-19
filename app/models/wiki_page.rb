@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,25 +17,31 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-require 'diff'
-require 'enumerator'
+require 'redmine/string_array_diff/diff'
 
 class WikiPage < ActiveRecord::Base
   include Redmine::SafeAttributes
 
   belongs_to :wiki
-  has_one :content, :class_name => 'WikiContent', :foreign_key => 'page_id', :dependent => :destroy
-  has_one :content_without_text, lambda {without_text.readonly}, :class_name => 'WikiContent', :foreign_key => 'page_id'
+  has_one :content, :class_name => 'WikiContent', :foreign_key => 'page_id',
+          :dependent => :destroy
+  has_one :content_without_text, lambda {without_text.readonly},
+          :class_name => 'WikiContent', :foreign_key => 'page_id'
 
   acts_as_attachable :delete_permission => :delete_wiki_pages_attachments
   acts_as_tree :dependent => :nullify, :order => 'title'
 
   acts_as_watchable
-  acts_as_event :title => Proc.new {|o| "#{l(:label_wiki)}: #{o.title}"},
-                :description => :text,
-                :datetime => :created_on,
-                :url => Proc.new {|o| {:controller => 'wiki', :action => 'show', :project_id => o.wiki.project, :id => o.title}}
-
+  acts_as_event(
+    :title => proc {|o| "#{l(:label_wiki)}: #{o.title}"},
+    :description => :text,
+    :datetime => :created_on,
+    :url =>
+      proc do |o|
+        {:controller => 'wiki', :action => 'show',
+         :project_id => o.wiki.project, :id => o.title}
+      end
+  )
   acts_as_searchable :columns => ['title', "#{WikiContent.table_name}.text"],
                      :scope => joins(:content, {:wiki => :project}),
                      :preload => [:content, {:wiki => :project}],
@@ -41,27 +49,33 @@ class WikiPage < ActiveRecord::Base
                      :project_key => "#{Wiki.table_name}.project_id"
 
   attr_accessor :redirect_existing_links
+  attr_writer   :deleted_attachment_ids
 
   validates_presence_of :title
   validates_format_of :title, :with => /\A[^,\.\/\?\;\|\s]*\z/
   validates_uniqueness_of :title, :scope => :wiki_id, :case_sensitive => false
   validates_length_of :title, maximum: 255
   validates_associated :content
-  attr_protected :id
 
   validate :validate_parent_title
   before_destroy :delete_redirects
-  before_save :handle_rename_or_move
-  after_save :handle_children_move
+  before_save :handle_rename_or_move, :update_wiki_start_page
+  after_save :handle_children_move, :delete_selected_attachments
 
   # eager load information about last updates, without loading text
-  scope :with_updated_on, lambda { preload(:content_without_text) }
+  scope :with_updated_on, lambda {preload(:content_without_text)}
 
   # Wiki pages that are protected by default
   DEFAULT_PROTECTED_PAGES = %w(sidebar)
 
   safe_attributes 'parent_id', 'parent_title', 'title', 'redirect_existing_links', 'wiki_id',
-    :if => lambda {|page, user| page.new_record? || user.allowed_to?(:rename_wiki_pages, page.project)}
+                  :if => lambda {|page, user| page.new_record? || user.allowed_to?(:rename_wiki_pages, page.project)}
+
+  safe_attributes 'is_start_page',
+                  :if => lambda {|page, user| user.allowed_to?(:manage_wiki, page.project)}
+
+  safe_attributes 'deleted_attachment_ids',
+                  :if => lambda {|page, user| page.attachments_deletable?(user)}
 
   def initialize(attributes=nil, *args)
     super
@@ -80,7 +94,11 @@ class WikiPage < ActiveRecord::Base
   end
 
   def safe_attributes=(attrs, user=User.current)
+    if attrs.respond_to?(:to_unsafe_hash)
+      attrs = attrs.to_unsafe_hash
+    end
     return unless attrs.is_a?(Hash)
+
     attrs = attrs.deep_dup
 
     # Project and Tracker must be set before since new_statuses_allowed_to depends on it.
@@ -122,7 +140,7 @@ class WikiPage < ActiveRecord::Base
 
   # Moves child pages if page was moved
   def handle_children_move
-    if !new_record? && wiki_id_changed?
+    if !new_record? && saved_change_to_wiki_id?
       children.each do |child|
         child.wiki_id = wiki_id
         child.redirect_existing_links = redirect_existing_links
@@ -144,11 +162,7 @@ class WikiPage < ActiveRecord::Base
   end
 
   def content_for_version(version=nil)
-    if content
-      result = content.versions.find_by_version(version.to_i) if version
-      result ||= content
-      result
-    end
+    (content && version) ? content.versions.find_by_version(version.to_i) : content
   end
 
   def diff(version_to=nil, version_from=nil)
@@ -209,6 +223,24 @@ class WikiPage < ActiveRecord::Base
     self.parent = parent_page
   end
 
+  def is_start_page
+    if @is_start_page.nil?
+      @is_start_page = wiki.try(:start_page) == title_was
+    end
+    @is_start_page
+  end
+
+  def is_start_page=(arg)
+    @is_start_page = arg == '1' || arg == true
+  end
+
+  def update_wiki_start_page
+    if is_start_page
+      wiki.update_attribute :start_page, title
+    end
+  end
+  private :update_wiki_start_page
+
   # Saves the page and its content if text was changed
   # Return true if the page was saved
   def save_with_content(content)
@@ -218,7 +250,6 @@ class WikiPage < ActiveRecord::Base
       if content.text_changed?
         begin
           self.content = content
-          ret = ret && content.changed?
         rescue ActiveRecord::RecordNotSaved
           ret = false
         end
@@ -226,6 +257,17 @@ class WikiPage < ActiveRecord::Base
       raise ActiveRecord::Rollback unless ret
     end
     ret
+  end
+
+  def deleted_attachment_ids
+    Array(@deleted_attachment_ids).map(&:to_i)
+  end
+
+  def delete_selected_attachments
+    if deleted_attachment_ids.present?
+      objects = attachments.where(:id => deleted_attachment_ids.map(&:to_i))
+      attachments.delete(objects)
+    end
   end
 
   protected
@@ -242,57 +284,5 @@ class WikiPage < ActiveRecord::Base
 
   def content_attribute(name)
     (association(:content).loaded? ? content : content_without_text).try(name)
-  end
-end
-
-class WikiDiff < Redmine::Helpers::Diff
-  attr_reader :content_to, :content_from
-
-  def initialize(content_to, content_from)
-    @content_to = content_to
-    @content_from = content_from
-    super(content_to.text, content_from.text)
-  end
-end
-
-class WikiAnnotate
-  attr_reader :lines, :content
-
-  def initialize(content)
-    @content = content
-    current = content
-    current_lines = current.text.split(/\r?\n/)
-    @lines = current_lines.collect {|t| [nil, nil, t]}
-    positions = []
-    current_lines.size.times {|i| positions << i}
-    while (current.previous)
-      d = current.previous.text.split(/\r?\n/).diff(current.text.split(/\r?\n/)).diffs.flatten
-      d.each_slice(3) do |s|
-        sign, line = s[0], s[1]
-        if sign == '+' && positions[line] && positions[line] != -1
-          if @lines[positions[line]][0].nil?
-            @lines[positions[line]][0] = current.version
-            @lines[positions[line]][1] = current.author
-          end
-        end
-      end
-      d.each_slice(3) do |s|
-        sign, line = s[0], s[1]
-        if sign == '-'
-          positions.insert(line, -1)
-        else
-          positions[line] = nil
-        end
-      end
-      positions.compact!
-      # Stop if every line is annotated
-      break unless @lines.detect { |line| line[0].nil? }
-      current = current.previous
-    end
-    @lines.each { |line|
-      line[0] ||= current.version
-      # if the last known version is > 1 (eg. history was cleared), we don't know the author
-      line[1] ||= current.author if current.version == 1
-    }
   end
 end

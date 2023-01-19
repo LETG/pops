@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +20,15 @@
 require File.expand_path('../../../../../../test_helper', __FILE__)
 
 class Redmine::Views::Builders::JsonTest < ActiveSupport::TestCase
+  def test_nil_and_false
+    assert_json_output({'value' => nil}) do |b|
+      b.value nil
+    end
+
+    assert_json_output({'value' => false}) do |b|
+      b.value false
+    end
+  end
 
   def test_hash
     assert_json_output({'person' => {'name' => 'Ryan', 'age' => 32}}) do |b|
@@ -65,7 +76,14 @@ class Redmine::Views::Builders::JsonTest < ActiveSupport::TestCase
   end
 
   def test_array_with_content_tags
-    assert_json_output({'books' => [{'value' => 'Book 1', 'author' => 'B. Smith'}, {'value' => 'Book 2', 'author' => 'G. Cooper'}]}) do |b|
+    assert_json_output(
+      {
+        'books' => [
+          {'value' => 'Book 1', 'author' => 'B. Smith'},
+          {'value' => 'Book 2', 'author' => 'G. Cooper'}
+        ]
+      }
+    ) do |b|
       b.array :books do |b|
         b.book 'Book 1', :author => 'B. Smith'
         b.book 'Book 2', :author => 'G. Cooper'
@@ -86,9 +104,29 @@ class Redmine::Views::Builders::JsonTest < ActiveSupport::TestCase
     end
   end
 
+  def test_request_response
+    assert_json_output(
+      {
+        'request' => {
+          'get' => 'book'
+        },
+        'response' => {
+          'book' => {'title' => 'Book 1'}
+        }
+      }
+    ) do |b|
+      b.request do
+        b.get 'book'
+      end
+      b.response do
+        b.book title: 'Book 1'
+      end
+    end
+  end
+
   def assert_json_output(expected, &block)
-    builder = Redmine::Views::Builders::Json.new(ActionDispatch::TestRequest.new, ActionDispatch::TestResponse.new)
-    block.call(builder)
+    builder = Redmine::Views::Builders::Json.new(ActionDispatch::TestRequest.create, ActionDispatch::TestResponse.create)
+    yield(builder)
     assert_equal(expected, ActiveSupport::JSON.decode(builder.output))
   end
 end

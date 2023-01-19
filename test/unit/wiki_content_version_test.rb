@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,22 +23,28 @@ class WikiContentVersionTest < ActiveSupport::TestCase
   fixtures :projects, :users, :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions
 
   def setup
+    User.current = nil
+  end
+
+  def test_should_respond_to_attachments
+    v = WikiContentVersion.find(2)
+    assert v.respond_to?(:attachments)
   end
 
   def test_destroy
-    v = WikiContent::Version.find(2)
+    v = WikiContentVersion.find(2)
 
-    assert_difference 'WikiContent::Version.count', -1 do
+    assert_difference 'WikiContentVersion.count', -1 do
       v.destroy
     end
   end
 
   def test_destroy_last_version_should_revert_content
-    v = WikiContent::Version.find(3)
+    v = WikiContentVersion.find(3)
 
     assert_no_difference 'WikiPage.count' do
       assert_no_difference 'WikiContent.count' do
-        assert_difference 'WikiContent::Version.count', -1 do
+        assert_difference 'WikiContentVersion.count', -1 do
           assert v.destroy
         end
       end
@@ -52,13 +60,13 @@ class WikiContentVersionTest < ActiveSupport::TestCase
   end
 
   def test_destroy_all_versions_should_delete_page
-    WikiContent::Version.find(1).destroy
-    WikiContent::Version.find(2).destroy
-    v = WikiContent::Version.find(3)
+    WikiContentVersion.find(1).destroy
+    WikiContentVersion.find(2).destroy
+    v = WikiContentVersion.find(3)
 
     assert_difference 'WikiPage.count', -1 do
       assert_difference 'WikiContent.count', -1 do
-        assert_difference 'WikiContent::Version.count', -1 do
+        assert_difference 'WikiContentVersion.count', -1 do
           assert v.destroy
         end
       end

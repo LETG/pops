@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,7 +34,7 @@
 class WikiController < ApplicationController
   default_search_scope :wiki_pages
   before_action :find_wiki, :authorize
-  before_action :find_existing_or_new_page, :only => [:show, :edit, :update]
+  before_action :find_existing_or_new_page, :only => [:show, :edit]
   before_action :find_existing_page, :only => [:rename, :protect, :history, :diff, :annotate, :add_attachment, :destroy, :destroy_version]
   before_action :find_attachments, :only => [:preview]
   accept_api_auth :index, :show, :update, :destroy
@@ -47,9 +49,9 @@ class WikiController < ApplicationController
     load_pages_for_index
 
     respond_to do |format|
-      format.html {
+      format.html do
         @pages_by_parent_id = @pages.group_by(&:parent_id)
-      }
+      end
       format.api
     end
   end
@@ -70,10 +72,10 @@ class WikiController < ApplicationController
       @page.title = '' unless editable?
       @page.validate
       if @page.errors[:title].blank?
-        path = project_wiki_page_path(@project, @page.title)
+        path = project_wiki_page_path(@project, @page.title, :parent => params[:parent])
         respond_to do |format|
-          format.html { redirect_to path }
-          format.js   { render :js => "window.location = #{path.to_json}" }
+          format.html {redirect_to path}
+          format.js   {render :js => "window.location = #{path.to_json}"}
         end
       end
     end
@@ -87,7 +89,7 @@ class WikiController < ApplicationController
     end
     @content = @page.content_for_version(params[:version])
     if @content.nil?
-      if User.current.allowed_to?(:edit_wiki_pages, @project) && editable? && !api_request?
+      if params[:version].blank? && User.current.allowed_to?(:edit_wiki_pages, @project) && editable? && !api_request?
         edit
         render :action => 'edit'
       else
@@ -125,6 +127,7 @@ class WikiController < ApplicationController
   # edit an existing page or a new one
   def edit
     return render_403 unless editable?
+
     if @page.new_record?
       if params[:parent].present?
         @page.parent = @page.wiki.find_page(params[:parent].to_s)
@@ -150,7 +153,9 @@ class WikiController < ApplicationController
 
   # Creates a new page or updates an existing one
   def update
+    @page = @wiki.find_or_new_page(params[:id])
     return render_403 unless editable?
+
     was_new_page = @page.new_record?
     @page.safe_attributes = params[:wiki_page]
 
@@ -176,42 +181,43 @@ class WikiController < ApplicationController
     if @page.save_with_content(@content)
       attachments = Attachment.attach_files(@page, params[:attachments] || (params[:wiki_page] && params[:wiki_page][:uploads]))
       render_attachment_warning_if_needed(@page)
-      call_hook(:controller_wiki_edit_after_save, { :params => params, :page => @page})
+      call_hook(:controller_wiki_edit_after_save, {:params => params, :page => @page})
 
       respond_to do |format|
-        format.html {
+        format.html do
           anchor = @section ? "section-#{@section}" : nil
           redirect_to project_wiki_page_path(@project, @page.title, :anchor => anchor)
-        }
-        format.api {
+        end
+        format.api do
           if was_new_page
             render :action => 'show', :status => :created, :location => project_wiki_page_path(@project, @page.title)
           else
             render_api_ok
           end
-        }
+        end
       end
     else
       respond_to do |format|
-        format.html { render :action => 'edit' }
-        format.api { render_validation_errors(@content) }
+        format.html {render :action => 'edit'}
+        format.api {render_validation_errors(@content)}
       end
     end
 
   rescue ActiveRecord::StaleObjectError, Redmine::WikiFormatting::StaleSectionError
     # Optimistic locking exception
     respond_to do |format|
-      format.html {
+      format.html do
         flash.now[:error] = l(:notice_locking_conflict)
         render :action => 'edit'
-      }
-      format.api { render_api_head :conflict }
+      end
+      format.api {render_api_head :conflict}
     end
   end
 
   # rename a page
   def rename
     return render_403 unless editable?
+
     @page.redirect_existing_links = true
     # used to display the *original* title if some AR validation errors occur
     @original_title = @page.pretty_title
@@ -269,6 +275,7 @@ class WikiController < ApplicationController
         # Reassign children to another parent page
         reassign_to = @wiki.pages.find_by_id(params[:reassign_to_id].to_i)
         return unless reassign_to
+
         @page.children.each do |child|
           child.update_attribute(:parent, reassign_to)
         end
@@ -280,8 +287,11 @@ class WikiController < ApplicationController
     end
     @page.destroy
     respond_to do |format|
-      format.html { redirect_to project_wiki_index_path(@project) }
-      format.api { render_api_ok }
+      format.html do
+        flash[:notice] = l(:notice_successful_delete)
+        redirect_to project_wiki_index_path(@project)
+      end
+      format.api {render_api_ok}
     end
   end
 
@@ -299,17 +309,16 @@ class WikiController < ApplicationController
   # Export wiki to a single pdf or html file
   def export
     @pages = @wiki.pages.
-                      order('title').
                       includes([:content, {:attachments => :author}]).
                       to_a
     respond_to do |format|
-      format.html {
+      format.html do
         export = render_to_string :action => 'export_multiple', :layout => false
         send_data(export, :type => 'text/html', :filename => "wiki.html")
-      }
-      format.pdf {
+      end
+      format.pdf do
         send_file_headers! :type => 'application/pdf', :filename => "#{@project.identifier}.pdf"
-      }
+      end
     end
   end
 
@@ -317,22 +326,24 @@ class WikiController < ApplicationController
     page = @wiki.find_page(params[:id])
     # page is nil when previewing a new page
     return render_403 unless page.nil? || editable?(page)
+
     if page
       @attachments += page.attachments
       @previewed = page.content
     end
-    @text = params[:content][:text]
+    @text = params[:content].present? ? params[:content][:text] : params[:text]
     render :partial => 'common/preview'
   end
 
   def add_attachment
     return render_403 unless editable?
+
     attachments = Attachment.attach_files(@page, params[:attachments])
     render_attachment_warning_if_needed(@page)
     redirect_to :action => 'show', :id => @page.title, :project_id => @project
   end
 
-private
+  private
 
   def find_wiki
     @project = Project.find(params[:project_id])
@@ -384,7 +395,6 @@ private
 
   def load_pages_for_index
     @pages = @wiki.pages.with_updated_on.
-                reorder("#{WikiPage.table_name}.title").
                 includes(:wiki => :project).
                 includes(:parent).
                 to_a

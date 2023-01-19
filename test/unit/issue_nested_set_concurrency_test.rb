@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,10 +26,11 @@ class IssueNestedSetConcurrencyTest < ActiveSupport::TestCase
            :issue_statuses,
            :enumerations
 
-  self.use_transactional_fixtures = false
+  self.use_transactional_tests = false
 
   def setup
     skip if sqlite? || mysql?
+    User.current = nil
     CustomField.delete_all
   end
 
@@ -81,7 +84,7 @@ class IssueNestedSetConcurrencyTest < ActiveSupport::TestCase
           ActiveRecord::Base.connection_pool.with_connection do
             begin
               yield
-            rescue Exception => e
+            rescue => e
               Thread.current[:exception] = e.message
             end
           end

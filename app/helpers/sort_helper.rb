@@ -1,5 +1,5 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Helpers to sort tables using clickable column headers.
 #
 # Author:  Stuart Rackham <srackham@methods.co.nz>, March 2005.
@@ -96,7 +96,7 @@ module SortHelper
   # Returns an SQL sort clause corresponding to the current sort state.
   # Use this to sort the controller's table items collection.
   #
-  def sort_clause()
+  def sort_clause
     @sort_criteria.sort_clause(@sortable_columns)
   end
 
@@ -115,16 +115,16 @@ module SortHelper
 
     if column.to_s == @sort_criteria.first_key
       if @sort_criteria.first_asc?
-        css = 'sort asc'
+        css = 'sort asc icon icon-sorted-desc'
         order = 'desc'
       else
-        css = 'sort desc'
+        css = 'sort desc icon icon-sorted-asc'
         order = 'asc'
       end
     end
     caption = column.to_s.humanize unless caption
 
-    sort_options = { :sort => @sort_criteria.add(column.to_s, order).to_param }
+    sort_options = {:sort => @sort_criteria.add(column.to_s, order).to_param}
     link_to(caption, {:params => request.query_parameters.merge(sort_options)}, :class => css)
   end
 
@@ -160,4 +160,3 @@ module SortHelper
     end
   end
 end
-

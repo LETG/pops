@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,9 +19,9 @@
 
 module Redmine
   module SubclassFactory
-    def self.included(base) 
+    def self.included(base)
       base.extend ClassMethods
-    end 
+    end
 
     module ClassMethods
       def get_subclass(class_name)
@@ -29,7 +31,7 @@ module Redmine
         rescue
           # invalid class name
         end
-        unless subclasses.include? klass
+        unless descendants.include? klass
           klass = nil
         end
         klass

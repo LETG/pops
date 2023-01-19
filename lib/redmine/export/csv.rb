@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,16 +30,16 @@ module Redmine
         include Redmine::I18n
 
         class << self
-
-          def generate(&block)
+          def generate(options = {}, &block)
             col_sep = l(:general_csv_separator)
-            encoding = l(:general_csv_encoding)
+            encoding = Encoding.find(options[:encoding]) rescue Encoding.find(l(:general_csv_encoding))
 
-            str = ''.force_encoding(encoding)
-            if encoding == 'UTF-8'
-              # BOM
-              str = "\xEF\xBB\xBF".force_encoding(encoding)
-            end
+            str =
+              if encoding == Encoding::UTF_8
+                +"\xEF\xBB\xBF" # BOM
+              else
+                (+'').force_encoding(encoding)
+              end
 
             super(str, :col_sep => col_sep, :encoding => encoding, &block)
           end

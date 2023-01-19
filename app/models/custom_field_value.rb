@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +18,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class CustomFieldValue
-  attr_accessor :custom_field, :customized, :value, :value_was
+  attr_accessor :custom_field, :customized, :value_was
+  attr_reader   :value
 
   def initialize(attributes={})
     attributes.each do |name, v|
@@ -62,7 +65,7 @@ class CustomFieldValue
 
   def validate_value
     custom_field.validate_custom_value(self).each do |message|
-      customized.errors.add(:base, custom_field.name + ' ' + message)
+      customized.errors.add(custom_field.name, message)
     end
   end
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,17 +22,21 @@ require File.expand_path('../../test_helper', __FILE__)
 class RoleTest < ActiveSupport::TestCase
   fixtures :roles, :workflows, :trackers
 
+  def setup
+    User.current = nil
+  end
+
   def test_sorted_scope
-    assert_equal Role.all.sort, Role.sorted.all
+    assert_equal Role.all.sort, Role.sorted.to_a
   end
 
   def test_givable_scope
-    assert_equal Role.all.reject(&:builtin?).sort, Role.givable.all
+    assert_equal Role.all.reject(&:builtin?).sort, Role.givable.to_a
   end
 
   def test_builtin_scope
-    assert_equal Role.all.select(&:builtin?).sort, Role.builtin(true).all.sort
-    assert_equal Role.all.reject(&:builtin?).sort, Role.builtin(false).all.sort
+    assert_equal Role.all.select(&:builtin?).sort, Role.builtin(true).to_a.sort
+    assert_equal Role.all.reject(&:builtin?).sort, Role.builtin(false).to_a.sort
   end
 
   def test_copy_from
@@ -45,20 +51,29 @@ class RoleTest < ActiveSupport::TestCase
     assert copy.save
   end
 
+  def test_copy_from_should_copy_managed_roles
+    orig = Role.generate!(:all_roles_managed => false, :managed_role_ids => [2, 3])
+    role = Role.new
+    role.copy_from orig
+    assert_equal [2, 3], role.managed_role_ids.sort
+  end
+
   def test_copy_workflows
     source = Role.find(1)
-    assert_equal 90, source.workflow_rules.size
+    rule_count = source.workflow_rules.count
+    assert rule_count > 0
 
     target = Role.new(:name => 'Target')
     assert target.save
-    target.workflow_rules.copy(source)
+    target.copy_workflow_rules(source)
     target.reload
-    assert_equal 90, target.workflow_rules.size
+    assert_equal rule_count, target.workflow_rules.size
   end
 
   def test_permissions_should_be_unserialized_with_its_coder
-    Role::PermissionsAttributeCoder.expects(:load).once
-    Role.find(1).permissions
+    Role::PermissionsAttributeCoder.stubs(:load).returns([:foo, :bar])
+    role = Role.find(1)
+    assert_equal [:foo, :bar], role.permissions
   end
 
   def test_add_permission
@@ -78,6 +93,17 @@ class RoleTest < ActiveSupport::TestCase
     role.reload
     assert ! role.permissions.include?(perm[0])
     assert_equal size - 2, role.permissions.size
+  end
+
+  def test_has_permission
+    role = Role.create!(:name => 'Test', :permissions => [:view_issues, :edit_issues])
+    assert_equal true, role.has_permission?(:view_issues)
+    assert_equal false, role.has_permission?(:delete_issues)
+  end
+
+  def test_has_permission_without_permissions
+    role = Role.create!(:name => 'Test')
+    assert_equal false, role.has_permission?(:delete_issues)
   end
 
   def test_name
@@ -125,5 +151,18 @@ class RoleTest < ActiveSupport::TestCase
       assert role.builtin?
       assert_equal Role::BUILTIN_NON_MEMBER, role.builtin
     end
+  end
+
+  def test_destroy
+    role = Role.generate!
+
+    # generate some dependent objects
+    query = IssueQuery.generate!(:project => @ecookbook, :visibility => Query::VISIBILITY_ROLES, :roles => Role.where(:id => [1, 3, role.id]).to_a)
+
+    role.destroy
+
+    # make sure some related data was removed
+    assert_nil ActiveRecord::Base.connection.select_value("SELECT 1 FROM queries_roles WHERE role_id = #{role.id}")
+    assert [1, 3], query.roles
   end
 end

@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 xml.instruct!
 xml.feed "xmlns" => "http://www.w3.org/2005/Atom" do
   xml.title   @title
-  xml.link    "rel" => "self", "href" => url_for(:format => 'atom', :key => User.current.rss_key, :only_path => false)
+  xml.link    "rel" => "self", "href" => url_for(:format => 'atom', :key => User.current.atom_key, :only_path => false)
   xml.link    "rel" => "alternate", "href" => home_url
   xml.id      home_url
   xml.icon    favicon_url
   xml.updated((@journals.first ? @journals.first.event_datetime : Time.now).xmlschema)
-  xml.author  { xml.name "#{Setting.app_title}" }
+  xml.author  {xml.name "#{Setting.app_title}"}
   @journals.each do |change|
     issue = change.issue
     xml.entry do

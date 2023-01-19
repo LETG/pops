@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,30 +23,28 @@ class Tracker < ActiveRecord::Base
   CORE_FIELDS_UNDISABLABLE = %w(project_id tracker_id subject priority_id is_private).freeze
   # Fields that can be disabled
   # Other (future) fields should be appended, not inserted!
-  CORE_FIELDS = %w(assigned_to_id category_id fixed_version_id parent_issue_id start_date due_date estimated_hours done_ratio description).freeze
+  CORE_FIELDS =
+    %w(assigned_to_id category_id fixed_version_id parent_issue_id
+       start_date due_date estimated_hours done_ratio description).freeze
   CORE_FIELDS_ALL = (CORE_FIELDS_UNDISABLABLE + CORE_FIELDS).freeze
 
   before_destroy :check_integrity
   belongs_to :default_status, :class_name => 'IssueStatus'
   has_many :issues
-  has_many :workflow_rules, :dependent => :delete_all do
-    def copy(source_tracker)
-      ActiveSupport::Deprecation.warn "tracker.workflow_rules.copy is deprecated and will be removed in Redmine 4.0, use tracker.copy_worflow_rules instead"
-      proxy_association.owner.copy_workflow_rules(source_tracker)
-    end
-  end
+  has_many :workflow_rules, :dependent => :delete_all
   has_and_belongs_to_many :projects
-  has_and_belongs_to_many :custom_fields, :class_name => 'IssueCustomField', :join_table => "#{table_name_prefix}custom_fields_trackers#{table_name_suffix}", :association_foreign_key => 'custom_field_id'
+  has_and_belongs_to_many :custom_fields, :class_name => 'IssueCustomField',
+                          :join_table => "#{table_name_prefix}custom_fields_trackers#{table_name_suffix}",
+                          :association_foreign_key => 'custom_field_id'
   acts_as_positioned
-
-  attr_protected :fields_bits
 
   validates_presence_of :default_status
   validates_presence_of :name
-  validates_uniqueness_of :name
+  validates_uniqueness_of :name, :case_sensitive => true
   validates_length_of :name, :maximum => 30
+  validates_length_of :description, :maximum => 255
 
-  scope :sorted, lambda { order(:position) }
+  scope :sorted, lambda {order(:position)}
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
 
   # Returns the trackers that are visible by the user.
@@ -55,7 +55,7 @@ class Tracker < ActiveRecord::Base
   #
   #   Tracker.visible(user)
   #   => returns the trackers that are visible by the user in at least on project
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     user = args.shift || User.current
     condition = Project.allowed_to_condition(user, :view_issues) do |role, user|
       unless role.permissions_all_trackers?(:view_issues)
@@ -68,15 +68,27 @@ class Tracker < ActiveRecord::Base
       end
     end
     joins(:projects).where(condition).distinct
-  }
+  end)
 
-  safe_attributes 'name',
+  safe_attributes(
+    'name',
     'default_status_id',
     'is_in_roadmap',
     'core_fields',
     'position',
     'custom_field_ids',
-    'project_ids'
+    'project_ids',
+    'description')
+
+  def copy_from(arg, options={})
+    return if arg.blank?
+
+    tracker = arg.is_a?(Tracker) ? arg : Tracker.find_by_id(arg.to_s)
+    self.attributes = tracker.attributes.dup.except("id", "name", "position")
+    self.custom_field_ids = tracker.custom_field_ids.dup
+    self.project_ids = tracker.project_ids.dup
+    self
+  end
 
   def to_s; name end
 
@@ -94,13 +106,19 @@ class Tracker < ActiveRecord::Base
     if new_record?
       []
     else
-      @issue_status_ids ||= WorkflowTransition.where(:tracker_id => id).distinct.pluck(:old_status_id, :new_status_id).flatten.uniq
+      @issue_status_ids ||=
+        WorkflowTransition.where(:tracker_id => id).
+          distinct.pluck(:old_status_id, :new_status_id).flatten.uniq
     end
   end
 
   def disabled_core_fields
     i = -1
-    @disabled_core_fields ||= CORE_FIELDS.select { i += 1; (fields_bits || 0) & (2 ** i) != 0}
+    @disabled_core_fields ||=
+      CORE_FIELDS.select do
+        i += 1
+        (fields_bits || 0) & (1 << i) != 0
+      end
   end
 
   def core_fields
@@ -113,7 +131,7 @@ class Tracker < ActiveRecord::Base
     bits = 0
     CORE_FIELDS.each_with_index do |field, i|
       unless fields.include?(field)
-        bits |= 2 ** i
+        bits |= 1 << i
       end
     end
     self.fields_bits = bits
@@ -143,8 +161,9 @@ class Tracker < ActiveRecord::Base
     end
   end
 
-private
+  private
+
   def check_integrity
-    raise Exception.new("Cannot delete tracker") if Issue.where(:tracker_id => self.id).any?
+    raise "Cannot delete tracker" if Issue.where(:tracker_id => self.id).any?
   end
 end

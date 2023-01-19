@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,9 +20,10 @@
 require File.expand_path('../../../../../test_helper', __FILE__)
 
 class Redmine::WikiFormatting::MarkdownFormatterTest < ActionView::TestCase
-  if Object.const_defined?(:Redcarpet)
-
   def setup
+    unless Object.const_defined?(:Redcarpet)
+      skip "Redcarpet is not installed"
+    end
     @formatter = Redmine::WikiFormatting::Markdown::Formatter
   end
 
@@ -58,25 +61,35 @@ class Redmine::WikiFormatting::MarkdownFormatterTest < ActionView::TestCase
     assert_include 'version:"1.0"', @formatter.new(text).to_html
   end
 
-  def test_should_support_syntax_highligth
-    text = <<-STR
-~~~ruby
-def foo
-end
-~~~
-STR
+  def test_should_support_syntax_highlight
+    text = <<~STR
+      ~~~ruby
+      def foo
+      end
+      ~~~
+    STR
     assert_select_in @formatter.new(text).to_html, 'pre code.ruby.syntaxhl' do
-      assert_select 'span.keyword', :text => 'def'
+      assert_select 'span.k', :text => 'def'
+      assert_select "[data-language='ruby']"
     end
   end
 
   def test_should_not_allow_invalid_language_for_code_blocks
-    text = <<-STR
-~~~foo
-test
-~~~
-STR
-    assert_equal "<pre>test\n</pre>", @formatter.new(text).to_html
+    text = <<~STR
+      ~~~foo
+      test
+      ~~~
+    STR
+    assert_equal "<pre><code data-language=\"foo\">test\n</code></pre>", @formatter.new(text).to_html
+  end
+
+  def test_should_preserve_code_block_language_in_data_language
+    text = <<~STR
+      ~~~c-k&r
+      test
+      ~~~
+    STR
+    assert_equal "<pre><code data-language=\"c-k&amp;r\">test\n</code></pre>", @formatter.new(text).to_html
   end
 
   def test_external_links_should_have_external_css_class
@@ -90,43 +103,76 @@ STR
   end
 
   def test_markdown_should_not_require_surrounded_empty_line
-    text = <<-STR
-This is a list:
-* One
-* Two
-STR
+    text = <<~STR
+      This is a list:
+      * One
+      * Two
+    STR
     assert_equal "<p>This is a list:</p>\n\n<ul>\n<li>One</li>\n<li>Two</li>\n</ul>", @formatter.new(text).to_html.strip
   end
 
-  STR_WITH_PRE = [
-  # 0
-"# Title
+  def test_footnotes
+    text = <<~STR
+      This is some text[^1].
 
-Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas sed libero.",
-  # 1
-"## Heading 2
+      [^1]: This is the foot note
+    STR
+    expected = <<~EXPECTED
+      <p>This is some text<sup id="fnref1"><a href="#fn1">1</a></sup>.</p>
+      <div class="footnotes">
+      <hr>
+      <ol>
 
-~~~ruby
-  def foo
+      <li id="fn1">
+      <p>This is the foot note&nbsp;<a href="#fnref1">&#8617;</a></p>
+      </li>
+
+      </ol>
+      </div>
+    EXPECTED
+    assert_equal expected.gsub(%r{[\r\n\t]}, ''), @formatter.new(text).to_html.gsub(%r{[\r\n\t]}, '')
   end
->>>>>>> .merge-right.r17266
-~~~
 
-Morbi facilisis accumsan orci non pharetra.
+  STR_WITH_PRE = [
+    # 0
+    <<~STR.chomp,
+      # Title
 
-```
-Pre Content:
+      Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas sed libero.
+    STR
+    # 1
+    <<~STR.chomp,
+      ## Heading 2
 
-## Inside pre
+      ~~~ruby
+        def foo
+        end
+      ~~~
 
-<tag> inside pre block
+      Morbi facilisis accumsan orci non pharetra.
 
-Morbi facilisis accumsan orci non pharetra.
-```",
-  # 2
-"### Heading 3
+      ~~~ ruby
+      def foo
+      end
+      ~~~
 
-Nulla nunc nisi, egestas in ornare vel, posuere ac libero."]
+      ```
+      Pre Content:
+
+      ## Inside pre
+
+      <tag> inside pre block
+
+      Morbi facilisis accumsan orci non pharetra.
+      ```
+    STR
+    # 2
+    <<~STR.chomp,
+      ### Heading 3
+
+      Nulla nunc nisi, egestas in ornare vel, posuere ac libero.
+    STR
+  ]
 
   def test_get_section_should_ignore_pre_content
     text = STR_WITH_PRE.join("\n\n")
@@ -138,9 +184,84 @@ Nulla nunc nisi, egestas in ornare vel, posuere ac libero."]
   def test_update_section_should_not_escape_pre_content_outside_section
     text = STR_WITH_PRE.join("\n\n")
     replacement = "New text"
-
-    assert_equal [STR_WITH_PRE[0..1], "New text"].flatten.join("\n\n"),
+    assert_equal(
+      [STR_WITH_PRE[0..1], "New text"].flatten.join("\n\n"),
       @formatter.new(text).update_section(3, replacement)
+    )
+  end
+
+  STR_SETEXT_LIKE = [
+    # 0
+    <<~STR.chomp,
+      # Title
+    STR
+    # 1
+    <<~STR.chomp,
+      ## Heading 2
+
+      Thematic breaks - not be confused with setext headings.
+
+      ---
+
+      Preceding CRLF is the default for web-submitted data.
+      \r
+      ---\r
+      \r
+
+      A space-only line does not mean much.
+      \s
+      ---
+
+      End of thematic breaks.
+    STR
+    # 2
+    <<~STR.chomp,
+      ## Heading 2
+      Nulla nunc nisi, egestas in ornare vel, posuere ac libero.
+    STR
+  ]
+
+  STR_RARE_SETEXT_LIKE = [
+    # 0
+    <<~STR.chomp,
+      # Title
+    STR
+    # 1
+    <<~STR.chomp,
+      ## Heading 2
+
+      - item
+      one
+      -
+      not a heading
+    STR
+    # 2
+    <<~STR.chomp,
+      ## Heading 2
+      Nulla nunc nisi, egestas in ornare vel, posuere ac libero.
+    STR
+  ]
+
+  def test_get_section_should_ignore_setext_like_text
+    text = STR_SETEXT_LIKE.join("\n\n")
+    assert_section_with_hash STR_SETEXT_LIKE[1], text, 2
+    assert_section_with_hash STR_SETEXT_LIKE[2], text, 3
+  end
+
+  def test_get_section_should_ignore_rare_setext_like_text
+    begin
+      text = STR_RARE_SETEXT_LIKE.join("\n\n")
+      assert_section_with_hash STR_RARE_SETEXT_LIKE[1], text, 2
+      assert_section_with_hash STR_RARE_SETEXT_LIKE[2], text, 3
+    rescue Minitest::Assertion => e
+      skip "Section extraction is currently limited, see #35037. Known error: #{e.message}"
+    end
+    assert_not "This test should be adjusted when fixing the known error."
+  end
+
+  def test_should_support_underlined_text
+    text = 'This _text_ should be underlined'
+    assert_equal '<p>This <u>text</u> should be underlined</p>', @formatter.new(text).to_html.strip
   end
 
   private
@@ -152,7 +273,5 @@ Nulla nunc nisi, egestas in ornare vel, posuere ac libero."]
     assert_equal 2, result.size
     assert_equal expected, result.first, "section content did not match"
     assert_equal Digest::MD5.hexdigest(expected), result.last, "section hash did not match"
-  end
-
   end
 end

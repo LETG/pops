@@ -13,8 +13,12 @@
 <%= error_messages_for 'content' %>
 
 <div class="box tabular">
-<%= text_area_tag 'content[text]', @text, :cols => 100, :rows => 25,
-                  :class => 'wiki-edit', :accesskey => accesskey(:edit) %>
+<%= text_area_tag 'content[text]', @text, :cols => 100, :rows => 25, :accesskey => accesskey(:edit),
+                  :class => 'wiki-edit',
+                  :data => {
+                      :auto_complete => true
+                  }
+%>
 
 <% if @page.safe_attribute_names.include?('parent_id') && @wiki.pages.any? %>
   <%= fields_for @page do |fp| %>
@@ -30,18 +34,41 @@
 <% end %>
 
 <p><label><%= l(:field_comments) %></label><%= f.text_field :comments, :size => 120, :maxlength => 1024 %></p>
-<p><label><%=l(:label_attachment_plural)%></label><%= render :partial => 'attachments/form' %></p>
+<fieldset>
+<legend><%=l(:label_attachment_plural)%></legend>
+<% if @page.attachments.any? && @page.safe_attribute?('deleted_attachment_ids') %>
+<div class="contextual"><%= link_to l(:label_edit_attachments), '#', :onclick => "$('#existing-attachments').toggle(); return false;" %></div>
+<div id="existing-attachments" style="<%= @page.deleted_attachment_ids.blank? ? 'display:none;' : '' %>">
+  <% @page.attachments.each do |attachment| %>
+  <span class="existing-attachment">
+    <%= text_field_tag '', attachment.filename, :class => "icon icon-attachment filename", :disabled => true %>
+    <label class='inline'>
+      <%= check_box_tag 'wiki_page[deleted_attachment_ids][]',
+                        attachment.id,
+                        @page.deleted_attachment_ids.include?(attachment.id),
+                        :id => nil, :class => "deleted_attachment" %> <%= l(:button_delete) %>
+    </label>
+  </span>
+  <% end %>
+  <hr />
+</div>
+<% end %>
+<div id="new-attachments" style="display:inline-block;">
+  <%= render :partial => 'attachments/form' %>
+</div>
+</fieldset>
 </div>
 
 <p>
   <%= submit_tag l(:button_save) %>
-   <%= preview_link({:controller => 'wiki', :action => 'preview', :project_id => @project, :id => @page.title }, 'wiki_form') %>
-   | <%= link_to l(:button_cancel), wiki_page_edit_cancel_path(@page) %>
+  <%= link_to l(:button_cancel), wiki_page_edit_cancel_path(@page) %>
  </p>
-<%= wikitoolbar_for 'content_text' %>
-<% end %>
+<%= wikitoolbar_for 'content_text', preview_project_wiki_page_path(:project_id => @project, :id => @page.title) %>
 
-<div id="preview" class="wiki"></div>
+<% if User.current.allowed_to?(:add_wiki_page_watchers, @project)%>
+  <%= update_data_sources_for_auto_complete({users: watchers_autocomplete_for_mention_path(project_id: @project, q: '', object_type: 'wiki_page', object_id: @page.id)}) %>
+  <% end %>
+<% end %>
 
 <% content_for :header_tags do %>
   <%= robot_exclusion_tag %>

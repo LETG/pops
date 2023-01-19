@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,8 +21,12 @@ module Redmine
   module Platform
     class << self
       def mswin?
-        (RUBY_PLATFORM =~ /(:?mswin|mingw)/) ||
-           (RUBY_PLATFORM == 'java' && (ENV['OS'] || ENV['os']) =~ /windows/i)
+        (/(:?mswin|mingw)/.match?(RUBY_PLATFORM)) ||
+           (RUBY_PLATFORM == 'java' && /windows/i.match?(ENV['OS'] || ENV['os']))
+      end
+
+      def osx?
+        (/(:?darwin)/.match?(RUBY_PLATFORM))
       end
     end
   end

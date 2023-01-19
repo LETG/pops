@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -31,7 +33,8 @@ class DocumentsController < ApplicationController
     documents = @project.documents.includes(:attachments, :category).to_a
     case @sort_by
     when 'date'
-      @grouped = documents.group_by {|d| d.updated_on.to_date }
+      documents.sort!{|a, b| b.updated_on <=> a.updated_on}
+      @grouped = documents.group_by {|d| d.updated_on.to_date}
     when 'title'
       @grouped = documents.group_by {|d| d.title.first.upcase}
     when 'author'
@@ -80,6 +83,7 @@ class DocumentsController < ApplicationController
 
   def destroy
     @document.destroy if request.delete?
+    flash[:notice] = l(:notice_successful_delete)
     redirect_to project_documents_path(@project)
   end
 
@@ -88,7 +92,7 @@ class DocumentsController < ApplicationController
     render_attachment_warning_if_needed(@document)
 
     if attachments.present? && attachments[:files].present? && Setting.notified_events.include?('document_added')
-      Mailer.attachments_added(attachments[:files]).deliver
+      Mailer.deliver_attachments_added(attachments[:files])
     end
     redirect_to document_path(@document)
   end

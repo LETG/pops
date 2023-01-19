@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,9 +20,10 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class ProjectNestedSetConcurrencyTest < ActiveSupport::TestCase
-  self.use_transactional_fixtures = false
+  self.use_transactional_tests = false
 
   def setup
+    User.current = nil
     CustomField.delete_all
   end
 
@@ -49,7 +52,7 @@ class ProjectNestedSetConcurrencyTest < ActiveSupport::TestCase
                 c2.reload.destroy
                 c1.reload.destroy
               end
-            rescue Exception => e
+            rescue => e
               Thread.current[:exception] = e.message
             end
           end
@@ -65,12 +68,14 @@ class ProjectNestedSetConcurrencyTest < ActiveSupport::TestCase
   # Generates a bare project with random name
   # and identifier
   def generate_project!(attributes={})
-    identifier = "a"+Redmine::Utils.random_hex(6)
-    Project.generate!({
+    identifier = "a" + Redmine::Utils.random_hex(6)
+    Project.generate!(
+      {
         :identifier => identifier,
         :name => identifier,
         :tracker_ids => [],
         :enabled_module_names => []
-      }.merge(attributes))
+      }.merge(attributes)
+    )
   end
 end

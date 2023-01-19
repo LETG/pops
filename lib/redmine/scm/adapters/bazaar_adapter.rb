@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +23,6 @@ module Redmine
   module Scm
     module Adapters
       class BazaarAdapter < AbstractAdapter
-
         # Bazaar executable name
         BZR_BIN = Redmine::Configuration['scm_bazaar_command'] || "bzr"
 
@@ -43,14 +44,14 @@ module Redmine
           end
 
           def scm_command_version
-            scm_version = scm_version_from_command_line.dup.force_encoding('ASCII-8BIT')
+            scm_version = scm_version_from_command_line.b
             if m = scm_version.match(%r{\A(.*?)((\d+\.)+\d+)})
               m[2].scan(%r{\d+}).collect(&:to_i)
             end
           end
 
           def scm_version_from_command_line
-            shellout("#{sq_bin} --version") { |io| io.read }.to_s
+            shellout("#{sq_bin} --version") {|io| io.read}.to_s
           end
         end
 
@@ -72,16 +73,19 @@ module Redmine
           info = nil
           scm_cmd(*cmd_args) do |io|
             if io.read =~ %r{^(\d+)\r?$}
-              info = Info.new({:root_url => url,
-                               :lastrev => Revision.new({
-                                 :identifier => $1
-                               })
-                             })
+              info =
+                Info.new(
+                  {
+                    :root_url => url,
+                    :lastrev =>
+                    Revision.new({:identifier => $1})
+                  }
+                )
             end
           end
           info
         rescue ScmCommandAborted
-          return nil
+          nil
         end
 
         # Returns an Entries collection
@@ -94,21 +98,25 @@ module Redmine
           cmd_args << "-r#{identifier.to_i}"
           cmd_args << bzr_target(path)
           scm_cmd(*cmd_args) do |io|
-            prefix_utf8 = "#{url}/#{path}".gsub('\\', '/')
+            prefix_utf8 = "#{url}/#{path}".tr('\\', '/')
             logger.debug "PREFIX: #{prefix_utf8}"
-            prefix = scm_iconv(@path_encoding, 'UTF-8', prefix_utf8)
-            prefix.force_encoding('ASCII-8BIT')
+            prefix = scm_iconv(@path_encoding, 'UTF-8', prefix_utf8).b
             re = %r{^V\s+(#{Regexp.escape(prefix)})?(\/?)([^\/]+)(\/?)\s+(\S+)\r?$}
             io.each_line do |line|
               next unless line =~ re
+
               name_locale, slash, revision = $3.strip, $4, $5.strip
               name = scm_iconv('UTF-8', @path_encoding, name_locale)
-              entries << Entry.new({:name => name,
-                                    :path => ((path.empty? ? "" : "#{path}/") + name),
-                                    :kind => (slash.blank? ? 'file' : 'dir'),
-                                    :size => nil,
-                                    :lastrev => Revision.new(:revision => revision)
-                                  })
+              entries <<
+                Entry.new(
+                  {
+                    :name => name,
+                    :path => ((path.empty? ? "" : "#{path}/") + name),
+                    :kind => (slash.blank? ? 'file' : 'dir'),
+                    :size => nil,
+                    :lastrev => Revision.new(:revision => revision)
+                  }
+                )
             end
           end
           if logger && logger.debug?
@@ -116,7 +124,7 @@ module Redmine
           end
           entries.sort_by_name
         rescue ScmCommandAborted
-          return nil
+          nil
         end
 
         def revisions(path=nil, identifier_from=nil, identifier_to=nil, options={})
@@ -131,12 +139,13 @@ module Redmine
             revision = nil
             parsing  = nil
             io.each_line do |line|
-              if line =~ /^----/
+              if /^----/.match?(line)
                 revisions << revision if revision
                 revision = Revision.new(:paths => [], :message => '')
                 parsing = nil
               else
                 next unless revision
+
                 if line =~ /^revno: (\d+)($|\s\[merge\]$)/
                   revision.identifier = $1.to_i
                 elsif line =~ /^committer: (.+)$/
@@ -145,14 +154,14 @@ module Redmine
                   revision.scmid = $1.strip
                 elsif line =~ /^timestamp: (.+)$/
                   revision.time = Time.parse($1).localtime
-                elsif line =~ /^    -----/
+                elsif /^    -----/.match?(line)
                   # partial revisions
                   parsing = nil unless parsing == 'message'
                 elsif line =~ /^(message|added|modified|removed|renamed):/
                   parsing = $1
                 elsif line =~ /^  (.*)$/
                   if parsing == 'message'
-                    revision.message << "#{$1}\n"
+                    revision.message += "#{$1}\n"
                   else
                     if $1 =~ /^(.*)\s+(\S+)$/
                       path_locale = $1.strip
@@ -183,7 +192,7 @@ module Redmine
           end
           revisions
         rescue ScmCommandAborted
-          return nil
+          nil
         end
 
         def diff(path, identifier_from, identifier_to=nil)
@@ -219,7 +228,7 @@ module Redmine
           end
           cat
         rescue ScmCommandAborted
-          return nil
+          nil
         end
 
         def annotate(path, identifier=nil)
@@ -232,51 +241,49 @@ module Redmine
             identifier = nil
             io.each_line do |line|
               next unless line =~ %r{^(\d+) ([^|]+)\| (.*)$}
+
               rev = $1
-              blame.add_line($3.rstrip,
-                 Revision.new(
-                  :identifier => rev,
-                  :revision   => rev,
-                  :author     => $2.strip
-                  ))
+              blame.
+                add_line(
+                  $3.rstrip,
+                  Revision.new(
+                    :identifier => rev,
+                    :revision   => rev,
+                    :author     => $2.strip
+                  )
+                )
             end
           end
           blame
         rescue ScmCommandAborted
-          return nil
+          nil
         end
 
         def self.branch_conf_path(path)
-          bcp = nil
+          return if path.nil?
+
           m = path.match(%r{^(.*[/\\])\.bzr.*$})
-          if m
-            bcp = m[1]
-          else
-            bcp = path
-          end
-          bcp.gsub!(%r{[\/\\]$}, "")
-          if bcp
-            bcp = File.join(bcp, ".bzr", "branch", "branch.conf")
-          end
-          bcp
+          bcp = (m ? m[1] : path).gsub(%r{[\/\\]$}, "")
+          File.join(bcp, ".bzr", "branch", "branch.conf")
         end
 
         def append_revisions_only
-          return @aro if ! @aro.nil?
+          return @aro unless @aro.nil?
+
           @aro = false
           bcp = self.class.branch_conf_path(url)
           if bcp && File.exist?(bcp)
             begin
-              f = File::open(bcp, "r")
+              f = File.open(bcp, "r")
               cnt = 0
               f.each_line do |line|
                 l = line.chomp.to_s
                 if l =~ /^\s*append_revisions_only\s*=\s*(\w+)\s*$/
                   str_aro = $1
-                  if str_aro.upcase == "TRUE"
+                  if str_aro.casecmp("TRUE") == 0
                     @aro = true
                     cnt += 1
-                  elsif str_aro.upcase == "FALSE"
+                  elsif str_aro.casecmp("FALSE") == 0
                     @aro = false
                     cnt += 1
                   end
@@ -300,14 +307,16 @@ module Redmine
           full_args.map do |e|
             full_args_locale << scm_iconv(@path_encoding, 'UTF-8', e)
           end
-          ret = shellout(
-                   self.class.sq_bin + ' ' + 
-                     full_args_locale.map { |e| shell_quote e.to_s }.join(' '),
-                   &block
-                   )
+          ret =
+            shellout(
+              self.class.sq_bin + ' ' +
+                full_args_locale.map {|e| shell_quote e.to_s}.join(' '),
+              &block
+            )
           if $? && $?.exitstatus != 0
             raise ScmCommandAborted, "bzr exited with non-zero status: #{$?.exitstatus}"
           end
+
           ret
         end
         private :scm_cmd
@@ -319,11 +328,12 @@ module Redmine
           full_args.map do |e|
             full_args_locale << scm_iconv(@path_encoding, 'UTF-8', e)
           end
-          ret = shellout(
-                   self.class.sq_bin + ' ' + 
-                     full_args_locale.map { |e| shell_quote e.to_s }.join(' '),
-                   &block
-                   )
+          ret =
+            shellout(
+              self.class.sq_bin + ' ' +
+                full_args_locale.map {|e| shell_quote e.to_s}.join(' '),
+              &block
+            )
           ret
         end
         private :scm_cmd_no_raise

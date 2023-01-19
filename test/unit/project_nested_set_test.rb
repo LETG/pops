@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,9 +20,11 @@
 require File.expand_path('../../test_helper', __FILE__)
 
 class ProjectNestedSetTest < ActiveSupport::TestCase
-
   def setup
+    User.current = nil
     Project.delete_all
+    Tracker.delete_all
+    EnabledModule.delete_all
 
     @a = Project.create!(:name => 'A', :identifier => 'projecta')
     @a1 = Project.create!(:name => 'A1', :identifier => 'projecta1')
@@ -53,12 +57,17 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
   end
 
   def test_rebuild_tree_should_build_valid_tree_even_with_valid_lft_rgt_values
-    Project.where({:id => @a.id }).update_all("name = 'YY'")
+    Project.where({:id => @a.id}).update_all("name = 'YY'")
     # lft and rgt values are still valid (Project.rebuild! would not update anything)
     # but projects are not ordered properly (YY is in the first place)
 
     Project.rebuild_tree!
     assert_valid_nested_set
+  end
+
+  def test_rebuild_without_projects_should_not_fail
+    Project.delete_all
+    assert Project.rebuild_tree!
   end
 
   def test_moving_a_child_to_a_different_parent_should_keep_valid_tree
@@ -160,12 +169,12 @@ class ProjectNestedSetTest < ActiveSupport::TestCase
         assert project.rgt < project.parent.rgt, "rgt=#{project.rgt} was not < parent.rgt=#{project.parent.rgt} for project #{project.name}"
       end
       # no overlapping lft/rgt values
-      overlapping = projects.detect {|other| 
+      overlapping = projects.detect do |other|
         other != project && (
           (other.lft > project.lft && other.lft < project.rgt && other.rgt > project.rgt) ||
           (other.rgt > project.lft && other.rgt < project.rgt && other.lft < project.lft)
         )
-      }
+      end
       assert_nil overlapping, (overlapping && "Project #{overlapping.name} (#{overlapping.lft}/#{overlapping.rgt}) overlapped #{project.name} (#{project.lft}/#{project.rgt})")
     end
 

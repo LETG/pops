@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,16 +18,20 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SysController < ActionController::Base
+  include ActiveSupport::SecurityUtils
+
   before_action :check_enabled
+
+  # Requests from repository WS clients don't contain CSRF tokens
+  skip_before_action :verify_authenticity_token
 
   def projects
     p = Project.active.has_module(:repository).
           order("#{Project.table_name}.identifier").preload(:repository).to_a
     # extra_info attribute from repository breaks activeresource client
-    render :json => p.to_json(
-                       :only => [:id, :identifier, :name, :is_public, :status],
-                       :include => {:repository => {:only => [:id, :url]}}
-                     )
+    render :json =>
+              p.to_json(:only => [:id, :identifier, :name, :is_public, :status],
+                        :include => {:repository => {:only => [:id, :url]}})
   end
 
   def create_project_repository
@@ -38,7 +44,7 @@ class SysController < ActionController::Base
       repository.safe_attributes = params[:repository]
       repository.project = project
       if repository.save
-        render :json => {repository.class.name.underscore.gsub('/', '-') => {:id => repository.id, :url => repository.url}}, :status => 201
+        render :json => {repository.class.name.underscore.tr('/', '-') => {:id => repository.id, :url => repository.url}}, :status => 201
       else
         head 422
       end
@@ -50,12 +56,13 @@ class SysController < ActionController::Base
     scope = Project.active.has_module(:repository)
     if params[:id]
       project = nil
-      if params[:id].to_s =~ /^\d*$/
+      if /^\d*$/.match?(params[:id].to_s)
         project = scope.find(params[:id])
       else
         project = scope.find_by_identifier(params[:id])
       end
       raise ActiveRecord::RecordNotFound unless project
+
       projects << project
     else
       projects = scope.to_a
@@ -74,7 +81,7 @@ class SysController < ActionController::Base
 
   def check_enabled
     User.current = nil
-    unless Setting.sys_api_enabled? && params[:key].to_s == Setting.sys_api_key
+    unless Setting.sys_api_enabled? && secure_compare(params[:key].to_s, Setting.sys_api_key.to_s)
       render :plain => 'Access denied. Repository management WS is disabled or key is invalid.', :status => 403
       return false
     end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,9 +22,8 @@ module Redmine
     class TimeReport
       attr_reader :criteria, :columns, :hours, :total_hours, :periods
 
-      def initialize(project, issue, criteria, columns, time_entry_scope)
+      def initialize(project, criteria, columns, time_entry_scope)
         @project = project
-        @issue = issue
 
         @criteria = criteria || []
         @criteria = @criteria.select{|criteria| available_criteria.has_key? criteria}
@@ -56,7 +57,7 @@ module Redmine
             end
             @hours << h
           end
-          
+
           @hours.each do |row|
             case @columns
             when 'year'
@@ -69,13 +70,13 @@ module Redmine
               row['day'] = "#{row['spent_on']}"
             end
           end
-          
+
           min = @hours.collect {|row| row['spent_on']}.min
           @from = min ? min.to_date : User.current.today
 
           max = @hours.collect {|row| row['spent_on']}.max
           @to = max ? max.to_date : User.current.today
-          
+
           @total_hours = @hours.inject(0) {|s,k| s = s + k['hours'].to_f}
 
           @periods = []
@@ -102,40 +103,41 @@ module Redmine
       end
 
       def load_available_criteria
-        @available_criteria = { 'project' => {:sql => "#{TimeEntry.table_name}.project_id",
-                                              :klass => Project,
-                                              :label => :label_project},
-                                 'status' => {:sql => "#{Issue.table_name}.status_id",
-                                              :klass => IssueStatus,
-                                              :label => :field_status},
-                                 'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
-                                              :klass => ::Version,
-                                              :label => :label_version},
-                                 'category' => {:sql => "#{Issue.table_name}.category_id",
-                                                :klass => IssueCategory,
-                                                :label => :field_category},
-                                 'user' => {:sql => "#{TimeEntry.table_name}.user_id",
-                                             :klass => User,
-                                             :label => :label_user},
-                                 'tracker' => {:sql => "#{Issue.table_name}.tracker_id",
-                                              :klass => Tracker,
-                                              :label => :label_tracker},
-                                 'activity' => {:sql => "#{TimeEntry.table_name}.activity_id",
-                                               :klass => TimeEntryActivity,
-                                               :label => :label_activity},
-                                 'issue' => {:sql => "#{TimeEntry.table_name}.issue_id",
-                                             :klass => Issue,
-                                             :label => :label_issue}
-                               }
+        @available_criteria = {
+          'project' => {:sql => "#{TimeEntry.table_name}.project_id",
+                        :klass => Project,
+                        :label => :label_project},
+          'status' => {:sql => "#{Issue.table_name}.status_id",
+                       :klass => IssueStatus,
+                       :label => :field_status},
+          'version' => {:sql => "#{Issue.table_name}.fixed_version_id",
+                        :klass => ::Version,
+                        :label => :label_version},
+          'category' => {:sql => "#{Issue.table_name}.category_id",
+                         :klass => IssueCategory,
+                         :label => :field_category},
+          'user' => {:sql => "#{TimeEntry.table_name}.user_id",
+                     :klass => User,
+                     :label => :label_user},
+          'tracker' => {:sql => "#{Issue.table_name}.tracker_id",
+                        :klass => Tracker,
+                        :label => :label_tracker},
+          'activity' => {:sql => "COALESCE(#{TimeEntryActivity.table_name}.parent_id, #{TimeEntryActivity.table_name}.id)",
+                         :klass => TimeEntryActivity,
+                         :label => :field_activity},
+          'issue' => {:sql => "#{TimeEntry.table_name}.issue_id",
+                      :klass => Issue,
+                      :label => :label_issue}
+        }
 
         # Add time entry custom fields
-        custom_fields = TimeEntryCustomField.all
+        custom_fields = TimeEntryCustomField.visible
         # Add project custom fields
-        custom_fields += ProjectCustomField.all
+        custom_fields += ProjectCustomField.visible
         # Add issue custom fields
-        custom_fields += (@project.nil? ? IssueCustomField.for_all : @project.all_issue_custom_fields)
+        custom_fields += @project.nil? ? IssueCustomField.visible.for_all : @project.all_issue_custom_fields.visible
         # Add time entry activity custom fields
-        custom_fields += TimeEntryActivityCustomField.all
+        custom_fields += TimeEntryActivityCustomField.visible
 
         # Add list and boolean custom fields as available criteria
         custom_fields.select {|cf| %w(list bool).include?(cf.field_format) && !cf.multiple?}.each do |cf|

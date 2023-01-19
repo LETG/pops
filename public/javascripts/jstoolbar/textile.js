@@ -26,6 +26,7 @@
 jsToolBar.prototype.elements.strong = {
   type: 'button',
   title: 'Strong',
+  shortcut: 'b',
   fn: {
     wiki: function() { this.singleTag('*') }
   }
@@ -35,6 +36,7 @@ jsToolBar.prototype.elements.strong = {
 jsToolBar.prototype.elements.em = {
   type: 'button',
   title: 'Italic',
+  shortcut: 'i',
   fn: {
     wiki: function() { this.singleTag("_") }
   }
@@ -44,6 +46,7 @@ jsToolBar.prototype.elements.em = {
 jsToolBar.prototype.elements.ins = {
   type: 'button',
   title: 'Underline',
+  shortcut: 'u',
   fn: {
     wiki: function() { this.singleTag('+') }
   }
@@ -150,7 +153,7 @@ jsToolBar.prototype.elements.bq = {
     wiki: function() {
       this.encloseLineSelection('','',function(str) {
         str = str.replace(/\r/g,'');
-        return str.replace(/(\n|^) *([^\n]*)/g,"$1> $2");
+        return str.replace(/(\n|^)( *)([^\n]*)/g,"$1> $2$3");
       });
     }
   }
@@ -164,7 +167,24 @@ jsToolBar.prototype.elements.unbq = {
     wiki: function() {
       this.encloseLineSelection('','',function(str) {
         str = str.replace(/\r/g,'');
-        return str.replace(/(\n|^) *[>]? *([^\n]*)/g,"$1$2");
+        return str.replace(/(\n|^) *(> ?)?( *)([^\n]*)/g,"$1$3$4");
+      });
+    }
+  }
+}
+
+// table
+jsToolBar.prototype.elements.table = {
+  type: 'button',
+  title: 'Table',
+  fn: {
+    wiki: function() {
+      var This = this;
+      this.tableMenu(function(cols, rowCount){
+        This.encloseLineSelection(
+          '|_.'+cols.join('|_.')+'|\n' +                                 // header
+          Array(rowCount+1).join(Array(cols.length+1).join('|  ')+'|\n') // cells
+        );
       });
     }
   }

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,102 +29,77 @@ class PdfTest < ActiveSupport::TestCase
   end
 
   def test_rdm_pdf_iconv_cannot_convert_ja_cp932
-    encoding = ( RUBY_PLATFORM == 'java' ? "SJIS" : "CP932" )
-    utf8_txt_1  = "\xe7\x8b\x80\xe6\x85\x8b"
-    utf8_txt_2  = "\xe7\x8b\x80\xe6\x85\x8b\xe7\x8b\x80"
-    utf8_txt_3  = "\xe7\x8b\x80\xe7\x8b\x80\xe6\x85\x8b\xe7\x8b\x80"
-    if utf8_txt_1.respond_to?(:force_encoding)
+    utf8_txt_1  = '狀態'
+    utf8_txt_2  = '狀態狀'
+    utf8_txt_3  = '狀狀態狀'
+    ["CP932", "SJIS"].each do |encoding|
       txt_1 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_1, encoding)
       txt_2 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_2, encoding)
       txt_3 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_3, encoding)
-      assert_equal "?\x91\xd4".force_encoding("ASCII-8BIT"), txt_1
-      assert_equal "?\x91\xd4?".force_encoding("ASCII-8BIT"), txt_2
-      assert_equal "??\x91\xd4?".force_encoding("ASCII-8BIT"), txt_3
+      assert_equal "?\x91\xd4".b, txt_1
+      assert_equal "?\x91\xd4?".b, txt_2
+      assert_equal "??\x91\xd4?".b, txt_3
       assert_equal "ASCII-8BIT", txt_1.encoding.to_s
       assert_equal "ASCII-8BIT", txt_2.encoding.to_s
       assert_equal "ASCII-8BIT", txt_3.encoding.to_s
-    elsif RUBY_PLATFORM == 'java'
-      assert_equal "??",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_1, encoding)
-      assert_equal "???",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_2, encoding)
-      assert_equal "????",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_3, encoding)
-    else
-      assert_equal "???\x91\xd4",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_1, encoding)
-      assert_equal "???\x91\xd4???",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_2, encoding)
-      assert_equal "??????\x91\xd4???",
-                   Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(utf8_txt_3, encoding)
     end
   end
 
   def test_rdm_pdf_iconv_invalid_utf8_should_be_replaced_en
-    str1 = "Texte encod\xe9 en ISO-8859-1"
-    str2 = "\xe9a\xe9b\xe9c\xe9d\xe9e test"
-    str1.force_encoding("UTF-8") if str1.respond_to?(:force_encoding)
-    str2.force_encoding("ASCII-8BIT") if str2.respond_to?(:force_encoding)
+    str1 = "Texte encod\xE9 en ISO-8859-1"
+    str2 = "\xe9a\xe9b\xe9c\xe9d\xe9e test".b
     txt_1 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(str1, 'UTF-8')
     txt_2 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(str2, 'UTF-8')
-    if txt_1.respond_to?(:force_encoding)
-      assert_equal "ASCII-8BIT", txt_1.encoding.to_s
-      assert_equal "ASCII-8BIT", txt_2.encoding.to_s
-    end
+    assert_equal "ASCII-8BIT", txt_1.encoding.to_s
+    assert_equal "ASCII-8BIT", txt_2.encoding.to_s
     assert_equal "Texte encod? en ISO-8859-1", txt_1
     assert_equal "?a?b?c?d?e test", txt_2
   end
 
   def test_rdm_pdf_iconv_invalid_utf8_should_be_replaced_ja
-    str1 = "Texte encod\xe9 en ISO-8859-1"
-    str2 = "\xe9a\xe9b\xe9c\xe9d\xe9e test"
-    str1.force_encoding("UTF-8") if str1.respond_to?(:force_encoding)
-    str2.force_encoding("ASCII-8BIT") if str2.respond_to?(:force_encoding)
+    str1 = "Texte encod\xE9 en ISO-8859-1"
+    str2 = "\xe9a\xe9b\xe9c\xe9d\xe9e test".b
     encoding = ( RUBY_PLATFORM == 'java' ? "SJIS" : "CP932" )
     txt_1 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(str1, encoding)
     txt_2 = Redmine::Export::PDF::RDMPdfEncoding::rdm_from_utf8(str2, encoding)
-    if txt_1.respond_to?(:force_encoding)
-      assert_equal "ASCII-8BIT", txt_1.encoding.to_s
-      assert_equal "ASCII-8BIT", txt_2.encoding.to_s
-    end
+    assert_equal "ASCII-8BIT", txt_1.encoding.to_s
+    assert_equal "ASCII-8BIT", txt_2.encoding.to_s
     assert_equal "Texte encod? en ISO-8859-1", txt_1
     assert_equal "?a?b?c?d?e test", txt_2
   end
 
   def test_attach
     set_fixtures_attachments_directory
+    ["CP932", "SJIS"].each do |encoding|
+      str2 = "\x83e\x83X\x83g".b
 
-    str2 = "\x83e\x83X\x83g"
-    str2.force_encoding("ASCII-8BIT") if str2.respond_to?(:force_encoding)
-    encoding = ( RUBY_PLATFORM == 'java' ? "SJIS" : "CP932" )
+      a1 = Attachment.find(17)
+      a2 = Attachment.find(19)
+      User.current = User.find(1)
+      assert a1.readable?
+      assert a1.visible?
+      assert a2.readable?
+      assert a2.visible?
 
-    a1 = Attachment.find(17)
-    a2 = Attachment.find(19)
+      aa1 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "Testfile.PNG", "UTF-8")
+      assert_not_nil aa1
+      assert_equal 17, aa1.id
 
-    User.current = User.find(1)
-    assert a1.readable?
-    assert a1.visible?
-    assert a2.readable?
-    assert a2.visible?
+      aa2 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "test#{str2}.png", encoding)
+      assert_not_nil aa2
+      assert_equal 19, aa2.id
 
-    aa1 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "Testfile.PNG", "UTF-8")
-    assert_not_nil aa1
-    assert_equal 17, aa1.id
-    aa2 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "test#{str2}.png", encoding)
-    assert_not_nil aa2
-    assert_equal 19, aa2.id
-
-    User.current = nil
-    assert a1.readable?
-    assert (! a1.visible?)
-    assert a2.readable?
-    assert (! a2.visible?)
-
-    aa1 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "Testfile.PNG", "UTF-8")
-    assert_equal nil, aa1
-    aa2 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "test#{str2}.png", encoding)
-    assert_equal nil, aa2
-
+      User.current = nil
+      assert a1.readable?
+      assert (! a1.visible?)
+      assert a2.readable?
+      assert (! a2.visible?)
+      aa1 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "Testfile.PNG", "UTF-8")
+      assert_nil aa1
+      aa2 = Redmine::Export::PDF::RDMPdfEncoding::attach(Attachment.all, "test#{str2}.png", encoding)
+      assert_nil aa2
+    end
+  ensure
     set_tmp_attachments_directory
   end
 end

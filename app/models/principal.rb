@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -37,9 +39,9 @@ class Principal < ActiveRecord::Base
   validate :validate_status
 
   # Groups and active users
-  scope :active, lambda { where(:status => STATUS_ACTIVE) }
+  scope :active, lambda {where(:status => STATUS_ACTIVE)}
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     user = args.first || User.current
 
     if user.admin?
@@ -56,44 +58,51 @@ class Principal < ActiveRecord::Base
         active
       else
         # self and members of visible projects
-        active.where("#{table_name}.id = ? OR #{table_name}.id IN (SELECT user_id FROM #{Member.table_name} WHERE project_id IN (?))",
+        active.where(
+          "#{table_name}.id = ? OR #{table_name}.id IN (SELECT user_id FROM #{Member.table_name} WHERE project_id IN (?))",
           user.id, user.visible_project_ids
         )
       end
     end
-  }
+  end)
 
-  scope :like, lambda {|q|
+  scope :like, (lambda do |q|
     q = q.to_s
     if q.blank?
       where({})
     else
-      pattern = "%#{q}%"
-      sql = %w(login firstname lastname).map {|column| "LOWER(#{table_name}.#{column}) LIKE LOWER(:p)"}.join(" OR ")
-      sql << " OR #{table_name}.id IN (SELECT user_id FROM #{EmailAddress.table_name} WHERE LOWER(address) LIKE LOWER(:p))"
-      params = {:p => pattern}
-      if q =~ /^(.+)\s+(.+)$/
-        a, b = "#{$1}%", "#{$2}%"
-        sql << " OR (LOWER(#{table_name}.firstname) LIKE LOWER(:a) AND LOWER(#{table_name}.lastname) LIKE LOWER(:b))"
-        sql << " OR (LOWER(#{table_name}.firstname) LIKE LOWER(:b) AND LOWER(#{table_name}.lastname) LIKE LOWER(:a))"
-        params.merge!(:a => a, :b => b)
+      pattern = "%#{sanitize_sql_like q}%"
+      sql = +"LOWER(#{table_name}.login) LIKE LOWER(:p) ESCAPE :s"
+      sql << " OR #{table_name}.id IN (SELECT user_id FROM #{EmailAddress.table_name} WHERE LOWER(address) LIKE LOWER(:p) ESCAPE :s)"
+      params = {:p => pattern, :s => '\\'}
+
+      tokens = q.split(/\s+/).reject(&:blank?).map {|token| "%#{sanitize_sql_like token}%"}
+      if tokens.present?
+        sql << ' OR ('
+        sql << tokens.map.with_index do |token, index|
+          params[:"token_#{index}"] = token
+          "(LOWER(#{table_name}.firstname) LIKE LOWER(:token_#{index}) ESCAPE :s OR LOWER(#{table_name}.lastname) LIKE LOWER(:token_#{index}) ESCAPE :s)"
+        end.join(' AND ')
+        sql << ')'
       end
       where(sql, params)
     end
-  }
+  end)
 
   # Principals that are members of a collection of projects
-  scope :member_of, lambda {|projects|
+  scope :member_of, (lambda do |projects|
     projects = [projects] if projects.is_a?(Project)
     if projects.blank?
       where("1=0")
     else
       ids = projects.map(&:id)
-      active.where("#{Principal.table_name}.id IN (SELECT DISTINCT user_id FROM #{Member.table_name} WHERE project_id IN (?))", ids)
+      # include active and locked users
+      where(:status => [STATUS_LOCKED, STATUS_ACTIVE]).
+      where("#{Principal.table_name}.id IN (SELECT DISTINCT user_id FROM #{Member.table_name} WHERE project_id IN (?))", ids)
     end
-  }
+  end)
   # Principals that are not members of projects
-  scope :not_member_of, lambda {|projects|
+  scope :not_member_of, (lambda do |projects|
     projects = [projects] unless projects.is_a?(Array)
     if projects.empty?
       where("1=0")
@@ -101,8 +110,11 @@ class Principal < ActiveRecord::Base
       ids = projects.map(&:id)
       where("#{Principal.table_name}.id NOT IN (SELECT DISTINCT user_id FROM #{Member.table_name} WHERE project_id IN (?))", ids)
     end
-  }
-  scope :sorted, lambda { order(*Principal.fields_for_order_statement)}
+  end)
+  scope :sorted, lambda {order(*Principal.fields_for_order_statement)}
+
+  # Principals that can be added as watchers
+  scope :assignable_watchers, lambda {active.visible.where(:type => ['User', 'Group'])}
 
   before_create :set_default_empty_values
   before_destroy :nullify_projects_default_assigned_to
@@ -125,7 +137,7 @@ class Principal < ActiveRecord::Base
   end
 
   def visible?(user=User.current)
-    Principal.visible(user).where(:id => id).first == self
+    Principal.visible(user).find_by(:id => id) == self
   end
 
   # Returns true if the principal is a member of project
@@ -167,13 +179,14 @@ class Principal < ActiveRecord::Base
     principal ||= principals.detect {|a| keyword.casecmp(a.login.to_s) == 0}
     principal ||= principals.detect {|a| keyword.casecmp(a.mail.to_s) == 0}
 
-    if principal.nil? && keyword.match(/ /)
+    if principal.nil? && / /.match?(keyword)
       firstname, lastname = *(keyword.split) # "First Last Throwaway"
-      principal ||= principals.detect {|a|
-                                 a.is_a?(User) &&
-                                   firstname.casecmp(a.firstname.to_s) == 0 &&
-                                   lastname.casecmp(a.lastname.to_s) == 0
-                               }
+      principal ||=
+        principals.detect do |a|
+          a.is_a?(User) &&
+            firstname.casecmp(a.firstname.to_s) == 0 &&
+              lastname.casecmp(a.lastname.to_s) == 0
+        end
     end
     if principal.nil?
       principal ||= principals.detect {|a| keyword.casecmp(a.name) == 0}
@@ -204,6 +217,3 @@ class Principal < ActiveRecord::Base
     end
   end
 end
-
-require_dependency "user"
-require_dependency "group"

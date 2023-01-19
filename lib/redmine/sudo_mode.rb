@@ -1,12 +1,12 @@
+# frozen_string_literal: true
+
 require 'active_support/core_ext/object/to_query'
 require 'rack/utils'
 
 module Redmine
   module SudoMode
-
     class SudoRequired < StandardError
     end
-
 
     class Form
       include ActiveModel::Validations
@@ -20,27 +20,25 @@ module Redmine
 
       def check_password
         unless password.present? && User.current.check_password?(password)
-          errors[:password] << :invalid
+          errors.add(:password, :invalid)
         end
       end
     end
-
 
     module Helper
       # Represents params data from hash as hidden fields
       #
       # taken from https://github.com/brianhempel/hash_to_hidden_fields
       def hash_to_hidden_fields(hash)
-        cleaned_hash = hash.reject { |k, v| v.nil? }
+        cleaned_hash = hash.to_unsafe_h.reject {|k, v| v.nil?}
         pairs = cleaned_hash.to_query.split(Rack::Utils::DEFAULT_SEP)
         tags = pairs.map do |pair|
-          key, value = pair.split('=', 2).map { |str| Rack::Utils.unescape(str) }
+          key, value = pair.split('=', 2).map {|str| Rack::Utils.unescape(str)}
           hidden_field_tag(key, value)
         end
         tags.join("\n").html_safe
       end
     end
-
 
     module Controller
       extend ActiveSupport::Concern
@@ -110,8 +108,8 @@ module Redmine
         # a simple 'render "sudo_mode/new"' works when used directly inside an
         # action, but not when called from a before_action:
         respond_to do |format|
-          format.html { render 'sudo_mode/new' }
-          format.js   { render 'sudo_mode/new' }
+          format.html {render 'sudo_mode/new'}
+          format.js   {render 'sudo_mode/new'}
         end
       end
 
@@ -150,7 +148,6 @@ module Redmine
       end
 
       module ClassMethods
-
         # Handles sudo requirements for the given actions, preserving the named
         # parameters, or any parameters if you omit the :parameters option.
         #
@@ -172,7 +169,6 @@ module Redmine
         end
       end
     end
-
 
     # true if the sudo mode state was queried during this request
     def self.was_used?

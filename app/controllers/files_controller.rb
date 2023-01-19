@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -38,13 +40,13 @@ class FilesController < ApplicationController
     @containers += @project.versions.includes(:attachments).
                     references(:attachments).reorder(sort_clause).to_a.sort.reverse
     respond_to do |format|
-      format.html { render :layout => !request.xhr? }
+      format.html {render :layout => !request.xhr?}
       format.api
     end
   end
 
   def new
-    @versions = @project.versions.sort
+    @versions = @project.versions.sorted
   end
 
   def create
@@ -55,21 +57,23 @@ class FilesController < ApplicationController
 
     if attachments[:files].present?
       if Setting.notified_events.include?('file_added')
-        Mailer.attachments_added(attachments[:files]).deliver
+        Mailer.deliver_attachments_added(attachments[:files])
       end
       respond_to do |format|
-        format.html {
+        format.html do
           flash[:notice] = l(:label_file_added)
-          redirect_to project_files_path(@project) }
-        format.api { render_api_ok }
+          redirect_to project_files_path(@project)
+        end
+        format.api {render_api_ok}
       end
     else
       respond_to do |format|
-        format.html {
+        format.html do
           flash.now[:error] = l(:label_attachment) + " " + l('activerecord.errors.messages.invalid')
           new
-          render :action => 'new' }
-        format.api { render :status => :bad_request }
+          render :action => 'new'
+        end
+        format.api {render :status => :bad_request}
       end
     end
   end

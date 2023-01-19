@@ -7,6 +7,8 @@
 
 <p><%= setting_select :cross_project_subtasks, cross_project_subtasks_options %></p>
 
+<p><%= setting_check_box :close_duplicate_issues %></p>
+
 <p><%= setting_check_box :issue_group_assignment %></p>
 
 <p><%= setting_check_box :default_issue_start_date_to_creation_date %></p>
@@ -20,6 +22,8 @@
 <p><%= setting_text_field :issues_export_limit, :size => 6 %></p>
 
 <p><%= setting_text_field :gantt_items_limit, :size => 6 %></p>
+
+<p><%= setting_text_field :gantt_months_limit, :size => 6 %></p>
 </div>
 
 <fieldset class="box">
@@ -43,6 +47,11 @@
            IssueQuery.new(:totalable_names => Setting.issue_list_default_totals).available_totalable_columns.map {|c| [c.caption, c.name.to_s]},
            :inline => true,
            :label => :label_total_plural %></p>
+
+  <p>
+    <label><%= l(:label_default_query) %></label>
+    <%= setting_select :default_issue_query, default_global_issue_query_options, label: false %>
+  </p>
 </fieldset>
 
 <%= submit_tag l(:button_save) %>

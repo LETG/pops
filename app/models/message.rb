@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,20 +24,30 @@ class Message < ActiveRecord::Base
   acts_as_tree :counter_cache => :replies_count, :order => "#{Message.table_name}.created_on ASC"
   acts_as_attachable
   belongs_to :last_reply, :class_name => 'Message'
-  attr_protected :id
 
   acts_as_searchable :columns => ['subject', 'content'],
                      :preload => {:board => :project},
                      :project_key => "#{Board.table_name}.project_id"
 
-  acts_as_event :title => Proc.new {|o| "#{o.board.name}: #{o.subject}"},
-                :description => :content,
-                :group => :parent,
-                :type => Proc.new {|o| o.parent_id.nil? ? 'message' : 'reply'},
-                :url => Proc.new {|o| {:controller => 'messages', :action => 'show', :board_id => o.board_id}.merge(o.parent_id.nil? ? {:id => o.id} :
-                                                                                                                                       {:id => o.parent_id, :r => o.id, :anchor => "message-#{o.id}"})}
-
-  acts_as_activity_provider :scope => preload({:board => :project}, :author),
+  acts_as_event(
+    :title => Proc.new {|o| "#{o.board.name}: #{o.subject}"},
+    :description => :content,
+    :group => :parent,
+    :type => Proc.new {|o| o.parent_id.nil? ? 'message' : 'reply'},
+    :url =>
+      Proc.new do |o|
+        {:controller => 'messages', :action => 'show',
+         :board_id => o.board_id}.
+           merge(
+             if o.parent_id.nil?
+               {:id => o.id}
+             else
+               {:id => o.parent_id, :r => o.id, :anchor => "message-#{o.id}"}
+             end
+           )
+      end
+  )
+  acts_as_activity_provider :scope => proc {preload({:board => :project}, :author)},
                             :author_key => :author_id
   acts_as_watchable
 
@@ -46,19 +58,21 @@ class Message < ActiveRecord::Base
   after_create :add_author_as_watcher, :reset_counters!
   after_update :update_messages_board
   after_destroy :reset_counters!
-  after_create :send_notification
+  after_create_commit :send_notification
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     joins(:board => :project).
     where(Project.allowed_to_condition(args.shift || User.current, :view_messages, *args))
-  }
+  end)
 
   safe_attributes 'subject', 'content'
-  safe_attributes 'locked', 'sticky', 'board_id',
-    :if => lambda {|message, user|
-      user.allowed_to?(:edit_messages, message.project)
-    }
-
+  safe_attributes(
+    'locked', 'sticky', 'board_id',
+    :if =>
+      lambda do |message, user|
+        user.allowed_to?(:edit_messages, message.project)
+      end
+  )
   def visible?(user=User.current)
     !user.nil? && user.allowed_to?(:view_messages, project)
   end
@@ -69,9 +83,9 @@ class Message < ActiveRecord::Base
   end
 
   def update_messages_board
-    if board_id_changed?
+    if saved_change_to_board_id?
       Message.where(["id = ? OR parent_id = ?", root.id, root.id]).update_all({:board_id => board_id})
-      Board.reset_counters!(board_id_was)
+      Board.reset_counters!(board_id_before_last_save)
       Board.reset_counters!(board_id)
     end
   end
@@ -115,7 +129,7 @@ class Message < ActiveRecord::Base
 
   def send_notification
     if Setting.notified_events.include?('message_posted')
-      Mailer.message_posted(self).deliver
+      Mailer.deliver_message_posted(self)
     end
   end
 end

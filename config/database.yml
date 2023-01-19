@@ -1,27 +1,17 @@
 development:
   adapter: postgresql
-  database: redmine
-  host: postgresql.service.consul
-  username: postgres
+  database: pops5
+  host: 172.30.1.5
+  port: 5432
+  timeout: 10000
+  username: popsadm
+  password: 'Nh;aqwzsx1414'
   encoding: utf8
 
-# PostgreSQL configuration example
-#production:
-#  adapter: postgresql
-#  database: redmine
-#  host: localhost
-#  username: postgres
-#  password: "postgres"
-
-# SQLite3 configuration example
-#production:
-#  adapter: sqlite3
-#  database: db/redmine.sqlite3
-
-# SQL Server configuration example
-#production:
-#  adapter: sqlserver
-#  database: redmine
-#  host: localhost
-#  username: jenkins
-#  password: jenkins
+  # production:
+  # adapter: postgresql
+  # database: pops
+  # host: pgiuem.univ-brest.fr
+  # username: popsadm
+  # password: aB-jCorwWzfhor
+  # encoding: utf8

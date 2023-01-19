@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,8 +18,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class Changeset < ActiveRecord::Base
-  
-
   belongs_to :repository
   belongs_to :user
   has_many :filechanges, :class_name => 'Change', :dependent => :delete_all
@@ -31,12 +31,17 @@ class Changeset < ActiveRecord::Base
                           :join_table => "#{table_name_prefix}changeset_parents#{table_name_suffix}",
                           :association_foreign_key => 'changeset_id', :foreign_key => 'parent_id'
 
-  acts_as_event :title => Proc.new {|o| o.title},
-                :description => :long_comments,
-                :datetime => :committed_on,
-                :url => Proc.new {|o| {:controller => 'repositories', :action => 'revision', :id => o.repository.project, :repository_id => o.repository.identifier_param, :rev => o.identifier}}
-
-  puts "ACTS AS SEARCHABLE"
+  acts_as_event(
+    :title => proc {|o| o.title},
+    :description => :long_comments,
+    :datetime => :committed_on,
+    :url =>
+      proc do |o|
+        {:controller => 'repositories', :action => 'revision',
+         :id => o.repository.project,
+         :repository_id => o.repository.identifier_param, :rev => o.identifier}
+      end
+  )
   acts_as_searchable :columns => 'comments',
                      :preload => {:repository => :project},
                      :project_key => "#{Repository.table_name}.project_id",
@@ -44,17 +49,16 @@ class Changeset < ActiveRecord::Base
 
   acts_as_activity_provider :timestamp => "#{table_name}.committed_on",
                             :author_key => :user_id,
-                            :scope => preload(:user, {:repository => :project})
+                            :scope => proc {preload(:user, {:repository => :project})}
 
   validates_presence_of :repository_id, :revision, :committed_on, :commit_date
-  validates_uniqueness_of :revision, :scope => :repository_id
-  validates_uniqueness_of :scmid, :scope => :repository_id, :allow_nil => true
-  attr_protected :id
+  validates_uniqueness_of :revision, :scope => :repository_id, :case_sensitive => true
+  validates_uniqueness_of :scmid, :scope => :repository_id, :allow_nil => true, :case_sensitive => true
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     joins(:repository => :project).
     where(Project.allowed_to_condition(args.shift || User.current, :view_changesets, *args))
-  }
+  end)
 
   after_create :scan_for_issues
   before_create :before_create_cs
@@ -96,8 +100,8 @@ class Changeset < ActiveRecord::Base
 
   def before_create_cs
     self.committer = self.class.to_utf8(self.committer, repository.repo_log_encoding)
-    self.comments  = self.class.normalize_comments(
-                       self.comments, repository.repo_log_encoding)
+    self.comments =
+      self.class.normalize_comments(self.comments, repository.repo_log_encoding)
     self.user = repository.find_committer_user(self.committer)
   end
 
@@ -119,22 +123,30 @@ class Changeset < ActiveRecord::Base
 
   def scan_comment_for_issue_ids
     return if comments.blank?
+
     # keywords used to reference issues
     ref_keywords = Setting.commit_ref_keywords.downcase.split(",").collect(&:strip)
     ref_keywords_any = ref_keywords.delete('*')
+
     # keywords used to fix issues
     fix_keywords = Setting.commit_update_keywords_array.map {|r| r['keywords']}.flatten.compact
-
     kw_regexp = (ref_keywords + fix_keywords).collect{|kw| Regexp.escape(kw)}.join("|")
 
     referenced_issues = []
-
-    comments.scan(/([\s\(\[,-]|^)((#{kw_regexp})[\s:]+)?(#\d+(\s+@#{TIMELOG_RE})?([\s,;&]+#\d+(\s+@#{TIMELOG_RE})?)*)(?=[[:punct:]]|\s|<|$)/i) do |match|
-      action, refs = match[2].to_s.downcase, match[3]
+    regexp =
+      %r{
+        ([\s\(\[,-]|^)((#{kw_regexp})[\s:]+)?
+        (\#\d+(\s+@#{TIMELOG_RE})?([\s,;&]+\#\d+(\s+@#{TIMELOG_RE})?)*)
+        (?=[[:punct:]]|\s|<|$)
+      }xi
+    comments.scan(regexp) do |match|
+      action = match[2].to_s.downcase
+      refs   = match[3]
       next unless action.present? || ref_keywords_any
 
       refs.scan(/#(\d+)(\s+@#{TIMELOG_RE})?/).each do |m|
-        issue, hours = find_referenced_issue_by_id(m[0].to_i), m[2]
+        issue = find_referenced_issue_by_id(m[0].to_i)
+        hours = m[2]
         if issue && !issue_linked_to_same_commit?(issue)
           referenced_issues << issue
           # Don't update issues or log time when importing old commits
@@ -163,11 +175,7 @@ class Changeset < ActiveRecord::Base
     if repository && repository.identifier.present?
       repo = "#{repository.identifier}|"
     end
-    tag = if scmid?
-      "commit:#{repo}#{scmid}"
-    else
-      "#{repo}r#{revision}"
-    end
+    tag = scmid? ? "commit:#{repo}#{scmid}" : "#{repo}r#{revision}"
     if ref_project && project && ref_project != project
       tag = "#{project.identifier}:#{tag}"
     end
@@ -203,6 +211,7 @@ class Changeset < ActiveRecord::Base
   # Finds an issue that can be referenced by the commit message
   def find_referenced_issue_by_id(id)
     return nil if id.blank?
+
     issue = Issue.find_by_id(id.to_i)
     if Setting.commit_cross_project_ref?
       # all issues can be referenced/fixed
@@ -244,7 +253,7 @@ class Changeset < ActiveRecord::Base
       issue.assign_attributes rule.slice(*Issue.attribute_names)
     end
     Redmine::Hook.call_hook(:model_changeset_scan_commit_for_issue_ids_pre_issue_update,
-                            { :changeset => self, :issue => issue, :action => action })
+                            {:changeset => self, :issue => issue, :action => action})
 
     if issue.changes.any?
       unless issue.save
@@ -257,15 +266,18 @@ class Changeset < ActiveRecord::Base
   end
 
   def log_time(issue, hours)
-    time_entry = TimeEntry.new(
-      :user => user,
-      :hours => hours,
-      :issue => issue,
-      :spent_on => commit_date,
-      :comments => l(:text_time_logged_by_changeset, :value => text_tag(issue.project),
-                     :locale => Setting.default_language)
+    time_entry =
+      TimeEntry.new(
+        :user => user,
+        :hours => hours,
+        :issue => issue,
+        :spent_on => commit_date,
+        :comments => l(:text_time_logged_by_changeset, :value => text_tag(issue.project),
+                       :locale => Setting.default_language)
       )
-    time_entry.activity = log_time_activity unless log_time_activity.nil?
+    if activity = issue.project.commit_logtime_activity
+      time_entry.activity = activity
+    end
 
     unless time_entry.save
       logger.warn("TimeEntry could not be created by changeset #{id}: #{time_entry.errors.full_messages}") if logger
@@ -273,27 +285,22 @@ class Changeset < ActiveRecord::Base
     time_entry
   end
 
-  def log_time_activity
-    if Setting.commit_logtime_activity_id.to_i > 0
-      TimeEntryActivity.find_by_id(Setting.commit_logtime_activity_id.to_i)
-    end
-  end
-
   def split_comments
     comments =~ /\A(.+?)\r?\n(.*)$/m
     @short_comments = $1 || comments
     @long_comments = $2.to_s.strip
-    return @short_comments, @long_comments
+    [@short_comments, @long_comments]
   end
 
-  public
+  # Singleton class method is public
+  class << self
+    # Strips and reencodes a commit log before insertion into the database
+    def normalize_comments(str, encoding)
+      Changeset.to_utf8(str.to_s.strip, encoding)
+    end
 
-  # Strips and reencodes a commit log before insertion into the database
-  def self.normalize_comments(str, encoding)
-    Changeset.to_utf8(str.to_s.strip, encoding)
-  end
-
-  def self.to_utf8(str, encoding)
-    Redmine::CodesetUtil.to_utf8(str, encoding)
+    def to_utf8(str, encoding)
+      Redmine::CodesetUtil.to_utf8(str, encoding)
+    end
   end
 end

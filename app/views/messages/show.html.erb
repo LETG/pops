@@ -22,7 +22,7 @@
          ) if @message.destroyable_by?(User.current) %>
 </div>
 
-<h2><%= avatar(@topic.author, :size => "24") %><%= @topic.subject %></h2>
+<h2><%= avatar(@topic.author) %><%= @topic.subject %></h2>
 
 <div class="message">
 <p><span class="author"><%= authoring @topic.created_on, @topic.author %></span></p>
@@ -34,6 +34,7 @@
 <br />
 
 <% unless @replies.empty? %>
+<div id="replies">
 <h3 class="comments icon icon-comments"><%= l(:label_reply_plural) %> (<%= @reply_count %>)</h3>
 <% if !@topic.locked? && authorize_for('messages', 'reply') && @replies.size >= 3 %>
   <p><%= toggle_link l(:button_reply), "reply", :focus => 'message_content', :scroll => "message_content" %></p>
@@ -64,8 +65,8 @@
             :class => 'icon icon-del'
           ) if message.destroyable_by?(User.current) %>
     </div>
-  <h4>
-    <%= avatar(message.author, :size => "24") %>
+  <h4 class='reply-header'>
+    <%= avatar(message.author) %>
     <%= link_to message.subject, { :controller => 'messages', :action => 'show', :board_id => @board, :id => @topic, :r => message, :anchor => "message-#{message.id}" } %>
     -
     <%= authoring message.created_on, message.author %>
@@ -74,6 +75,7 @@
   <%= link_to_attachments message, :author => false, :thumbnails => true %>
   </div>
 <% end %>
+</div>
 <span class="pagination"><%= pagination_links_full @reply_pages, @reply_count, :per_page_links => false %></span>
 <% end %>
 
@@ -83,10 +85,16 @@
 <%= form_for @reply, :as => :reply, :url => {:action => 'reply', :id => @topic}, :html => {:multipart => true, :id => 'message-form'} do |f| %>
   <%= render :partial => 'form', :locals => {:f => f, :replying => true} %>
   <%= submit_tag l(:button_submit) %>
-  <%= preview_link({:controller => 'messages', :action => 'preview', :board_id => @board}, 'message-form') %>
 <% end %>
-<div id="preview" class="wiki"></div>
 </div>
 <% end %>
 
 <% html_title @topic.subject %>
+<% content_for :sidebar do %>
+  <% if User.current.allowed_to?(:add_message_watchers, @project) ||
+    (@topic.watchers.present? && User.current.allowed_to?(:view_message_watchers, @project)) %>
+    <div id="watchers">
+      <%= render :partial => 'watchers/watchers', :locals => {:watched => @topic} %>
+    </div>
+  <% end %>
+<% end %>

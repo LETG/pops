@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -104,6 +106,10 @@ class QueriesController < ApplicationController
     render_404
   end
 
+  def current_menu_item
+    @query ? @query.queried_class.to_s.underscore.pluralize.to_sym : nil
+  end
+
   private
 
   def find_query
@@ -114,18 +120,11 @@ class QueriesController < ApplicationController
     render_404
   end
 
-  def find_optional_project
-    @project = Project.find(params[:project_id]) if params[:project_id]
-    render_403 unless User.current.allowed_to?(:save_queries, @project, :global => true)
-  rescue ActiveRecord::RecordNotFound
-    render_404
-  end
-
   def update_query_from_params
     @query.project = params[:query_is_for_all] ? nil : @project
     @query.build_from_params(params)
     @query.column_names = nil if params[:default_columns]
-    @query.sort_criteria = params[:query] && params[:query][:sort_criteria]
+    @query.sort_criteria = (params[:query] && params[:query][:sort_criteria]) || @query.sort_criteria
     @query.name = params[:query] && params[:query][:name]
     if User.current.allowed_to?(:manage_public_queries, @query.project) || User.current.admin?
       @query.visibility = (params[:query] && params[:query][:visibility]) || Query::VISIBILITY_PRIVATE
@@ -148,6 +147,12 @@ class QueriesController < ApplicationController
       else
         redirect_to issues_gantt_path(options)
       end
+    elsif params[:calendar]
+      if @project
+        redirect_to project_calendar_path(@project, options)
+      else
+        redirect_to issues_calendar_path(options)
+      end
     else
       redirect_to _project_issues_path(@project, options)
     end
@@ -155,6 +160,10 @@ class QueriesController < ApplicationController
 
   def redirect_to_time_entry_query(options)
     redirect_to _time_entries_path(@project, nil, options)
+  end
+
+  def redirect_to_project_query(options)
+    redirect_to projects_path(options)
   end
 
   # Returns the Query subclass, IssueQuery by default

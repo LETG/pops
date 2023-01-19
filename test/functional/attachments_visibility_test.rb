@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,9 +23,11 @@ class AttachmentsVisibilityTest < Redmine::ControllerTest
   tests AttachmentsController
   fixtures :users, :email_addresses, :projects, :roles, :members, :member_roles,
            :enabled_modules, :projects_trackers, :issue_statuses, :enumerations,
-           :issues, :trackers, :versions
+           :issues, :trackers, :versions,
+           :custom_fields, :custom_fields_trackers, :custom_fields_projects
 
   def setup
+    User.current = nil
     set_tmp_attachments_directory
 
     @field = IssueCustomField.generate!(:field_format => 'attachment', :visible => true)

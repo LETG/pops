@@ -15,12 +15,12 @@ cs:
       short: "%b %d"
       long: "%B %d, %Y"
 
-    day_names: [Neděle, Pondělí, Úterý, Středa, Čtvrtek, Pátek, Sobota]
-    abbr_day_names: [Ne, Po, Út, St, Čt, Pá, So]
+    day_names: [neděle, pondělí, úterý, středa, čtvrtek, pátek, sobota]
+    abbr_day_names: [ne, po, út, st, čt, pá, so]
 
     # Don't forget the nil at the beginning; there's no such thing as a 0th month
-    month_names: [~, Leden, Únor, Březen, Duben, Květen, Červen, Červenec, Srpen, Září, Říjen, Listopad, Prosinec]
-    abbr_month_names: [~, Led, Úno, Bře, Dub, Kvě, Čer, Čec, Srp, Zář, Říj, Lis, Pro]
+    month_names: [~, leden, únor, březen, duben, květen, červen, červenec, srpen, září, říjen, listopad, prosinec]
+    abbr_month_names: [~, led, úno, bře, dub, kvě, čer, čec, srp, zář, říj, lis, pro]
     # Used in date_select and datime_select.
     order:
       - :year
@@ -41,40 +41,40 @@ cs:
       half_a_minute: "půl minuty"
       less_than_x_seconds:
         one:   "méně než sekunda"
-        other: "méně než %{count} sekund"
+        other: "méně než %{count} sekund(y)"
       x_seconds:
         one:   "1 sekunda"
         other: "%{count} sekund"
       less_than_x_minutes:
         one:   "méně než minuta"
-        other: "méně než %{count} minut"
+        other: "méně než %{count} minut(y)"
       x_minutes:
         one:   "1 minuta"
         other: "%{count} minut"
       about_x_hours:
         one:   "asi 1 hodina"
-        other: "asi %{count} hodin"
+        other: "asi %{count} hodin(y)"
       x_hours:
         one:   "1 hodina"
-        other: "%{count} hodin"
+        other: "%{count} hodin(y)"
       x_days:
         one:   "1 den"
-        other: "%{count} dnů"
+        other: "%{count} dny(ů)"
       about_x_months:
         one:   "asi 1 měsíc"
-        other: "asi %{count} měsíců"
+        other: "asi %{count} měsíce(ů)"
       x_months:
         one:   "1 měsíc"
-        other: "%{count} měsíců"
+        other: "%{count} měsíc(ů)"
       about_x_years:
         one:   "asi 1 rok"
-        other: "asi %{count} let"
+        other: "asi %{count} roky(ů)"
       over_x_years:
         one:   "více než 1 rok"
-        other: "více než %{count} roky"
+        other: "více než %{count} roky(ů)"
       almost_x_years:
         one:   "témeř 1 rok"
-        other: "téměř %{count} roky"
+        other: "téměř %{count} roky(ů)"
 
   number:
     # Výchozí formát pro čísla
@@ -137,6 +137,10 @@ cs:
         earlier_than_minimum_start_date: "nemůže být dříve než %{date} kvůli předřazeným úkolům"
         not_a_regexp: "není platný regulární výraz"
         open_issue_with_closed_parent: "Otevřený úkol nemůže být přiřazen pod uzavřený rodičovský úkol"
+        must_contain_uppercase: "musí obsahovat velká písmena (A-Z)"
+        must_contain_lowercase: "musí obsahovat malá písmena (a-z)"
+        must_contain_digits: "musí obsahovat čísla (0-9)"
+        must_contain_special_chars: "musí obsahovat speciální znaky (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Prosím vyberte
 
@@ -175,7 +179,6 @@ cs:
   notice_api_access_key_reseted: Váš API přístupový klíč byl resetován.
   notice_failed_to_save_issues: "Chyba při uložení %{count} úkolu(ů) z %{total} vybraných: %{ids}."
   notice_failed_to_save_members: "Nepodařilo se uložit člena(y): %{errors}."
-  notice_no_issue_selected: "Nebyl zvolen žádný úkol. Prosím, zvolte úkoly, které chcete editovat"
   notice_account_pending: "Váš účet byl vytvořen, nyní čeká na schválení administrátorem."
   notice_default_data_loaded: Výchozí konfigurace úspěšně nahrána.
   notice_unable_delete_version: Nemohu odstanit verzi
@@ -198,7 +201,7 @@ cs:
   error_issue_done_ratios_not_updated: Koeficient dokončení úkolu nebyl aktualizován.
   error_workflow_copy_source: Prosím vyberte zdrojovou frontu nebo roli
   error_workflow_copy_target: Prosím vyberte cílovou frontu(y) a roli(e)
-  error_unable_delete_issue_status: Nelze smazat stavy úkolů
+  error_unable_delete_issue_status: Nelze smazat stavy úkolů (%{value})
   error_unable_to_connect: Nelze se připojit (%{value})
   warning_attachments_not_saved: "%{count} soubor(ů) nebylo možné uložit."
 
@@ -216,7 +219,6 @@ cs:
   mail_body_wiki_content_added: "'%{id}' Wiki stránka byla přidána od %{author}."
   mail_subject_wiki_content_updated: "'%{id}' Wiki stránka byla aktualizována"
   mail_body_wiki_content_updated: "'%{id}' Wiki stránka byla aktualizována od %{author}."
-
 
   field_name: Název
   field_description: Popis
@@ -276,7 +278,7 @@ cs:
   field_base_dn: Base DN
   field_attr_login: Přihlášení (atribut)
   field_attr_firstname: Jméno (atribut)
-  field_attr_lastname: Příjemní (atribut)
+  field_attr_lastname: Příjmení (atribut)
   field_attr_mail: Email (atribut)
   field_onthefly: Automatické vytváření uživatelů
   field_start_date: Začátek
@@ -306,7 +308,6 @@ cs:
   field_parent_title: Rodičovská stránka
   field_editable: Editovatelný
   field_watcher: Sleduje
-  field_identity_url: OpenID URL
   field_content: Obsah
   field_group_by: Seskupovat výsledky podle
   field_sharing: Sdílení
@@ -317,7 +318,6 @@ cs:
   field_visible: Viditelný
 
   setting_app_title: Název aplikace
-  setting_app_subtitle: Podtitulek aplikace
   setting_welcome_text: Uvítací text
   setting_default_language: Výchozí jazyk
   setting_login_required: Autentifikace vyžadována
@@ -325,7 +325,6 @@ cs:
   setting_attachment_max_size: Maximální velikost přílohy
   setting_issues_export_limit: Limit pro export úkolů
   setting_mail_from: Odesílat emaily z adresy
-  setting_bcc_recipients: Příjemci jako skrytá kopie (bcc)
   setting_plain_text_mail: pouze prostý text (ne HTML)
   setting_host_name: Jméno serveru
   setting_text_formatting: Formátování textu
@@ -358,7 +357,6 @@ cs:
   setting_diff_max_lines_displayed: Maximální počet zobrazených řádků rozdílu
   setting_file_max_size_displayed: Maximální velikost textových souborů zobrazených přímo na stránce
   setting_repository_log_display_limit: Maximální počet revizí zobrazených v logu souboru
-  setting_openid: Umožnit přihlašování a registrace s OpenID
   setting_password_min_length: Minimální délka hesla
   setting_new_project_user_role_id: Role přiřazená uživateli bez práv administrátora, který projekt vytvořil
   setting_default_projects_modules: Výchozí zapnutné moduly pro nový projekt
@@ -384,11 +382,10 @@ cs:
   permission_view_issues: Zobrazit úkoly
   permission_add_issues: Přidávání úkolů
   permission_edit_issues: Upravování úkolů
-  permission_manage_issue_relations: Spravování vztahů mezi úkoly
+  permission_manage_issue_relations: Spravování vazeb mezi úkoly
   permission_add_issue_notes: Přidávání poznámek
   permission_edit_issue_notes: Upravování poznámek
   permission_edit_own_issue_notes: Upravování vlastních poznámek
-  permission_move_issues: Přesouvání úkolů
   permission_delete_issues: Mazání úkolů
   permission_manage_public_queries: Správa veřejných dotazů
   permission_save_queries: Ukládání dotazů
@@ -487,9 +484,7 @@ cs:
   label_enumeration_new: Nová hodnota
   label_information: Informace
   label_information_plural: Informace
-  label_please_login: Přihlašte se, prosím
   label_register: Registrovat
-  label_login_with_open_id_option: nebo se přihlašte s OpenID
   label_password_lost: Zapomenuté heslo
   label_home: Úvodní
   label_my_page: Moje stránka
@@ -504,7 +499,6 @@ cs:
   label_last_login: Poslední přihlášení
   label_registered_on: Registrován
   label_activity: Aktivita
-  label_overall_activity: Celková aktivita
   label_user_activity: "Aktivita uživatele: %{value}"
   label_new: Nový
   label_logged_as: Přihlášen jako
@@ -604,7 +598,6 @@ cs:
   label_less_or_equal: '<='
   label_in: v
   label_today: dnes
-  label_all_time: vše
   label_yesterday: včera
   label_this_week: tento týden
   label_last_week: minulý týden
@@ -662,7 +655,6 @@ cs:
   label_changes_details: Detail všech změn
   label_issue_tracking: Sledování úkolů
   label_spent_time: Strávený čas
-  label_overall_spent_time: Celkem strávený čas
   label_f_hour: "%{value} hodina"
   label_f_hour_plural: "%{value} hodin"
   label_time_tracking: Sledování času
@@ -680,8 +672,8 @@ cs:
   label_related_issues: Související úkoly
   label_applied_status: Použitý stav
   label_loading: Nahrávám...
-  label_relation_new: Nová souvislost
-  label_relation_delete: Odstranit souvislost
+  label_relation_new: Nová vazba
+  label_relation_delete: Odstranit vazbu
   label_relates_to: související s
   label_duplicates: duplikuje
   label_duplicated_by: duplikován
@@ -729,11 +721,11 @@ cs:
   label_theme: Téma
   label_default: Výchozí
   label_search_titles_only: Vyhledávat pouze v názvech
-  label_user_mail_option_all: "Pro všechny události všech mých projektů"
-  label_user_mail_option_selected: "Pro všechny události vybraných projektů..."
-  label_user_mail_option_none: "Žádné události"
-  label_user_mail_option_only_my_events: "Jen pro věci, co sleduji nebo jsem v nich zapojen"
-  label_user_mail_no_self_notified: "Nezasílat informace o mnou vytvořených změnách"
+  label_user_mail_option_all: Pro všechny události všech mých projektech
+  label_user_mail_option_selected: Pro všechny události na vybraných projektech...
+  label_user_mail_option_none: Žádné události
+  label_user_mail_option_only_my_events: Jen pro věci, co sleduji nebo jsem v nich zapojen
+  label_user_mail_no_self_notified: Nezasílat informace o mnou vytvořených změnách
   label_registration_activation_by_email: aktivace účtu emailem
   label_registration_manual_activation: manuální aktivace účtu
   label_registration_automatic_activation: automatická aktivace účtu
@@ -826,7 +818,6 @@ cs:
   button_update: Aktualizovat
   button_configure: Konfigurovat
   button_quote: Citovat
-  button_duplicate: Duplikovat
   button_show: Zobrazit
 
   status_active: aktivní
@@ -841,7 +832,6 @@ cs:
 
   text_select_mail_notifications: Vyberte akci, při které bude zasláno upozornění emailem.
   text_regexp_info: např. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 znamená bez limitu
   text_project_destroy_confirmation: Jste si jisti, že chcete odstranit tento projekt a všechna související data?
   text_subprojects_destroy_warning: "Jeho podprojek(y): %{value} budou také smazány."
   text_workflow_edit: Vyberte roli a frontu k editaci průběhu práce
@@ -877,12 +867,13 @@ cs:
   text_default_administrator_account_changed: Výchozí nastavení administrátorského účtu změněno
   text_file_repository_writable: Povolen zápis do adresáře ukládání souborů
   text_plugin_assets_writable: Možnost zápisu do adresáře plugin assets
-  text_rmagick_available: RMagick k dispozici (volitelné)
+  text_minimagick_available: MiniMagick k dispozici (volitelné)
   text_destroy_time_entries_question: "U úkolů, které chcete odstranit, je evidováno %{hours} práce. Co chete udělat?"
   text_destroy_time_entries: Odstranit zaznamenané hodiny.
   text_assign_time_entries_to_project: Přiřadit zaznamenané hodiny projektu
   text_reassign_time_entries: 'Přeřadit zaznamenané hodiny k tomuto úkolu:'
   text_user_wrote: "%{value} napsal:"
+  text_user_wrote_in: "%{value} napsal (%{link}):"
   text_enumeration_destroy_question: "Několik (%{count}) objektů je přiřazeno k této hodnotě."
   text_enumeration_category_reassign_to: 'Přeřadit je do této:'
   text_email_delivery_not_configured: "Doručování e-mailů není nastaveno a odesílání notifikací je zakázáno.\nNastavte Váš SMTP server v souboru config/configuration.yml a restartujte aplikaci."
@@ -961,7 +952,7 @@ cs:
   label_git_report_last_commit: Reportovat poslední commit pro soubory a adresáře
   text_scm_config: Můžete si nastavit vaše SCM příkazy v config/configuration.yml. Restartujte, prosím, aplikaci po jejich úpravě.
   text_scm_command_not_available: SCM příkaz není k dispozici. Zkontrolujte, prosím, nastavení v panelu Administrace.
-  notice_issue_successful_create: Úkol %{id} vytvořen.
+  notice_issue_successful_create: Úkol %{id} byl vytvořen.
   label_between: mezi
   setting_issue_group_assignment: Povolit přiřazení úkolu skupině
   label_diff: rozdíl
@@ -991,9 +982,9 @@ cs:
   error_attachment_too_big: Soubor nemůže být nahrán, protože jeho velikost je větší než maximální (%{max_size})
   notice_failed_to_save_time_entries: "Chyba při ukládání %{count} časov(ých/ého) záznam(ů) z %{total} vybraného: %{ids}."
   label_x_issues:
-    zero:  0 Úkol
-    one:   1 Úkol
-    other: "%{count} Úkoly"
+    zero:  0 úkol
+    one:   1 úkol
+    other: "%{count} úkolů"
   label_repository_new: Nový repositář
   field_repository_is_default: Hlavní repositář
   label_copy_attachments: Kopírovat přílohy
@@ -1021,7 +1012,6 @@ cs:
   setting_session_timeout: Vypršení sezení bez aktivity
   label_session_expiration: Vypršení sezení
   permission_close_project: Zavřít / Otevřít projekt
-  label_show_closed_projects: Zobrazit zavřené projekty
   button_close: Zavřít
   button_reopen: Znovu otevřít
   project_status_active: aktivní
@@ -1037,10 +1027,10 @@ cs:
   label_fields_permissions: Práva k polím
   label_readonly: Pouze pro čtení
   label_required: Vyžadováno
-  text_repository_identifier_info: Jou povoleny pouze malá písmena (a-z), číslice, pomlčky a podtržítka.<br />Po uložení již nelze identifikátor změnit.
+  text_repository_identifier_info: Jsou povoleny pouze malá písmena (a-z), číslice, pomlčky a podtržítka.<br />Po uložení již nelze identifikátor změnit.
   field_board_parent: Rodičovské fórum
-  label_attribute_of_project: Projektové %{name}
-  label_attribute_of_author: Autorovo %{name}
+  label_attribute_of_project: "%{name} projektu"
+  label_attribute_of_author: "%{name} autora"
   label_attribute_of_assigned_to: "%{name} přiřazené(ho)"
   label_attribute_of_fixed_version: Cílová verze %{name}
   label_copy_subtasks: Kopírovat dílčí úkoly
@@ -1063,7 +1053,7 @@ cs:
   setting_non_working_week_days: Dny pracovního volna/klidu
   label_in_the_next_days: v přístích
   label_in_the_past_days: v minulých
-  label_attribute_of_user: "%{name} uživatel(e/ky)"
+  label_attribute_of_user: "%{name} uživatele"
   text_turning_multiple_off: Jestliže zakážete více hodnot,
     hodnoty budou smazány za účelem rezervace pouze jediné hodnoty na položku.
   label_attribute_of_issue: "%{name} úkolu"
@@ -1093,10 +1083,10 @@ cs:
   label_drop_down_list: rozbalovací seznam
   label_checkboxes: zaškrtávátka
   label_link_values_to: Propojit hodnoty s URL
-  setting_force_default_language_for_anonymous: Vynutit výchozí jazyk pro anonymní uživatele
-    users
-  setting_force_default_language_for_loggedin: Vynutit výchozí jazyk pro přihlášené uživatele
-    users
+  setting_force_default_language_for_anonymous: Vynutit výchozí jazyk pro anonymní
+    uživatele
+  setting_force_default_language_for_loggedin: Vynutit výchozí jazyk pro přihlášené
+    uživatele
   label_custom_field_select_type: Vybrat typ objektu, ke kterému bude přiřazeno uživatelské pole
   label_issue_assigned_to_updated: Přiřazený uživatel aktualizován
   label_check_for_updates: Zkontroluj aktualizace
@@ -1145,7 +1135,7 @@ cs:
   notice_import_finished_with_errors: "%{count} z %{total} položek nemohlo být naimportováno"
   error_invalid_file_encoding: Soubor není platným souborem s kódováním %{encoding}
   error_invalid_csv_file_or_settings: Soubor není CSV soubor nebo neodpovídá
-    níže uvedenému nastavení
+    níže uvedenému nastavení (%{value})
   error_can_not_read_import_file: Chyba při čtení souboru pro import
   permission_import_issues: Import úkolů
   label_import_issues: Import úkolů
@@ -1166,7 +1156,7 @@ cs:
   label_total_plural: Celkem
   label_assigned_issues: Přiřazené úkoly
   label_field_format_enumeration: Seznam klíčů/hodnot
-  label_f_hour_short: '%{value} hod'
+  label_f_hour_short: '%{value}hod'
   field_default_version: Výchozí verze
   error_attachment_extension_not_allowed: Přípona přílohy %{extension} není povolena
   setting_attachment_extensions_allowed: Povolené přípony
@@ -1178,18 +1168,16 @@ cs:
   setting_sys_api_key: API klíč
   setting_lost_password: Zapomenuté heslo
   mail_subject_security_notification: Bezpečnostní upozornění
-  mail_body_security_notification_change: ! '%{field} bylo změněno.'
-  mail_body_security_notification_change_to: ! '%{field} bylo změněno na %{value}.'
-  mail_body_security_notification_add: ! '%{field} %{value} bylo přidáno.'
-  mail_body_security_notification_remove: ! '%{field} %{value} bylo odebráno.'
-  mail_body_security_notification_notify_enabled: Email %{value} nyní dostává
-    notifikace.
-  mail_body_security_notification_notify_disabled: Email %{value} už nedostává
-    notifikace.
-  mail_body_settings_updated: ! 'Následující nastavení byla změněna:'
+  mail_body_security_notification_change: "%{field} bylo změněno."
+  mail_body_security_notification_change_to: "%{field} bylo změněno na %{value}."
+  mail_body_security_notification_add: "%{field} %{value} bylo přidáno."
+  mail_body_security_notification_remove: "%{field} %{value} bylo odebráno."
+  mail_body_security_notification_notify_enabled: Email %{value} nyní dostává notifikace.
+  mail_body_security_notification_notify_disabled: Email %{value} už nedostává notifikace.
+  mail_body_settings_updated: "Následující nastavení byla změněna:"
   field_remote_ip: IP adresa
   label_wiki_page_new: Nová wiki stránka
-  label_relations: Relace
+  label_relations: Vazby
   button_filter: Filtr
   mail_body_password_updated: Vaše heslo bylo změněno.
   label_no_preview: Náhled není k dispozici
@@ -1206,9 +1194,8 @@ cs:
   setting_timespan_format: Formát časového intervalu
   label_table_of_contents: Obsah
   setting_commit_logs_formatting: Použij textové formátování pro popisky comitů
-  setting_mail_handler_enable_regex_delimiters: Povol regulární výrazy
-  error_move_of_child_not_possible: 'Dílčí úkol %{child} nemůže být přesunut do nového
-    projektu: %{errors}'
+  setting_mail_handler_enable_regex: Povol regulární výrazy
+  error_move_of_child_not_possible: "Dílčí úkol %{child} nemůže být přesunut do nového projektu: %{errors}"
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Strávený čas nemůže
     být přiřazen k úkolu, který se bude mazat
   setting_timelog_required_fields: Požadovaná pole pro zapisování času
@@ -1227,3 +1214,224 @@ cs:
   permission_view_news: Zobraz novinky
   label_no_preview_alternative_html: "Náhled není k dispozici. Soubor: %{link}."
   label_no_preview_download: Stažení
+  setting_close_duplicate_issues: Automaticky uzavři duplicitní úkoly
+  error_exceeds_maximum_hours_per_day: Není možné zapsat více než %{max_hours}hod v ten
+    samý den (%{logged_hours}hod bylo již vykázáno)
+  setting_time_entry_list_defaults: Výchozí hodnoty pro zápis stráveného času
+  setting_timelog_accept_0_hours: Akceptovat zápis času 0hod
+  setting_timelog_max_hours_per_day: Maximum hodin, které mohou být vykázány jedním uživatelem za jeden den
+  label_x_revisions: "%{count} revizí"
+  error_can_not_delete_auth_source: Tento autentifikační mód se používá a nemůže být smazán.
+  button_actions: Akce
+  mail_body_lost_password_validity: Mějte na paměti, že pomocí tohoto odkazu můžete změnit heslo pouze jednou.
+  text_login_required_html: Pokud není vyžadována autentifikace, veřejné projekty a jejich obsah jsou
+    veřejně přístupné na webu. Můžete <a href="%{anonymous_role_path}">upravit příslušná práva</a>.
+  label_login_required_yes: 'Ano'
+  label_login_required_no: Ne, umožnit anonymní přístup k veřejným projektům
+  text_project_is_public_non_member: Veřejné projekty a jejich obsah je přístupný pro všechny přihlášené uživatele.
+  text_project_is_public_anonymous: Veřejné projekty a jejich obsah je otevřeně přístupný na webu.
+  label_version_and_files: Verze (%{count}) a soubory
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (bez ověření certifikátu)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Je doporučeno použít šifrované LDAPS připojení s certifikátem pro zabránění
+    jakékoliv manipulace během autentifikačního procesu.
+  label_nothing_to_preview: Žádný náhled
+  error_token_expired: Tento odkaz na obnovu hesla vypršel, prosím zkuste to znovu.
+  error_spent_on_future_date: Nelze zapsat čas do budoucna
+  setting_timelog_accept_future_dates: Akceptovat zápis času do budoucna
+  label_delete_link_to_subtask: Odstranit souvislost
+  error_not_allowed_to_log_time_for_other_users: Nejste oprávněni k zápisu času
+    ostatních uživatelů
+  permission_log_time_for_other_users: Záznam stráveného času ostatních uživatelů
+  label_tomorrow: zítra
+  label_next_week: příští týden
+  label_next_month: příští měsíc
+  text_role_no_workflow: Tato role nemá definován průběh práce
+  text_status_no_workflow: Žádná fronta nepoužívá tento stav v průběhu práce
+  setting_mail_handler_preferred_body_part: Preferovaná část (HTML) emailu
+  setting_show_status_changes_in_mail_subject: Zobrazit změny stavů v předmetu mailové
+    notifikace úkolů
+  label_inherited_from_parent_project: Poděděné z rodičovského projektu
+  label_inherited_from_group: Poděděné ze skupiny %{name}
+  label_trackers_description: Popis front
+  label_open_trackers_description: Zobrazit popis všech trackerů
+  label_preferred_body_part_text: Text
+  label_preferred_body_part_html: HTML (experimentální)
+  field_parent_issue_subject: Předmět rodičovského úkolu
+  permission_edit_own_issues: Upravování vlastních úkolů
+  text_select_apply_tracker: Použít frontu
+  label_updated_issues: Aktualizované úkoly
+  text_avatar_server_config_html: Aktuální avatar server je <a href="%{url}">%{url}</a>.
+    Nastavení lze změnit v config/configuration.yml.
+  setting_gantt_months_limit: Maximální počet měsíců zobrazených v ganttově diagramu
+  permission_import_time_entries: Import stráveného času
+  label_import_notifications: Odeslat emailové notifikace během importu
+  text_gs_available: ImageMagick PDF podpora k dispozici (volitelné)
+  field_recently_used_projects: Počet nedávno použitých projektů v rychlém výběru
+  label_optgroup_bookmarks: Záložky
+  label_optgroup_others: Jiné projekty
+  label_optgroup_recents: Nedávno použité
+  button_project_bookmark: Přidat záložku
+  button_project_bookmark_delete: Odstranit záložku
+  field_history_default_tab: Výchozí karta historie úkolů
+  label_issue_history_properties: Změny vlastností
+  label_issue_history_notes: Poznámky
+  label_last_tab_visited: Poslední zobrazená karta
+  field_unique_id: Unikátní ID
+  text_no_subject: bez předmětu
+  setting_password_required_char_classes: Vyžadované třídy znaků pro hesla
+  label_password_char_class_uppercase: velká písmena
+  label_password_char_class_lowercase: malá písmena
+  label_password_char_class_digits: číslice
+  label_password_char_class_special_chars: speciální znaky
+  text_characters_must_contain: Musí obsahovat %{character_classes}.
+  label_starts_with: začíná
+  label_ends_with: končí
+  label_issue_fixed_version_updated: Cílová verze aktualizována
+  setting_project_list_defaults: Výchozí nastavení seznamu projektů
+  label_display_type: Zobrazit výsledky jako
+  label_display_type_list: Seznam
+  label_display_type_board: Fórum
+  label_my_bookmarks: Moje záložky
+  label_import_time_entries: Import stráveného času
+  field_toolbar_language_options: Jazyky zvýrazňování syntaxe kódu
+  label_user_mail_notify_about_high_priority_issues_html: Notifikuj mě o úkolech
+    s prioritou <em>%{prio}</em> nebo vyšší
+  label_assign_to_me: Přiřadit na mě
+  notice_issue_not_closable_by_open_tasks: Tento úkol nemůže být uzavřen, protože
+    má alespoň jeden otevřený podúkol.
+  notice_issue_not_closable_by_blocking_issue: Tento úkol nemůže být uzavřen, protože
+    je blokován alespoň jedním otevřeným úkolem.
+  notice_issue_not_reopenable_by_closed_parent_issue: Tento úkol nemůže být znovu otevřen, protože
+    jeho rodičovský úkol je uzavřen.
+  error_bulk_download_size_too_big: Tyto přílohy nemohou být hromadně staženy, protože
+    celková velikost souboru přesahuje maximální povolenou velikost (%{max_size})
+  setting_bulk_download_max_size: Maximální celková velikost pro hromadné stažení
+  label_download_all_attachments: Stáhnout všechny soubory
+  error_attachments_too_many: Tento soubor nemůže být nahrán, protože byl překročen maximální
+    počet souborů, které mohou být současně přiloženy (%{max_number_of_files})
+  setting_email_domains_allowed: Povolené emailové domény
+  setting_email_domains_denied: Zakázané emailové domény
+  field_passwd_changed_on: Poslední změna hesla
+  label_relations_mapping: Mapování vazeb
+  label_import_users: Import uživatelů
+  label_days_to_html: "%{days} dní do %{date}"
+  setting_twofa: Dvou-fázové ověření
+  label_optional: volitelné
+  label_required_lower: povinné
+  button_disable: Zakázat
+  twofa__totp__name: Ověřování aplikace
+  twofa__totp__text_pairing_info_html: Oskenujte tento QR kód nebo zadejte klíč v prostém textu
+    do TOTP aplikace (např. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) následně zadejte kód do pole níže pro aktivaci dvou-fázového ověření.
+  twofa__totp__label_plain_text_key: Klíč v prostém textu
+  twofa__totp__label_activate: Povolit ověřování aplikace
+  twofa_currently_active: 'Aktuálně aktivní: %{twofa_scheme_name}'
+  twofa_not_active: Neaktivní
+  twofa_label_code: Kód
+  twofa_hint_disabled_html: Nastavení <strong>%{label}</strong> deaktivuje a odpáruje
+    dvou-fázové ověření zařízení pro všechny uživatele.
+  twofa_hint_required_html: Nastavení <strong>%{label}</strong> bude vyžadovat od všech uživatelů
+    aktivaci dvou-fázového ověření při příštím přihlášení.
+  twofa_label_setup: Povolit dvou-fázové ověření
+  twofa_label_deactivation_confirmation: Deaktivovat dvou-fázové ověření
+  twofa_notice_select: 'Prosím vyberte schéma dvou-fázového ověření, které chcete použít:'
+  twofa_warning_require: Administrátor Vás žádá o povolení dvou-fázového ověření.
+  twofa_activated: Dvou-fázové ověření úspěšně povoleno. Je doporučeno
+    <a data-method="post" href="%{bc_path}">vygenerovat záložní kódy</a> pro Váš účet.
+  twofa_deactivated: Dvou-fázové ověření zakázáno.
+  twofa_mail_body_security_notification_paired: Dvou-fázové ověření úspěšně
+    povoleno s použitím %{field}.
+  twofa_mail_body_security_notification_unpaired: Dvou-fázové ověření bylo na Vašem účtu
+    deaktivováno.
+  twofa_mail_body_backup_codes_generated: Nové záložní kódy dvou-fázového ověření byly
+    vygenerovány.
+  twofa_mail_body_backup_code_used: Byl použit záložní kód dvou-fázového
+    ověření.
+  twofa_invalid_code: Kód je neplatný nebo zastralý.
+  twofa_label_enter_otp: Prosím zadejte Váš kód dvou-fázového ověření.
+  twofa_too_many_tries: Příliš mnoho pokusů.
+  twofa_resend_code: Znovu zaslat kód
+  twofa_code_sent: Ověřovací kód Vám byl zaslán.
+  twofa_generate_backup_codes: Vygenerovat záložní kódy
+  twofa_text_generate_backup_codes_confirmation: Toto zneplatní všechny existující záložní
+    kódy a vygeneruje nové. Chcete pokračovat?
+  twofa_notice_backup_codes_generated: Vaše záložní kódy byly vygenerovány.
+  twofa_warning_backup_codes_generated_invalidated: Nové záložní kódy byly vygenerovány.
+    Vaše současné kódy z %{time} jsou nyní zneplatněny.
+  twofa_label_backup_codes: Záložní kódy dvou-fázového ověření
+  twofa_text_backup_codes_hint: Použijte tyto kódy místo jednorázového hesla v případě, že nemáte přístup k Vašemu původnímu ověření.
+    Každý z kódů lze použít pouze jednou. Je doporučeno vytisknout a uložit je na bezpečné místo.
+  twofa_text_backup_codes_created_at: Záložní kódy vygenerovány %{datetime}.
+  twofa_backup_codes_already_shown: Záložní kódy nemohou být zobrazeny znovu, v případě nutnosti prosím <a data-method="post"
+    href="%{bc_path}">vygenerujte nové záložní kódy</a>.
+  error_can_not_execute_macro_html: Chyba při vykonávání <strong>%{name}</strong> makra
+    (%{error})
+  error_macro_does_not_accept_block: Toto makro nepřijímá blok textu
+  error_childpages_macro_no_argument: Bez argumentů může být toto makro voláno pouze z
+    wiki stránek
+  error_circular_inclusion: Zjištěno cyklické zahrnutí
+  error_page_not_found: Stránka nenalezena
+  error_filename_required: Název souboru vyžadován
+  error_invalid_size_parameter: Neplatný parametr velikosti
+  error_attachment_not_found: Příloha %{name} nenalezena
+  permission_delete_project: Odstranit projekt
+  field_twofa_scheme: Schéma dvou-fázového ověření
+  text_user_destroy_confirmation: Jste si jisti, že chcete odstranit tohoto uživatele a
+    všechny reference na něj? Tato akce nemůže být vzata zpět. Často je užamčení uživatele
+    místo jeho smazání vhodnějším řešením. Pro potvrzení, prosím zadjte níže jeho login (%{login}).
+  text_project_destroy_enter_identifier: Pro potvrzení, prosím zadejte níže identifikátor projektu
+    (%{identifier}).
+  button_add_subtask: Přidat podúkol
+  notice_invalid_watcher: 'Neplatný sledovatel: Uživatel nebude dostávat žádné notifikace,
+    protože nemá přístup pro zobrazení tohoto objektu.'
+  button_fetch_changesets: Stáhnout commity
+  permission_view_message_watchers: Zobrazení seznamu sledovatelů příspěvků
+  permission_add_message_watchers: Přidávání sledovatelů příspěvků
+  permission_delete_message_watchers: Mazání sledovatelů příspěvků
+  label_message_watchers: Sledující
+  button_copy_link: Kopírovat odkaz
+  error_invalid_authenticity_token: Neplatný token pravosti formuláře.
+  error_query_statement_invalid: Nastala chyba při vykonávání dotazu a
+    byla zaznamenána. Prosím oznamte tuto chybu svému Redmine administrátorovi.
+  permission_view_wiki_page_watchers: Zobrazení seznamu sledovatelů Wiki stránek
+  permission_add_wiki_page_watchers: Přidávání sledovatelů na Wiki stránky
+  permission_delete_wiki_page_watchers: Mazání sledovatelů Wiki stránek
+  label_wiki_page_watchers: Sledující
+  label_attachment_description: Popis souboru
+  error_no_data_in_file: Soubor neobsahuje žádná data
+  field_twofa_required: Vyžadovat dvou-fázové ověření
+  twofa_hint_optional_html: Nastavení <strong>%{label}</strong> nechá uživatele nastavit
+    dvou-fázové ověření dle přání, pokud není vyžadováno některou z jeho skupin.
+  twofa_text_group_required: Toto nastavení je účinné pouze pokud je globální nastavení dvou-fázového ověření
+    nastaveno jako 'volitelné'. Aktuálně je dvou-fázové ověření
+    vyžadováno pro všechny uživatele.
+  twofa_text_group_disabled: Toto nastavení je účinné pouze pokud je globální nastavení dvou-fázového ověření
+    nastaveno jako 'volitelné'. Aktuálně je dvou-fázové ověření
+    vypnuté.
+  field_default_issue_query: Výchozí dotaz úkolů
+  label_default_queries:
+    for_all_projects: Pro všechny projekty
+    for_current_project: Pro aktuální projekt
+    for_all_users: Pro všechny uživatele
+    for_this_user: For this user
+  text_allowed_queries_to_select: Lze vybrat pouze veřejné dotazy (viditelné pro všechny uživatele)
+  text_all_migrations_have_been_run: Všechny databázové migrace byly spušteny
+  button_save_object: Uložit %{object_name}
+  button_edit_object: Upravit %{object_name}
+  button_delete_object: Smazat %{object_name}
+  text_setting_config_change: Můžete nastavit chování v config/configuration.yml.
+    Po úpravě prosím restartujte aplikaci.
+  label_bulk_edit: Hromadná úprava
+  button_create_and_follow: Vytvořit a pokračovat
+  label_subtask: Podúkol
+  label_default_query: Výchozí dotaz
+  field_default_project_query: Výchozí dotaz projektů
+  label_required_administrators: vyžadováno pro administrátory
+  twofa_hint_required_administrators_html: Nastavení <strong>%{label}</strong> se chová
+    jako volitelné, ale bude vyžadovat od všech uživatelů s administrátorskými právy nastavení dvou-fázového ověření
+    při jejich příštím přihlášení.
+  label_auto_watch_on: Automaticky sledovat
+  label_auto_watch_on_issue_contributed_to: Úkoly ke kterým jsem přispěl

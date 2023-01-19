@@ -26,12 +26,12 @@ namespace :test do
         FileUtils.mkdir_p Rails.root + '/tmp/test'
       end
 
-      supported_scms = [:subversion, :cvs, :bazaar, :mercurial, :git, :darcs, :filesystem]
+      supported_scms = [:subversion, :cvs, :bazaar, :mercurial, :git, :git_utf8, :filesystem]
 
       desc "Creates a test subversion repository"
       task :subversion => :create_dir do
         repo_path = "tmp/test/subversion_repository"
-        unless File.exists?(repo_path)
+        unless File.exist?(repo_path)
           system "svnadmin create #{repo_path}"
           system "gunzip < test/fixtures/repositories/subversion_repository.dump.gz | svnadmin load #{repo_path}"
         end
@@ -40,7 +40,7 @@ namespace :test do
       desc "Creates a test mercurial repository"
       task :mercurial => :create_dir do
         repo_path = "tmp/test/mercurial_repository"
-        unless File.exists?(repo_path)
+        unless File.exist?(repo_path)
           bundle_path = "test/fixtures/repositories/mercurial_repository.hg"
           system "hg init #{repo_path}"
           system "hg -R #{repo_path} pull #{bundle_path}"
@@ -48,7 +48,7 @@ namespace :test do
       end
 
       def extract_tar_gz(prefix)
-        unless File.exists?("tmp/test/#{prefix}_repository")
+        unless File.exist?("tmp/test/#{prefix}_repository")
           # system "gunzip < test/fixtures/repositories/#{prefix}_repository.tar.gz | tar -xv -C tmp/test"
           system "tar -xvz -C tmp/test -f test/fixtures/repositories/#{prefix}_repository.tar.gz"
         end
@@ -79,34 +79,22 @@ namespace :test do
       end
     end
 
-    Rake::TestTask.new(:units => "db:test:prepare") do |t|
-      t.libs << "test"
-      t.verbose = true
-      t.warning = false
-      t.test_files = FileList['test/unit/repository*_test.rb'] + FileList['test/unit/lib/redmine/scm/**/*_test.rb']
+    task(:units => "db:test:prepare") do |t|
+      $: << "test"
+      Rails::TestUnit::Runner.rake_run FileList['test/unit/repository*_test.rb'] + FileList['test/unit/lib/redmine/scm/**/*_test.rb']
     end
     Rake::Task['test:scm:units'].comment = "Run the scm unit tests"
 
-    Rake::TestTask.new(:functionals => "db:test:prepare") do |t|
-      t.libs << "test"
-      t.verbose = true
-      t.warning = false
-      t.test_files = FileList['test/functional/repositories*_test.rb']
+    task(:functionals => "db:test:prepare") do |t|
+      $: << "test"
+      Rails::TestUnit::Runner.rake_run FileList['test/functional/repositories*_test.rb']
     end
     Rake::Task['test:scm:functionals'].comment = "Run the scm functional tests"
   end
 
-  Rake::TestTask.new(:routing) do |t|
-    t.libs << "test"
-    t.verbose = true
-    t.test_files = FileList['test/integration/routing/*_test.rb'] + FileList['test/integration/api_test/*_routing_test.rb']
+  task(:routing) do |t|
+    $: << "test"
+    Rails::TestUnit::Runner.rake_run FileList['test/integration/routing/*_test.rb'] + FileList['test/integration/api_test/*_routing_test.rb']
   end
   Rake::Task['test:routing'].comment = "Run the routing tests"
-
-  Rake::TestTask.new(:ui => "db:test:prepare") do |t|
-    t.libs << "test"
-    t.verbose = true
-    t.test_files = FileList['test/ui/**/*_test_ui.rb']
-  end
-  Rake::Task['test:ui'].comment = "Run the UI tests with Capybara (PhantomJS listening on port 4444 is required)"
 end

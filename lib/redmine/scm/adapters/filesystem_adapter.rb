@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # FileSystem adapter
 # File written by Paul Rivier, at Demotera.
@@ -50,9 +52,7 @@ module Redmine
         end
 
         def info
-          info = Info.new({:root_url => target(),
-                            :lastrev => nil
-                          })
+          info = Info.new({:root_url => target(), :lastrev => nil})
           info
         rescue CommandFailed
           return nil
@@ -65,8 +65,13 @@ module Redmine
           Dir.new(trgt).each do |e1|
             e_utf8 = scm_iconv('UTF-8', @path_encoding, e1)
             next if e_utf8.blank?
-            relative_path_utf8 = format_path_ends(
-                (format_path_ends(path,false,true) + e_utf8),false,false)
+
+            relative_path_utf8 =
+              format_path_ends(
+                (format_path_ends(path, false, true) + e_utf8),
+                false,
+                false
+              )
             t1_utf8 = target(relative_path_utf8)
             t1 = scm_iconv(@path_encoding, 'UTF-8', t1_utf8)
             relative_path = scm_iconv(@path_encoding, 'UTF-8', relative_path_utf8)
@@ -77,14 +82,16 @@ module Redmine
               p1         = File.readable?(t1) ? relative_path : ""
               utf_8_path = scm_iconv('UTF-8', @path_encoding, p1)
               entries <<
-                Entry.new({ :name => scm_iconv('UTF-8', @path_encoding, File.basename(e1)),
-                          # below : list unreadable files, but dont link them.
-                          :path => utf_8_path,
-                          :kind => (File.directory?(t1) ? 'dir' : 'file'),
-                          :size => (File.directory?(t1) ? nil : [File.size(t1)].pack('l').unpack('L').first),
-                          :lastrev =>
-                              Revision.new({:time => (File.mtime(t1)) })
-                        })
+                Entry.new(
+                  {
+                    :name => scm_iconv('UTF-8', @path_encoding, File.basename(e1)),
+                    # below : list unreadable files, but dont link them.
+                    :path => utf_8_path,
+                    :kind => (File.directory?(t1) ? 'dir' : 'file'),
+                    :size => (File.directory?(t1) ? nil : File.size(t1)),
+                    :lastrev => Revision.new({:time => (File.mtime(t1))})
+                  }
+                )
             end
           end
           entries.sort_by_name
@@ -107,9 +114,10 @@ module Redmine
         # Here we do not shell-out, so we do not want quotes.
         def target(path=nil)
           # Prevent the use of ..
-          if path and !path.match(/(^|\/)\.\.(\/|$)/)
+          if path and !/(^|\/)\.\.(\/|$)/.match?(path)
             return "#{self.url}#{without_leading_slash(path)}"
           end
+
           return self.url
         end
       end

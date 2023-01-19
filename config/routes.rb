@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,17 +22,18 @@ Rails.application.routes.draw do
 
   match 'login', :to => 'account#login', :as => 'signin', :via => [:get, :post]
   match 'logout', :to => 'account#logout', :as => 'signout', :via => [:get, :post]
+  match 'account/twofa/confirm', :to => 'account#twofa_confirm', :via => :get
+  match 'account/twofa/resend', :to => 'account#twofa_resend', :via => :post
+  match 'account/twofa', :to => 'account#twofa', :via => [:get, :post]
   match 'account/register', :to => 'account#register', :via => [:get, :post], :as => 'register'
   match 'account/lost_password', :to => 'account#lost_password', :via => [:get, :post], :as => 'lost_password'
   match 'account/activate', :to => 'account#activate', :via => :get
   get 'account/activation_email', :to => 'account#activation_email', :as => 'activation_email'
 
   match '/news/preview', :controller => 'previews', :action => 'news', :as => 'preview_news', :via => [:get, :post, :put, :patch]
-  match '/issues/preview/new/:project_id', :to => 'previews#issue', :as => 'preview_new_issue', :via => [:get, :post, :put, :patch]
-  match '/issues/preview/edit/:id', :to => 'previews#issue', :as => 'preview_edit_issue', :via => [:get, :post, :put, :patch]
   match '/issues/preview', :to => 'previews#issue', :as => 'preview_issue', :via => [:get, :post, :put, :patch]
+  match '/preview/text', :to => 'previews#text', :as => 'preview_text', :via => [:get, :post, :put, :patch]
 
-  match 'projects/:id/wiki', :to => 'wikis#edit', :via => :post
   match 'projects/:id/wiki/destroy', :to => 'wikis#destroy', :via => [:get, :post]
 
   match 'boards/:board_id/topics/new', :to => 'messages#new', :via => [:get, :post], :as => 'new_board_message'
@@ -43,8 +46,11 @@ Rails.application.routes.draw do
   post 'boards/:board_id/topics/:id/edit', :to => 'messages#edit'
   post 'boards/:board_id/topics/:id/destroy', :to => 'messages#destroy'
 
-  # Misc issue routes. TODO: move into resources
+  # Auto complete routes
   match '/issues/auto_complete', :to => 'auto_completes#issues', :via => :get, :as => 'auto_complete_issues'
+  match '/wiki_pages/auto_complete', :to => 'auto_completes#wiki_pages', :via => :get, :as => 'auto_complete_wiki_pages'
+
+  # Misc issue routes. TODO: move into resources
   match '/issues/context_menu', :to => 'context_menus#issues', :as => 'issues_context_menu', :via => [:get, :post]
   match '/issues/changes', :to => 'journals#index', :as => 'issue_changes', :via => :get
   match '/issues/:id/quoted', :to => 'journals#new', :id => /\d+/, :via => :post, :as => 'quoted_issue'
@@ -64,25 +70,43 @@ Rails.application.routes.draw do
   get 'projects/:id/issues/report', :to => 'reports#issue_report', :as => 'project_issues_report'
   get 'projects/:id/issues/report/:detail', :to => 'reports#issue_report_details', :as => 'project_issues_report_details'
 
-  get   '/issues/imports/new', :to => 'imports#new', :as => 'new_issues_import'
+  get   '/issues/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'IssueImport'}, :as => 'new_issues_import'
+  get   '/time_entries/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'TimeEntryImport'}, :as => 'new_time_entries_import'
+  get   '/users/imports/new', :to => 'imports#new',
+        :defaults => {:type => 'UserImport'}, :as => 'new_users_import'
   post  '/imports', :to => 'imports#create', :as => 'imports'
   get   '/imports/:id', :to => 'imports#show', :as => 'import'
   match '/imports/:id/settings', :to => 'imports#settings', :via => [:get, :post], :as => 'import_settings'
   match '/imports/:id/mapping', :to => 'imports#mapping', :via => [:get, :post], :as => 'import_mapping'
   match '/imports/:id/run', :to => 'imports#run', :via => [:get, :post], :as => 'import_run'
 
-  match 'my/account', :controller => 'my', :action => 'account', :via => [:get, :post]
-  match 'my/account/destroy', :controller => 'my', :action => 'destroy', :via => [:get, :post]
+  match 'my/account', :controller => 'my', :action => 'account', :via => [:get, :put]
+  match 'my/account/destroy', :controller => 'my', :action => 'destroy', :via => [:get, :post], :as => :delete_my_account
   match 'my/page', :controller => 'my', :action => 'page', :via => :get
   post 'my/page', :to => 'my#update_page'
   match 'my', :controller => 'my', :action => 'index', :via => :get # Redirects to my/page
   get 'my/api_key', :to => 'my#show_api_key', :as => 'my_api_key'
   post 'my/api_key', :to => 'my#reset_api_key'
-  post 'my/rss_key', :to => 'my#reset_rss_key', :as => 'my_rss_key'
+  post 'my/atom_key', :to => 'my#reset_atom_key', :as => 'my_atom_key'
   match 'my/password', :controller => 'my', :action => 'password', :via => [:get, :post]
   match 'my/add_block', :controller => 'my', :action => 'add_block', :via => :post
   match 'my/remove_block', :controller => 'my', :action => 'remove_block', :via => :post
   match 'my/order_blocks', :controller => 'my', :action => 'order_blocks', :via => :post
+  match 'my/twofa/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/init', :controller => 'twofa', :action => 'activate_init', :via => :post
+  match 'my/twofa/:scheme/activate/confirm', :controller => 'twofa', :action => 'activate_confirm', :via => :get
+  match 'my/twofa/:scheme/activate', :controller => 'twofa', :action => 'activate', :via => [:get, :post]
+  match 'my/twofa/:scheme/deactivate/init', :controller => 'twofa', :action => 'deactivate_init', :via => :post
+  match 'my/twofa/:scheme/deactivate/confirm', :controller => 'twofa', :action => 'deactivate_confirm', :via => :get
+  match 'my/twofa/:scheme/deactivate', :controller => 'twofa', :action => 'deactivate', :via => [:get, :post]
+  match 'my/twofa/select_scheme', :controller => 'twofa', :action => 'select_scheme', :via => :get
+  match 'my/twofa/backup_codes/init', :controller => 'twofa_backup_codes', :action => 'init', :via => :post
+  match 'my/twofa/backup_codes/confirm', :controller => 'twofa_backup_codes', :action => 'confirm', :via => :get
+  match 'my/twofa/backup_codes/create', :controller => 'twofa_backup_codes', :action => 'create', :via => [:get, :post]
+  match 'my/twofa/backup_codes', :controller => 'twofa_backup_codes', :action => 'show', :via => [:get]
+  match 'users/:user_id/twofa/deactivate', :controller => 'twofa', :action => 'admin_deactivate', :via => :post
 
   resources :users do
     resources :memberships, :controller => 'principal_memberships'
@@ -95,6 +119,7 @@ Rails.application.routes.draw do
   post 'watchers', :to => 'watchers#create'
   post 'watchers/append', :to => 'watchers#append'
   delete 'watchers', :to => 'watchers#destroy'
+  get 'watchers/autocomplete_for_mention', to: 'watchers#autocomplete_for_mention', via: [:get]
   get 'watchers/autocomplete_for_user', :to => 'watchers#autocomplete_for_user'
   # Specific routes for issue watchers API
   post 'issues/:object_id/watchers', :to => 'watchers#create', :object_type => 'issue'
@@ -107,12 +132,12 @@ Rails.application.routes.draw do
 
     member do
       get 'settings(/:tab)', :action => 'settings', :as => 'settings'
-      post 'modules'
-      post 'archive'
-      post 'unarchive'
-      post 'close'
-      post 'reopen'
+      match 'archive', :via => [:post, :put]
+      match 'unarchive', :via => [:post, :put]
+      match 'close', :via => [:post, :put]
+      match 'reopen', :via => [:post, :put]
       match 'copy', :via => [:get, :post]
+      match 'bookmark', :via => [:delete, :post]
     end
 
     shallow do
@@ -158,7 +183,7 @@ Rails.application.routes.draw do
         end
       end
     end
-  
+
     match 'wiki/index', :controller => 'wiki', :action => 'index', :via => :get
     resources :wiki, :except => [:index, :create], :as => 'wiki_page' do
       member do
@@ -187,10 +212,11 @@ Rails.application.routes.draw do
     member do
       # Used when updating the form of an existing issue
       patch 'edit', :to => 'issues#edit'
+      get 'tab/:name', :action => 'issue_tab', :as => 'tab'
     end
     collection do
       match 'bulk_edit', :via => [:get, :post]
-      post 'bulk_update'
+      match 'bulk_update', :via => [:post, :patch]
     end
     resources :time_entries, :controller => 'timelog', :only => [:new, :create]
     shallow do
@@ -204,7 +230,7 @@ Rails.application.routes.draw do
   resources :queries, :except => [:show]
   get '/queries/filter', :to => 'queries#filter', :as => 'queries_filter'
 
-  resources :news, :only => [:index, :show, :edit, :update, :destroy]
+  resources :news, :only => [:index, :show, :edit, :update, :destroy, :create, :new]
   match '/news/:id/comments', :to => 'comments#create', :via => :post
   match '/news/:id/comments/:comment_id', :to => 'comments#destroy', :via => :delete
 
@@ -234,6 +260,8 @@ Rails.application.routes.draw do
   match '/time_entries/destroy', :to => 'timelog#destroy', :via => :delete
   # Used to update the new time entry form
   post '/time_entries/new', :to => 'timelog#new'
+  # Used to update the bulk edit time entry form
+  post '/time_entries/bulk_edit', :to => 'timelog#bulk_edit'
 
   get 'projects/:id/activity', :to => 'activities#index', :as => :project_activity
   get 'activity', :to => 'activities#index'
@@ -241,70 +269,54 @@ Rails.application.routes.draw do
   # repositories routes
   get 'projects/:id/repository/:repository_id/statistics', :to => 'repositories#stats'
   get 'projects/:id/repository/:repository_id/graph', :to => 'repositories#graph'
-
-  get 'projects/:id/repository/:repository_id/changes(/*path)',
-      :to => 'repositories#changes',
-      :format => false
+  post 'projects/:id/repository/:repository_id/fetch_changesets', :to => 'repositories#fetch_changesets'
 
   get 'projects/:id/repository/:repository_id/revisions/:rev', :to => 'repositories#revision'
   get 'projects/:id/repository/:repository_id/revision', :to => 'repositories#revision'
   post   'projects/:id/repository/:repository_id/revisions/:rev/issues', :to => 'repositories#add_related_issue'
   delete 'projects/:id/repository/:repository_id/revisions/:rev/issues/:issue_id', :to => 'repositories#remove_related_issue'
   get 'projects/:id/repository/:repository_id/revisions', :to => 'repositories#revisions'
-  %w(browse show entry raw annotate diff).each do |action|
+  %w(browse show entry raw annotate).each do |action|
     get "projects/:id/repository/:repository_id/revisions/:rev/#{action}(/*path)",
         :controller => 'repositories',
         :action => action,
-        :format => false,
-        :constraints => {:rev => /[a-z0-9\.\-_]+/}
+        :format => 'html',
+        :constraints => {:rev => /[a-z0-9\.\-_]+/, :path => /.*/}
   end
 
-  get 'projects/:id/repository/statistics', :to => 'repositories#stats'
-  get 'projects/:id/repository/graph', :to => 'repositories#graph'
-
-  get 'projects/:id/repository/changes(/*path)',
-      :to => 'repositories#changes',
-      :format => false
-
-  get 'projects/:id/repository/revisions', :to => 'repositories#revisions'
-  get 'projects/:id/repository/revisions/:rev', :to => 'repositories#revision'
-  get 'projects/:id/repository/revision', :to => 'repositories#revision'
-  post   'projects/:id/repository/revisions/:rev/issues', :to => 'repositories#add_related_issue'
-  delete 'projects/:id/repository/revisions/:rev/issues/:issue_id', :to => 'repositories#remove_related_issue'
-  %w(browse show entry raw annotate diff).each do |action|
-    get "projects/:id/repository/revisions/:rev/#{action}(/*path)",
-        :controller => 'repositories',
-        :action => action,
-        :format => false,
-        :constraints => {:rev => /[a-z0-9\.\-_]+/}
-  end
-  %w(browse entry raw changes annotate diff).each do |action|
+  %w(browse entry raw changes annotate).each do |action|
     get "projects/:id/repository/:repository_id/#{action}(/*path)",
         :controller => 'repositories',
         :action => action,
-        :format => false
-  end
-  %w(browse entry raw changes annotate diff).each do |action|
-    get "projects/:id/repository/#{action}(/*path)",
-        :controller => 'repositories',
-        :action => action,
-        :format => false
+        :format => 'html',
+        :constraints => {:path => /.*/}
   end
 
-  get 'projects/:id/repository/:repository_id/show/*path', :to => 'repositories#show', :format => false
-  get 'projects/:id/repository/show/*path', :to => 'repositories#show', :format => false
+  get "projects/:id/repository/:repository_id/revisions/:rev/diff(/*path)",
+      :to => 'repositories#diff',
+      :format => false,
+      :constraints => {:rev => /[a-z0-9\.\-_]+/, :path => /.*/}
+  get "projects/:id/repository/:repository_id/diff(/*path)",
+      :to => 'repositories#diff',
+      :format => false,
+      :constraints => {:path => /.*/}
+
+  get 'projects/:id/repository/:repository_id/show/*path', :to => 'repositories#show', :format => 'html', :constraints => {:path => /.*/}
 
   get 'projects/:id/repository/:repository_id', :to => 'repositories#show', :path => nil
   get 'projects/:id/repository', :to => 'repositories#show', :path => nil
 
   # additional routes for having the file name at the end of url
-  get 'attachments/:id/:filename', :to => 'attachments#show', :id => /\d+/, :filename => /.*/, :as => 'named_attachment'
+  get 'attachments/:id/:filename', :to => 'attachments#show', :id => /\d+/, :filename => /.*/, :as => 'named_attachment', :format => 'html'
   get 'attachments/download/:id/:filename', :to => 'attachments#download', :id => /\d+/, :filename => /.*/, :as => 'download_named_attachment'
   get 'attachments/download/:id', :to => 'attachments#download', :id => /\d+/
   get 'attachments/thumbnail/:id(/:size)', :to => 'attachments#thumbnail', :id => /\d+/, :size => /\d+/, :as => 'thumbnail'
   resources :attachments, :only => [:show, :update, :destroy]
-  get 'attachments/:object_type/:object_id/edit', :to => 'attachments#edit_all', :as => :object_attachments_edit
-  patch 'attachments/:object_type/:object_id', :to => 'attachments#update_all', :as => :object_attachments
+  constraints object_type: /(issues|versions|news|messages|wiki_pages|projects|documents|journals)/ do
+    get 'attachments/:object_type/:object_id/edit', :to => 'attachments#edit_all', :as => :object_attachments_edit
+    patch 'attachments/:object_type/:object_id', :to => 'attachments#update_all', :as => :object_attachments
+    get 'attachments/:object_type/:object_id/download', :to => 'attachments#download_all', :as => :object_attachments_download
+  end
 
   resources :groups do
     resources :memberships, :controller => 'principal_memberships'
@@ -333,14 +345,14 @@ Rails.application.routes.draw do
   end
   resources :roles do
     collection do
-      match 'permissions', :via => [:get, :post]
+      get 'permissions'
+      post 'permissions', :to => 'roles#update_permissions'
     end
   end
   resources :enumerations, :except => :show
   match 'enumerations/:type', :to => 'enumerations#index', :via => :get
 
-  get 'projects/:id/search', :controller => 'search', :action => 'index'
-  get 'search', :controller => 'search', :action => 'index'
+  get '(projects/:id)/search', :controller => 'search', :action => 'index', :as => 'search'
 
 
   get  'mail_handler', :to => 'mail_handler#new'
@@ -362,10 +374,17 @@ Rails.application.routes.draw do
     end
   end
 
-  match 'workflows', :controller => 'workflows', :action => 'index', :via => :get
-  match 'workflows/edit', :controller => 'workflows', :action => 'edit', :via => [:get, :post]
-  match 'workflows/permissions', :controller => 'workflows', :action => 'permissions', :via => [:get, :post]
-  match 'workflows/copy', :controller => 'workflows', :action => 'copy', :via => [:get, :post]
+  resources :workflows, only: [:index] do
+    collection do
+      get 'edit'
+      patch 'update'
+      get 'permissions'
+      patch 'update_permissions'
+      get 'copy'
+      post 'duplicate'
+    end
+  end
+
   match 'settings', :controller => 'settings', :action => 'index', :via => :get
   match 'settings/edit', :controller => 'settings', :action => 'edit', :via => [:get, :post]
   match 'settings/plugin/:id', :controller => 'settings', :action => 'plugin', :via => [:get, :post], :as => 'plugin_settings'
@@ -376,14 +395,14 @@ Rails.application.routes.draw do
 
   match 'uploads', :to => 'attachments#upload', :via => :post
 
-  get 'robots.txt', :to => 'welcome#robots'
+  get 'robots', :to => 'welcome#robots'
 
   Dir.glob File.expand_path("#{Redmine::Plugin.directory}/*") do |plugin_dir|
     file = File.join(plugin_dir, "config/routes.rb")
-    if File.exists?(file)
+    if File.exist?(file)
       begin
         instance_eval File.read(file)
-      rescue Exception => e
+      rescue SyntaxError, StandardError => e
         puts "An error occurred while loading the routes definition of #{File.basename(plugin_dir)} plugin (#{file}): #{e.message}."
         exit 1
       end

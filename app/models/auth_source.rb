@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,7 @@
 
 # Generic exception for when the AuthSource can not be reached
 # (eg. can not connect to the LDAP)
-class AuthSourceException < Exception; end
+class AuthSourceException < StandardError; end
 class AuthSourceTimeoutException < AuthSourceException; end
 
 class AuthSource < ActiveRecord::Base
@@ -28,11 +30,11 @@ class AuthSource < ActiveRecord::Base
   has_many :users
 
   validates_presence_of :name
-  validates_uniqueness_of :name
+  validates_uniqueness_of :name, :case_sensitive => true
   validates_length_of :name, :maximum => 60
-  attr_protected :id
 
-  safe_attributes 'name',
+  safe_attributes(
+    'name',
     'host',
     'port',
     'account',
@@ -44,8 +46,9 @@ class AuthSource < ActiveRecord::Base
     'attr_mail',
     'onthefly_register',
     'tls',
+    'verify_peer',
     'filter',
-    'timeout'
+    'timeout')
 
   def authenticate(login, password)
   end

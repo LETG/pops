@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +24,6 @@ module Redmine
   module Scm
     module Adapters
       class SubversionAdapter < AbstractAdapter
-
         # SVN executable name
         SVN_BIN = Redmine::Configuration['scm_subversion_command'] || "svn"
 
@@ -46,20 +47,20 @@ module Redmine
           end
 
           def svn_binary_version
-            scm_version = scm_version_from_command_line.dup.force_encoding('ASCII-8BIT')
+            scm_version = scm_version_from_command_line.b
             if m = scm_version.match(%r{\A(.*?)((\d+\.)+\d+)})
               m[2].scan(%r{\d+}).collect(&:to_i)
             end
           end
 
           def scm_version_from_command_line
-            shellout("#{sq_bin} --version") { |io| io.read }.to_s
+            shellout("#{sq_bin} --version") {|io| io.read}.to_s
           end
         end
 
         # Get info about the svn repository
         def info
-          cmd = "#{self.class.sq_bin} info --xml #{target}"
+          cmd = +"#{self.class.sq_bin} info --xml #{target}"
           cmd << credentials_string
           info = nil
           shellout(cmd) do |io|
@@ -67,17 +68,25 @@ module Redmine
             begin
               doc = parse_xml(output)
               # root_url = doc.elements["info/entry/repository/root"].text
-              info = Info.new({:root_url => doc['info']['entry']['repository']['root']['__content__'],
-                               :lastrev => Revision.new({
-                                 :identifier => doc['info']['entry']['commit']['revision'],
-                                 :time => Time.parse(doc['info']['entry']['commit']['date']['__content__']).localtime,
-                                 :author => (doc['info']['entry']['commit']['author'] ? doc['info']['entry']['commit']['author']['__content__'] : "")
-                               })
-                             })
+              info =
+                Info.new(
+                  {
+                    :root_url => doc['info']['entry']['repository']['root']['__content__'],
+                    :lastrev =>
+                    Revision.new(
+                      {
+                        :identifier => doc['info']['entry']['commit']['revision'],
+                        :time => Time.parse(doc['info']['entry']['commit']['date']['__content__']).localtime,
+                        :author => (doc['info']['entry']['commit']['author'] ? doc['info']['entry']['commit']['author']['__content__'] : "")
+                      }
+                    )
+                  }
+                )
             rescue
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           info
         rescue CommandFailed
           return nil
@@ -89,7 +98,7 @@ module Redmine
           path ||= ''
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
           entries = Entries.new
-          cmd = "#{self.class.sq_bin} list --xml #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} list --xml #{target(path)}@#{identifier}"
           cmd << credentials_string
           shellout(cmd) do |io|
             output = io.read.force_encoding('UTF-8')
@@ -101,24 +110,33 @@ module Redmine
                 # Skip directory if there is no commit date (usually that
                 # means that we don't have read access to it)
                 next if entry['kind'] == 'dir' && commit_date.nil?
+
                 name = entry['name']['__content__']
-                entries << Entry.new({:name => URI.unescape(name),
-                            :path => ((path.empty? ? "" : "#{path}/") + name),
-                            :kind => entry['kind'],
-                            :size => ((s = entry['size']) ? s['__content__'].to_i : nil),
-                            :lastrev => Revision.new({
-                              :identifier => commit['revision'],
-                              :time => Time.parse(commit_date['__content__'].to_s).localtime,
-                              :author => ((a = commit['author']) ? a['__content__'] : nil)
-                              })
-                            })
+                entries <<
+                  Entry.new(
+                    {
+                      :name => Addressable::URI.unescape(name),
+                      :path => ((path.empty? ? "" : "#{path}/") + name),
+                      :kind => entry['kind'],
+                      :size => ((s = entry['size']) ? s['__content__'].to_i : nil),
+                      :lastrev =>
+                        Revision.new(
+                          {
+                            :identifier => commit['revision'],
+                            :time => Time.parse(commit_date['__content__'].to_s).localtime,
+                            :author => ((a = commit['author']) ? a['__content__'] : nil)
+                          }
+                        )
+                    }
+                  )
               end
-            rescue Exception => e
+            rescue => e
               logger.error("Error parsing svn output: #{e.message}")
               logger.error("Output was:\n #{output}")
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           logger.debug("Found #{entries.size} entries in the repository for #{target(path)}") if logger && logger.debug?
           entries.sort_by_name
         end
@@ -128,7 +146,7 @@ module Redmine
           return nil unless self.class.client_version_above?([1, 5, 0])
 
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} proplist --verbose --xml #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} proplist --verbose --xml #{target(path)}@#{identifier}"
           cmd << credentials_string
           properties = {}
           shellout(cmd) do |io|
@@ -136,12 +154,13 @@ module Redmine
             begin
               doc = parse_xml(output)
               each_xml_element(doc['properties']['target'], 'property') do |property|
-                properties[ property['name'] ] = property['__content__'].to_s
+                properties[property['name']] = property['__content__'].to_s
               end
             rescue
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           properties
         end
 
@@ -150,7 +169,7 @@ module Redmine
           identifier_from = (identifier_from && identifier_from.to_i > 0) ? identifier_from.to_i : "HEAD"
           identifier_to = (identifier_to && identifier_to.to_i > 0) ? identifier_to.to_i : 1
           revisions = Revisions.new
-          cmd = "#{self.class.sq_bin} log --xml -r #{identifier_from}:#{identifier_to}"
+          cmd = +"#{self.class.sq_bin} log --xml -r #{identifier_from}:#{identifier_to}"
           cmd << credentials_string
           cmd << " --verbose " if  options[:with_paths]
           cmd << " --limit #{options[:limit].to_i}" if options[:limit]
@@ -161,26 +180,35 @@ module Redmine
               doc = parse_xml(output)
               each_xml_element(doc['log'], 'logentry') do |logentry|
                 paths = []
-                each_xml_element(logentry['paths'], 'path') do |path|
-                  paths << {:action => path['action'],
-                            :path => path['__content__'],
-                            :from_path => path['copyfrom-path'],
-                            :from_revision => path['copyfrom-rev']
-                            }
-                end if logentry['paths'] && logentry['paths']['path']
-                paths.sort! { |x,y| x[:path] <=> y[:path] }
+                if logentry['paths'] && logentry['paths']['path']
+                  each_xml_element(logentry['paths'], 'path') do |path|
+                    paths <<
+                      {
+                        :action => path['action'],
+                        :path => path['__content__'],
+                        :from_path => path['copyfrom-path'],
+                        :from_revision => path['copyfrom-rev']
+                      }
+                  end
+                end
+                paths.sort_by! {|e| e[:path]}
 
-                revisions << Revision.new({:identifier => logentry['revision'],
-                              :author => (logentry['author'] ? logentry['author']['__content__'] : ""),
-                              :time => Time.parse(logentry['date']['__content__'].to_s).localtime,
-                              :message => logentry['msg']['__content__'],
-                              :paths => paths
-                            })
+                revisions <<
+                  Revision.new(
+                    {
+                      :identifier => logentry['revision'],
+                      :author => (logentry['author'] ? logentry['author']['__content__'] : ""),
+                      :time => Time.parse(logentry['date']['__content__'].to_s).localtime,
+                      :message => logentry['msg']['__content__'],
+                      :paths => paths
+                    }
+                  )
               end
             rescue
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           revisions
         end
 
@@ -190,7 +218,7 @@ module Redmine
 
           identifier_to = (identifier_to and identifier_to.to_i > 0) ? identifier_to.to_i : (identifier_from.to_i - 1)
 
-          cmd = "#{self.class.sq_bin} diff -r "
+          cmd = +"#{self.class.sq_bin} diff -r "
           cmd << "#{identifier_to}:"
           cmd << "#{identifier_from}"
           cmd << " #{target(path)}@#{identifier_from}"
@@ -202,12 +230,13 @@ module Redmine
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           diff
         end
 
         def cat(path, identifier=nil)
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} cat #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} cat #{target(path)}@#{identifier}"
           cmd << credentials_string
           cat = nil
           shellout(cmd) do |io|
@@ -215,34 +244,39 @@ module Redmine
             cat = io.read
           end
           return nil if $? && $?.exitstatus != 0
+
           cat
         end
 
         def annotate(path, identifier=nil)
           identifier = (identifier and identifier.to_i > 0) ? identifier.to_i : "HEAD"
-          cmd = "#{self.class.sq_bin} blame #{target(path)}@#{identifier}"
+          cmd = +"#{self.class.sq_bin} blame #{target(path)}@#{identifier}"
           cmd << credentials_string
           blame = Annotate.new
           shellout(cmd) do |io|
             io.each_line do |line|
               next unless line =~ %r{^\s*(\d+)\s*(\S+)\s(.*)$}
+
               rev = $1
-              blame.add_line($3.rstrip,
-                   Revision.new(
-                      :identifier => rev,
-                      :revision   => rev,
-                      :author     => $2.strip
-                      ))
+              blame.add_line(
+                $3.rstrip,
+                Revision.new(
+                  :identifier => rev,
+                  :revision   => rev,
+                  :author     => $2.strip
+                )
+              )
             end
           end
           return nil if $? && $?.exitstatus != 0
+
           blame
         end
 
         private
 
         def credentials_string
-          str = ''
+          str = +''
           str << " --username #{shell_quote(@login)}" unless @login.blank?
           str << " --password #{shell_quote(@password)}" unless @login.blank? || @password.blank?
           str << " --no-auth-cache --non-interactive"
@@ -265,9 +299,9 @@ module Redmine
         end
 
         def target(path = '')
-          base = path.match(/^\//) ? root_url : url
+          base = /^\//.match?(path) ? root_url : url
           uri = "#{base}/#{path}"
-          uri = URI.escape(URI.escape(uri), '[]')
+          uri = Addressable::URI.encode(uri)
           shell_quote(uri.gsub(/[?<>\*]/, ''))
         end
       end

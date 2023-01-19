@@ -152,6 +152,10 @@ fr:
         earlier_than_minimum_start_date: "ne peut pas être antérieure au %{date} à cause des demandes qui précèdent"
         not_a_regexp: "n'est pas une expression regulière valide"
         open_issue_with_closed_parent: "Une demande ouverte ne peut pas être rattachée à une demande fermée"
+        must_contain_uppercase: "doit contenir des lettres majuscules (A-Z)"
+        must_contain_lowercase: "doit contenir des lettres minuscules (a-z)"
+        must_contain_digits: "doit contenir des chiffres (0-9)"
+        must_contain_special_chars: "doit contenir des caractères spéciaux (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Choisir
 
@@ -193,7 +197,6 @@ fr:
   notice_failed_to_save_issues: "%{count} demande(s) sur les %{total} sélectionnées n'ont pas pu être mise(s) à jour : %{ids}."
   notice_failed_to_save_time_entries: "%{count} temps passé(s) sur les %{total} sélectionnés n'ont pas pu être mis à jour: %{ids}."
   notice_failed_to_save_members: "Erreur lors de la sauvegarde des membres: %{errors}."
-  notice_no_issue_selected: "Aucune demande sélectionnée ! Cochez les demandes que vous voulez mettre à jour."
   notice_account_pending: "Votre compte a été créé et attend l'approbation de l'administrateur."
   notice_default_data_loaded: Paramétrage par défaut chargé avec succès.
   notice_unable_delete_version: Impossible de supprimer cette version.
@@ -224,14 +227,14 @@ fr:
   error_issue_done_ratios_not_updated: L'avancement des demandes n'a pas pu être mis à jour.
   error_workflow_copy_source: 'Veuillez sélectionner un tracker et/ou un rôle source'
   error_workflow_copy_target: 'Veuillez sélectionner les trackers et rôles cibles'
-  error_unable_delete_issue_status: Impossible de supprimer le statut de demande
+  error_unable_delete_issue_status: Impossible de supprimer le statut de demande (%{value})
   error_unable_to_connect: Connexion impossible (%{value})
   error_attachment_too_big: Ce fichier ne peut pas être attaché car il excède la taille maximale autorisée (%{max_size})
   error_session_expired: "Votre session a expiré. Veuillez vous reconnecter."
   warning_attachments_not_saved: "%{count} fichier(s) n'ont pas pu être sauvegardés."
   error_password_expired: "Votre mot de passe a expiré ou nécessite d'être changé."
   error_invalid_file_encoding: "Le fichier n'est pas un fichier %{encoding} valide"
-  error_invalid_csv_file_or_settings: "Le fichier n'est pas un fichier CSV ou n'est pas conforme aux paramètres sélectionnés"
+  error_invalid_csv_file_or_settings: "Le fichier n'est pas un fichier CSV ou n'est pas conforme aux paramètres sélectionnés (%{value})"
   error_can_not_read_import_file: "Une erreur est survenue lors de la lecture du fichier à importer"
   error_attachment_extension_not_allowed: "L'extension %{extension} n'est pas autorisée"
   error_ldap_bind_credentials: "Identifiant ou mot de passe LDAP incorrect"
@@ -240,6 +243,7 @@ fr:
   error_move_of_child_not_possible: "La sous-tâche %{child} n'a pas pu être déplacée dans le nouveau projet : %{errors}"
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: "Le temps passé ne peut pas être réaffecté à une demande qui va être supprimée"
   warning_fields_cleared_on_bulk_edit: "Les changements apportés entraîneront la suppression automatique des valeurs d'un ou plusieurs champs sur les objets sélectionnés"
+  error_exceeds_maximum_hours_per_day: "Impossible de saisir plus de %{max_hours} heures pour le même jour (%{logged_hours} heures ont déjà été saisies)"
 
   mail_subject_lost_password: "Votre mot de passe %{value}"
   mail_body_lost_password: 'Pour changer votre mot de passe, cliquez sur le lien suivant :'
@@ -326,7 +330,7 @@ fr:
   field_auth_source: Mode d'authentification
   field_hide_mail: Cacher mon adresse mail
   field_comments: Commentaire
-  field_url: Site web laboratoire
+  field_url: URL
   field_start_page: Page de démarrage
   field_subproject: Sous-projet
   field_hours: Heures
@@ -336,7 +340,7 @@ fr:
   field_is_filter: Utilisé comme filtre
   field_issue_to: Demande liée
   field_delay: Retard
-  field_assignable: Demandes assignables à ce rôle
+  field_assignable: Demandes assignables aux utilisateurs ayant ce rôle
   field_redirect_existing_links: Rediriger les liens existants
   field_estimated_hours: Temps estimé
   field_column_names: Colonnes
@@ -348,7 +352,6 @@ fr:
   field_parent_title: Page parent
   field_editable: Modifiable
   field_watcher: Observateur
-  field_identity_url: URL OpenID
   field_content: Contenu
   field_group_by: Grouper par
   field_sharing: Partage
@@ -387,9 +390,9 @@ fr:
   field_full_width_layout: Afficher sur toute la largeur
   field_digest: Checksum
   field_default_assigned_to: Assigné par défaut
+  field_default_issue_query: Rapport par défaut
 
   setting_app_title: Titre de l'application
-  setting_app_subtitle: Sous-titre de l'application
   setting_welcome_text: Texte d'accueil
   setting_default_language: Langue par défaut
   setting_login_required: Authentification obligatoire
@@ -398,7 +401,6 @@ fr:
   setting_attachment_max_size: Taille maximale des fichiers
   setting_issues_export_limit: Limite d'exportation des demandes
   setting_mail_from: Adresse d'émission
-  setting_bcc_recipients: Destinataires en copie cachée (cci)
   setting_plain_text_mail: Mail en texte brut (non HTML)
   setting_host_name: Nom d'hôte et chemin
   setting_text_formatting: Formatage du texte
@@ -426,7 +428,7 @@ fr:
   setting_display_subprojects_issues: Afficher par défaut les demandes des sous-projets sur les projets principaux
   setting_enabled_scm: SCM activés
   setting_mail_handler_body_delimiters: "Tronquer les emails après l'une de ces lignes"
-  setting_mail_handler_enable_regex_delimiters: "Utiliser les expressions regulières"
+  setting_mail_handler_enable_regex: "Utiliser les expressions regulières"
   setting_mail_handler_api_enabled: "Activer le WS pour la réception d'emails"
   setting_mail_handler_api_key: Clé de protection de l'API
   setting_sequential_project_identifiers: Générer des identifiants de projet séquentiels
@@ -435,7 +437,6 @@ fr:
   setting_diff_max_lines_displayed: Nombre maximum de lignes de diff affichées
   setting_file_max_size_displayed: Taille maximum des fichiers texte affichés en ligne
   setting_repository_log_display_limit: "Nombre maximum de révisions affichées sur l'historique d'un fichier"
-  setting_openid: "Autoriser l'authentification et l'enregistrement OpenID"
   setting_password_max_age: Expiration des mots de passe après
   setting_password_min_length: Longueur minimum des mots de passe
   setting_new_project_user_role_id: Rôle donné à un utilisateur non-administrateur qui crée un projet
@@ -474,6 +475,10 @@ fr:
   setting_new_item_menu_tab: Onglet de création d'objets dans le menu du project
   setting_commit_logs_formatting: Appliquer le formattage de texte aux messages de commit
   setting_timelog_required_fields: Champs obligatoire pour les temps passés
+  setting_close_duplicate_issues: Fermer les doublons automatiquement
+  setting_time_entry_list_defaults: Affichage par défaut de la liste des temps passés
+  setting_timelog_accept_0_hours: Autoriser la saisie de temps avec 0 heure
+  setting_timelog_max_hours_per_day: Maximum d'heures pouvant être saisies par un utilisateur sur un jour
 
   permission_add_project: Créer un projet
   permission_add_subprojects: Créer des sous-projets
@@ -496,7 +501,6 @@ fr:
   permission_edit_own_issue_notes: Modifier ses propres notes
   permission_view_private_notes: Voir les notes privées
   permission_set_notes_private: Rendre les notes privées
-  permission_move_issues: Déplacer les demandes
   permission_delete_issues: Supprimer les demandes
   permission_manage_public_queries: Gérer les requêtes publiques
   permission_save_queries: Sauvegarder les requêtes
@@ -608,9 +612,7 @@ fr:
   label_enumeration_new: Nouvelle valeur
   label_information: Information
   label_information_plural: Informations
-  label_please_login: Identification
   label_register: S'enregistrer
-  label_login_with_open_id_option: S'authentifier avec OpenID
   label_password_lost: Mot de passe perdu
   label_password_required: Confirmez votre mot de passe pour continuer
   label_home: Accueil
@@ -627,7 +629,6 @@ fr:
   label_last_login: Dernière connexion
   label_registered_on: Inscrit le
   label_activity: Activité
-  label_overall_activity: Activité globale
   label_user_activity: "Activité de %{value}"
   label_new: Nouveau
   label_logged_as: Connecté en tant que
@@ -739,7 +740,6 @@ fr:
   label_between: entre
   label_in: dans
   label_today: aujourd'hui
-  label_all_time: toute la période
   label_yesterday: hier
   label_this_week: cette semaine
   label_last_week: la semaine dernière
@@ -779,6 +779,7 @@ fr:
   label_latest_revision_plural: Dernières révisions
   label_view_revisions: Voir les révisions
   label_view_all_revisions: Voir toutes les révisions
+  label_x_revisions: "%{count} révisions"
   label_max_size: Taille maximale
   label_sort_highest: Remonter en premier
   label_sort_higher: Remonter
@@ -806,7 +807,6 @@ fr:
   label_issue_tracking: Suivi des demandes
   label_spent_time: Temps passé
   label_total_spent_time: Temps passé total
-  label_overall_spent_time: Temps passé global
   label_f_hour: "%{value} heure"
   label_f_hour_plural: "%{value} heures"
   label_f_hour_short: "%{value} h"
@@ -949,7 +949,6 @@ fr:
   label_completed_versions: Versions passées
   label_search_for_watchers: Rechercher des observateurs
   label_session_expiration: Expiration des sessions
-  label_show_closed_projects: Voir les projets fermés
   label_status_transitions: Changements de statut
   label_fields_permissions: Permissions sur les champs
   label_readonly: Lecture
@@ -1024,6 +1023,13 @@ fr:
   label_font_monospace: Police non proportionnelle
   label_font_proportional: Police proportionnelle
   label_last_notes: Dernières notes
+  label_default_queries:
+    for_all_projects: Pour tous les projets
+    for_current_project: Pour le projet en cours
+    for_all_users: Pour tous les utilisateurs
+    for_this_user: For this user
+  label_trackers_description: Description des trackers
+  label_open_trackers_description: Afficher la description des trackers
 
   button_login: Connexion
   button_submit: Soumettre
@@ -1069,7 +1075,6 @@ fr:
   button_update: Mettre à jour
   button_configure: Configurer
   button_quote: Citer
-  button_duplicate: Dupliquer
   button_show: Afficher
   button_hide: Cacher
   button_edit_section: Modifier cette section
@@ -1096,7 +1101,6 @@ fr:
 
   text_select_mail_notifications: Actions pour lesquelles une notification par e-mail est envoyée
   text_regexp_info: ex. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 pour aucune restriction
   text_project_destroy_confirmation: Êtes-vous sûr de vouloir supprimer ce projet et toutes ses données ?
   text_subprojects_destroy_warning: "Ses sous-projets : %{value} seront également supprimés."
   text_workflow_edit: Sélectionner un tracker et un rôle pour éditer le workflow
@@ -1109,11 +1113,11 @@ fr:
   text_tip_issue_begin_day: tâche commençant ce jour
   text_tip_issue_end_day: tâche finissant ce jour
   text_tip_issue_begin_end_day: tâche commençant et finissant ce jour
-  text_project_identifier_info: 'Seuls les lettres minuscules (a-z), chiffres, tirets et tirets bas sont autorisés, doit commencer par une minuscule.<br />Un fois sauvegardé, l''identifiant ne pourra plus être modifié.'
+  text_project_identifier_info: 'Seuls les lettres minuscules (a-z), chiffres, tirets et tirets bas sont autorisés.<br />Un fois sauvegardé, l''identifiant ne pourra plus être modifié.'
   text_caracters_maximum: "%{count} caractères maximum."
   text_caracters_minimum: "%{count} caractères minimum."
   text_length_between: "Longueur comprise entre %{min} et %{max} caractères."
-  text_tracker_no_workflow: Aucun worflow n'est défini pour ce tracker
+  text_tracker_no_workflow: Aucun workflow n'est défini pour ce tracker
   text_unallowed_characters: Caractères non autorisés
   text_comma_separated: Plusieurs valeurs possibles (séparées par des virgules).
   text_line_separated: Plusieurs valeurs possibles (une valeur par ligne).
@@ -1129,20 +1133,21 @@ fr:
   text_load_default_configuration: Charger le paramétrage par défaut
   text_status_changed_by_changeset: "Appliqué par commit %{value}."
   text_time_logged_by_changeset: "Appliqué par commit %{value}"
-  text_issues_destroy_confirmation: 'Êtes-vous sûr de vouloir supprimer la ou les demandes(s) selectionnée(s) ?'
+  text_issues_destroy_confirmation: 'Êtes-vous sûr de vouloir supprimer la ou les demande(s) selectionnée(s) ?'
   text_issues_destroy_descendants_confirmation: "Cela entrainera également la suppression de %{count} sous-tâche(s)."
   text_time_entries_destroy_confirmation: "Etes-vous sûr de vouloir supprimer les temps passés sélectionnés ?"
   text_select_project_modules: 'Sélectionner les modules à activer pour ce projet :'
   text_default_administrator_account_changed: Compte administrateur par défaut changé
   text_file_repository_writable: Répertoire de stockage des fichiers accessible en écriture
   text_plugin_assets_writable: Répertoire public des plugins accessible en écriture
-  text_rmagick_available: Bibliothèque RMagick présente (optionnelle)
+  text_minimagick_available: Bibliothèque MiniMagick présente (optionnelle)
   text_convert_available: Binaire convert de ImageMagick présent (optionel)
   text_destroy_time_entries_question: "%{hours} heures ont été enregistrées sur les demandes à supprimer. Que voulez-vous faire ?"
   text_destroy_time_entries: Supprimer les heures
   text_assign_time_entries_to_project: Reporter les heures sur le projet
   text_reassign_time_entries: 'Reporter les heures sur cette demande:'
   text_user_wrote: "%{value} a écrit :"
+  text_user_wrote_in: "%{value} a écrit  (%{link}):"
   text_enumeration_destroy_question: "La valeur « %{name} » est affectée à %{count} objet(s)."
   text_enumeration_category_reassign_to: 'Réaffecter les objets à cette valeur:'
   text_email_delivery_not_configured: "L'envoi de mail n'est pas configuré, les notifications sont désactivées.\nConfigurez votre serveur SMTP dans config/configuration.yml et redémarrez l'application pour les activer."
@@ -1214,6 +1219,7 @@ fr:
   description_issue_category_reassign: Choisir une catégorie
   description_wiki_subpages_reassign: Choisir une nouvelle page parent
   text_repository_identifier_info: 'Seuls les lettres minuscules (a-z), chiffres, tirets et tirets bas sont autorisés.<br />Un fois sauvegardé, l''identifiant ne pourra plus être modifié.'
+  text_allowed_queries_to_select: Seuls les rapports publics (pour tous les utilisateurs) sont sélectionnables
   label_parent_task_attributes_derived: Calculé à partir des sous-tâches
   label_parent_task_attributes_independent: Indépendent des sous-tâches
   mail_subject_security_notification: Notification de sécurité
@@ -1227,5 +1233,198 @@ fr:
   label_no_preview: Aucun aperçu disponible
   label_no_preview_alternative_html: Aucun aperçu disponible. Veuillez %{link} le fichier.
   label_no_preview_download: télécharger
-  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
-  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
+  label_user_mail_option_only_assigned: Seulement pour ce que je surveille ou qui m'est assigné
+  label_user_mail_option_only_owner: Seulement pour ce que je surveille ou que j'ai créé
+  error_can_not_delete_auth_source: "Ce mode d'authentification est utilisé par des comptes utilisateurs et ne peut pas être supprimé"
+  button_actions: Actions
+  mail_body_lost_password_validity: "Ce lien ne vous permettra de changer de mot de passe qu'une seule fois."
+  text_login_required_html: "En désactivant l'authentification obligatoire, les projets publics et leurs contenus sont librement accessibles à toute personne sur le réseau. Vous pouvez <a href='%{anonymous_role_path}'>éditer les permissions applicables</a>."
+  label_login_required_yes: Oui
+  label_login_required_no: Non, autoriser l'accès anonyme aux projets publics
+  text_project_is_public_non_member: "Les projets publics et leurs contenus sont accessibles à tout utilisateur authentifié."
+  text_project_is_public_anonymous: "Les projets publics et leurs contenus sont librement accessibles à toute personne sur le réseau."
+  label_version_and_files: Versions (%{count}) et fichiers
+  label_ldap: LDAP
+  label_ldaps_verify_none: "LDAPS (sans vérification du certificat)"
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: "Il est recommandé d'utiliser une connexion LDPAS avec vérification du certificat pour empêcher toute interception des données durant la procédure d'authentification."
+  label_nothing_to_preview: "Aucun texte à prévisualiser"
+  error_token_expired: "Ce lien de récupération de votre mot de passe a expiré, veuillez recommencer."
+  error_spent_on_future_date: "Impossible d'enregistrer un temps passé sur une date future"
+  setting_timelog_accept_future_dates: "Autoriser la saisie de temps sur une date future"
+  label_delete_link_to_subtask: "Supprimer la relation avec la sous-tâche"
+  error_not_allowed_to_log_time_for_other_users: "Vous n'êtes pas autorisé à saisir le temps passé pour d'autres utilisateurs"
+  permission_log_time_for_other_users: "Saisir le temps passé pour d'autres utilisateurs"
+  label_inherited_from_parent_project: "Hérité du projet parent"
+  label_inherited_from_group: "Hérité du groupe %{name}"
+  label_tomorrow: demain
+  label_next_week: semaine prochaine
+  label_next_month: mois prochain
+  text_role_no_workflow: "Aucun workflow défini pour ce rôle"
+  text_status_no_workflow: "Aucun tracker n'utilise ce statut dans le workflow"
+  setting_mail_handler_preferred_body_part: "Partie privilégiée des messages multipart (HTML)"
+  setting_show_status_changes_in_mail_subject: "Inclure les changements de statut des demandes dans le sujet des notifications"
+  label_preferred_body_part_text: "Texte"
+  label_preferred_body_part_html: "HTML (expérimental)"
+  field_parent_issue_subject: "Sujet de la demande parent"
+  permission_edit_own_issues: "Modifier ses propres demandes"
+  text_select_apply_tracker: "Sélectionner un tracker"
+  label_updated_issues: "Demandes mises à jour"
+  text_avatar_server_config_html: "Le serveur d'avatars actuel est <a href=\"%{url}\">%{url}</a>. Vous pouvez le configurer dans config/configuration.yml."
+  setting_gantt_months_limit: "Nombre maximum de mois affichés sur le gantt"
+  permission_import_time_entries: "Importer des temps passés"
+  label_import_notifications: "Envoyer les notifications durant l'import"
+  text_gs_available: "Support PDF ImageMagick disponible (optionnel)"
+  field_recently_used_projects: "Nombre de projets consultés récemment affichés dans le menu"
+  label_optgroup_bookmarks: "Favoris"
+  label_optgroup_others: "Autres projets"
+  label_optgroup_recents: "Consultés récemment"
+  button_project_bookmark: "Ajouter aux favoris"
+  button_project_bookmark_delete: "Retirer des favoris"
+  field_history_default_tab: "Onglet par défaut de l'historique d'une demande"
+  label_issue_history_properties: "Changements"
+  label_issue_history_notes: "Notes"
+  label_last_tab_visited: "Dernier onglet visité"
+  field_unique_id: "ID unique"
+  text_no_subject: "sans sujet"
+  setting_password_required_char_classes: "Caractères requis pour les mots de passe"
+  label_password_char_class_uppercase: "lettres majuscules"
+  label_password_char_class_lowercase: "lettres miniscules"
+  label_password_char_class_digits: "chiffres"
+  label_password_char_class_special_chars: "caractères spéciaux"
+  text_characters_must_contain: "Doit contenir les types de caractères suivants : %{character_classes}."
+  label_starts_with: "commence par"
+  label_ends_with: "se termine par"
+  label_issue_fixed_version_updated: "Version cible mise à jour"
+  setting_project_list_defaults: "Affichage par défaut de la liste des projets"
+  label_display_type: "Affichage"
+  label_display_type_list: "Liste"
+  label_display_type_board: "Tableau"
+  label_my_bookmarks: "Favoris"
+  label_import_time_entries: "Importer des temps passés"
+  field_toolbar_language_options: Langages de la barre d'outils de mise en évidence du code
+  label_user_mail_notify_about_high_priority_issues_html: Me notifier aussi des demandes avec une priorité <em>%{prio}</em> ou supérieure
+  label_assign_to_me: M'assigner
+  notice_issue_not_closable_by_open_tasks: Cette demande ne peut pas être fermée car elle contient au moins une sous-tâche encore ouverte.
+  notice_issue_not_closable_by_blocking_issue: Cette demande ne peut pas être fermée car elle est bloqué par au moins une demande encore ouverte.
+  notice_issue_not_reopenable_by_closed_parent_issue: Cette demande ne peut être réouverte car sa demande parente est fermée.
+  error_bulk_download_size_too_big: Ces pièces jointes ne peuvent pas être téléchargées en masse car
+    la taille totale des fichiers dépasse la taille maximale autorisée (%{max_size})
+  setting_bulk_download_max_size: Taille totale maximale du télécharement groupé
+  label_download_all_attachments: Télécharger tous les fichiers
+  error_attachments_too_many: Ce fichier ne peut être transmis car il excède le nombre maximum de fichier pouvant être attaché simultanément (%{max_number_of_files})
+  setting_email_domains_allowed: Domaines de messagerie autorisés
+  setting_email_domains_denied: Domaines de messagerie non autorisés
+  field_passwd_changed_on: Mot de passe modifié pour la dernière fois
+  label_relations_mapping: Cartographie des relations
+  label_import_users: Importer les utilisateurs
+  label_days_to_html: "%{days} jours jusqu'à %{date}"
+  setting_twofa: Double authentification
+  label_optional: optionel
+  label_required_lower: obligatoire
+  button_disable: Désactiver
+  twofa__totp__name: Application d'authentication
+  twofa__totp__text_pairing_info_html: Scannez ce QR-Code ou saisissez la clé au format textee
+    dans une application de double authentification (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) et saisissez le code dans le champ de saisie ci-dessus pour activer la double authentification.
+  twofa__totp__label_plain_text_key: Clé au format texte
+  twofa__totp__label_activate: Activer la double authentification
+  twofa_currently_active: 'Activée: %{twofa_scheme_name}'
+  twofa_not_active: Désactivée
+  twofa_label_code: Code
+  twofa_hint_disabled_html: La valeur <strong>%{label}</strong> va désactiver et déconnecter
+    les applications de double authentification pour tous les utilisateurs.
+  twofa_hint_required_html: La valeur <strong>%{label}</strong> va imposer à tous les utilisateurs de mettre
+    en place la double authentification à la prochaine connexion.
+  twofa_label_setup: Activer la double authentification
+  twofa_label_deactivation_confirmation: Désactiver la double authentification
+  twofa_notice_select: 'Veuillez choisir la méthode de double authentification que vous souhaitez utiliser :'
+  twofa_warning_require: L'administrateur vous demande d'activer la double authentification.
+  twofa_activated: La double authentification a bien été activée. Il est recommandé
+    de <a data-method="post" href="%{bc_path}">générer des codes de secours</a> pour votre compte.
+  twofa_deactivated: La double authentification a été désactivée.
+  twofa_mail_body_security_notification_paired: La double authentification a bien été activée
+    en utilisant %{field}.
+  twofa_mail_body_security_notification_unpaired: La double authentification a été désactivée
+    pour votre compte.
+  twofa_mail_body_backup_codes_generated: Les nouveaux codes de secours ont été générés.
+  twofa_mail_body_backup_code_used: Un code de secours de la double authentification a été utilisé.
+  twofa_invalid_code: Le code est invalide ou expiré.
+  twofa_label_enter_otp: Veuillez saisir le code de la double authentification.
+  twofa_too_many_tries: Trop de tentatives.
+  twofa_resend_code: Envoyer un code à nouveau
+  twofa_code_sent: Un code d'authentification vous a été envoyé.
+  twofa_generate_backup_codes: Générer des codes de secours
+  twofa_text_generate_backup_codes_confirmation: Cette opération va désactiver tous les codes de secours actuels
+    et en générer de nouveaux. Souhaitez-vous continuer ?
+  twofa_notice_backup_codes_generated: Les codes de secours ont été générés.
+  twofa_warning_backup_codes_generated_invalidated: Les nouveaux codes de secours ont été générés.
+    Les anciens codes du %{time} sont à présent invalides.
+  twofa_label_backup_codes: Codes de secours pour la double authentification
+  twofa_text_backup_codes_hint: Utilisez ces codes à la place des codes temporaires à chaque fois que vous ne pouvez
+    pas utiliser l'application de double authentification. Chaque code ne peut être utilisé qu'une seule fois. Il
+    est recommandé de les imprimer et de les sauvegarder en lieu sûr.
+  twofa_text_backup_codes_created_at: Codes de secours générés le %{datetime}.
+  twofa_backup_codes_already_shown: Les codes de secours ne peuvent pas être affichés à nouveau, veuillez
+    <a data-method="post" href="%{bc_path}">générer de nouveaux codes</a> si besoin.
+  error_can_not_execute_macro_html: Erreur lors de l'exécution de la macro <strong>%{name}</strong>
+    (%{error})
+  error_macro_does_not_accept_block: Cette macro n'accepte pas de bloc de texte
+  error_childpages_macro_no_argument: Sans argument, cette macro ne peut uniquement être appelée que par les pages wiki
+  error_circular_inclusion: Inclusion récursive détectée
+  error_page_not_found: Page non trouvée
+  error_filename_required: Nom de fichier obligatoire
+  error_invalid_size_parameter: Paramètre de taille invalide
+  error_attachment_not_found: Pièce jointe %{name} non trouvée
+  permission_delete_project: Supprimer le projet
+  field_twofa_scheme: Méthode de double authentication
+  text_user_destroy_confirmation: Voulez-vous vraiment supprimer cet utilisateur et l'ensemble des références à celui-ci ?
+    Cette action ne peut être annulée. Il est souvent préférable de verrouiller l'utilisateur au lieu de le supprimer.
+    Pour confirmer, veuillez entrer l'identifiant (%{login}) ci dessous.
+  text_project_destroy_enter_identifier: Pour confirmer, veuillez saisir l'identifiant du projet
+    (%{identifier}) ci dessous.
+  button_add_subtask: Ajouter une sous-tâche
+  notice_invalid_watcher: "Observateur non valide: l'utilisateur ne recevra aucune notification
+    car il n'a pas accès pour afficher cet objet."
+  button_fetch_changesets: Récupérer les commits
+  permission_view_message_watchers: Afficher la liste des observateurs de messages
+  permission_add_message_watchers: Ajouter des observateurs de messages
+  permission_delete_message_watchers: Supprimer des observateurs de messages
+  label_message_watchers: Obsvervateurs
+  button_copy_link: Copier le lien
+  error_invalid_authenticity_token: Jeton d'authenticité de formulaire invalide.
+  error_query_statement_invalid: Une erreur s'est produite lors de l'exécution de la requête et a
+    été enregistré. Veuillez signaler cette erreur à votre administrateur Redmine.
+  permission_view_wiki_page_watchers: View wiki page watchers list
+  permission_add_wiki_page_watchers: Add wiki page watchers
+  permission_delete_wiki_page_watchers: Delete wiki page watchers
+  label_wiki_page_watchers: Watchers
+  label_attachment_description: File description
+  error_no_data_in_file: The file does not contain any data
+  field_twofa_required: Require two factor authentication
+  twofa_hint_optional_html: Setting <strong>%{label}</strong> will let users set up
+    two-factor authentication at will, unless it is required by one of their groups.
+  twofa_text_group_required: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is required for all users.
+  twofa_text_group_disabled: This setting is only effective when the global two factor
+    authentication setting is set to 'optional'. Currently, two factor authentication
+    is disabled.
+  text_all_migrations_have_been_run: All database migrations have been run
+  button_save_object: Save %{object_name}
+  button_edit_object: Edit %{object_name}
+  button_delete_object: Delete %{object_name}
+  text_setting_config_change: You can configure the behaviour in config/configuration.yml.
+    Please restart the application after editing it.
+  label_bulk_edit: Bulk edit
+  button_create_and_follow: Create and follow
+  label_subtask: Subtask
+  label_default_query: Rapport par défaut
+  field_default_project_query: Default project query
+  label_required_administrators: required for administrators
+  twofa_hint_required_administrators_html: Setting <strong>%{label}</strong> behaves
+    like optional, but will require all users with administration rights to set up two-factor
+    authentication at their next login.
+  label_auto_watch_on: Auto watch
+  label_auto_watch_on_issue_contributed_to: Issues I contributed to

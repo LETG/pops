@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,6 +22,10 @@ require File.expand_path('../../test_helper', __FILE__)
 class DocumentCategoryTest < ActiveSupport::TestCase
   fixtures :enumerations, :documents, :issues
 
+  def setup
+    User.current = nil
+  end
+
   def test_should_be_an_enumeration
     assert DocumentCategory.ancestors.include?(Enumeration)
   end
@@ -34,14 +40,14 @@ class DocumentCategoryTest < ActiveSupport::TestCase
   end
 
   def test_default
-    assert_nil DocumentCategory.where(:is_default => true).first
+    assert_not DocumentCategory.where(:is_default => true).exists?
     e = Enumeration.find_by_name('Technical documentation')
-    e.update_attributes(:is_default => true)
+    e.update(:is_default => true)
     assert_equal 3, DocumentCategory.default.id
   end
 
   def test_force_default
-    assert_nil DocumentCategory.where(:is_default => true).first
+    assert_not DocumentCategory.where(:is_default => true).exists?
     assert_equal 1, DocumentCategory.default.id
   end
 end

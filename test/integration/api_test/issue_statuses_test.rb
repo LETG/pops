@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,27 +22,13 @@ require File.expand_path('../../../test_helper', __FILE__)
 class Redmine::ApiTest::IssueStatusesTest < Redmine::ApiTest::Base
   fixtures :issue_statuses
 
-  def setup
-    Setting.rest_api_enabled = '1'
-  end
-
   test "GET /issue_statuses.xml should return issue statuses" do
     get '/issue_statuses.xml'
 
     assert_response :success
-    assert_equal 'application/xml', @response.content_type
-    assert_tag :tag => 'issue_statuses',
-      :attributes => {:type => 'array'},
-      :child => {
-        :tag => 'issue_status',
-        :child => {
-          :tag => 'id',
-          :content => '2',
-          :sibling => {
-            :tag => 'name',
-            :content => 'Assigned'
-          }
-        }
-      }
+    assert_equal 'application/xml', @response.media_type
+    assert_select 'issue_statuses[type=array] issue_status id', :text => '2' do
+      assert_select '~ name', :text => 'Assigned'
+    end
   end
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -54,11 +56,12 @@ class Redmine::Views::LabelledFormBuilder < ActionView::Helpers::FormBuilder
   # Returns a label tag for the given field
   def label_for_field(field, options = {})
     return ''.html_safe if options.delete(:no_label)
+
     text = options[:label].is_a?(Symbol) ? l(options[:label]) : options[:label]
-    text ||= l(("field_" + field.to_s.gsub(/\_id$/, "")).to_sym)
+    text ||= @object.class.human_attribute_name(field)
     text += @template.content_tag("span", " *", :class => "required") if options.delete(:required)
     @template.content_tag("label", text.html_safe,
-                                   :class => (@object && @object.errors[field].present? ? "error" : nil),
-                                   :for => (@object_name.to_s + "_" + field.to_s))
+                          :class => (@object && @object.errors[field].present? ? "error" : nil),
+                          :for => (@object_name.to_s + "_" + field.to_s))
   end
 end

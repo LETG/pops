@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,6 +26,10 @@ class IssueNestedSetTest < ActiveSupport::TestCase
            :enumerations,
            :issues
 
+  def setup
+    User.current = nil
+  end
+
   def test_new_record_is_leaf
     i = Issue.new
     assert i.leaf?
@@ -43,7 +49,10 @@ class IssueNestedSetTest < ActiveSupport::TestCase
   def test_create_child_issue
     lft = new_issue_lft
     parent = Issue.generate!
-    child =  parent.generate_child!
+    child = nil
+    assert_difference 'Journal.count', 1 do
+      child = parent.generate_child!
+    end
     parent.reload
     child.reload
     assert_equal [parent.id, nil,       lft,     lft + 3], [parent.root_id, parent.parent_id, parent.lft, parent.rgt]
@@ -52,17 +61,23 @@ class IssueNestedSetTest < ActiveSupport::TestCase
 
   def test_creating_a_child_in_a_subproject_should_validate
     issue = Issue.generate!
-    child = Issue.new(:project_id => 3, :tracker_id => 2, :author_id => 1,
-                      :subject => 'child', :parent_issue_id => issue.id)
-    assert_save child
+    child = nil
+    assert_difference 'Journal.count', 1 do
+      child = Issue.new(:project_id => 3, :tracker_id => 2, :author_id => 1,
+                        :subject => 'child', :parent_issue_id => issue.id)
+      assert_save child
+    end
     assert_equal issue, child.reload.parent
   end
 
   def test_creating_a_child_in_an_invalid_project_should_not_validate
     issue = Issue.generate!
-    child = Issue.new(:project_id => 2, :tracker_id => 1, :author_id => 1,
-                      :subject => 'child', :parent_issue_id => issue.id)
-    assert !child.save
+    child = nil
+    assert_no_difference 'Journal.count' do
+      child = Issue.new(:project_id => 2, :tracker_id => 1, :author_id => 1,
+                        :subject => 'child', :parent_issue_id => issue.id)
+      assert !child.save
+    end
     assert_not_equal [], child.errors[:parent_issue_id]
   end
 
@@ -71,14 +86,17 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     parent1 = Issue.generate!
     parent2 = Issue.generate!
     child = parent1.generate_child!
-    parent2.parent_issue_id = parent1.id
-    parent2.save!
+    assert_difference 'Journal.count', 2 do
+      parent2.init_journal(User.find(2))
+      parent2.parent_issue_id = parent1.id
+      parent2.save!
+    end
     child.reload
     parent1.reload
     parent2.reload
     assert_equal [parent1.id, lft,     lft + 5], [parent1.root_id, parent1.lft, parent1.rgt]
-    assert_equal [parent1.id, lft + 3, lft + 4], [parent2.root_id, parent2.lft, parent2.rgt]
-    assert_equal [parent1.id, lft + 1, lft + 2], [child.root_id, child.lft, child.rgt]
+    assert_equal [parent1.id, lft + 1, lft + 2], [parent2.root_id, parent2.lft, parent2.rgt]
+    assert_equal [parent1.id, lft + 3, lft + 4], [child.root_id, child.lft, child.rgt]
   end
 
   def test_move_a_child_to_root
@@ -88,8 +106,11 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     parent2 = Issue.generate!
     lft3 = new_issue_lft
     child = parent1.generate_child!
-    child.parent_issue_id = nil
-    child.save!
+    assert_difference 'Journal.count', 2 do
+      child.init_journal(User.find(2))
+      child.parent_issue_id = nil
+      child.save!
+    end
     child.reload
     parent1.reload
     parent2.reload
@@ -104,8 +125,11 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     lft2 = new_issue_lft
     parent2 = Issue.generate!
     child = parent1.generate_child!
-    child.parent_issue_id = parent2.id
-    child.save!
+    assert_difference 'Journal.count', 3 do
+      child.init_journal(User.find(2))
+      child.parent_issue_id = parent2.id
+      child.save!
+    end
     child.reload
     parent1.reload
     parent2.reload
@@ -148,8 +172,13 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     grandchild = child.generate_child!
     lft4 = new_issue_lft
     child.reload
-    child.project = Project.find(2)
-    assert child.save
+    assert_difference 'Journal.count', 2 do
+      assert_difference 'JournalDetail.count', 3 do
+        child.init_journal(User.find(2))
+        child.project = Project.find(2)
+        assert child.save
+      end
+    end
     child.reload
     grandchild.reload
     parent1.reload
@@ -167,8 +196,11 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     grandchild = child.generate_child!
 
     child.reload
-    child.parent_issue_id = grandchild.id
-    assert !child.save
+    assert_no_difference 'Journal.count' do
+      child.init_journal(User.find(2))
+      child.parent_issue_id = grandchild.id
+      assert !child.save
+    end
     assert_not_equal [], child.errors[:parent_issue_id]
   end
 
@@ -217,8 +249,8 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     issue3.subject = 'child with journal'
     issue3.save!
     assert_difference 'Issue.count', -2 do
-      assert_difference 'Journal.count', -1 do
-        assert_difference 'JournalDetail.count', -1 do
+      assert_difference 'Journal.count', -2 do
+        assert_difference 'JournalDetail.count', -2 do
           Issue.find(issue2.id).destroy
         end
       end
@@ -238,7 +270,9 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     child2 = issue.generate_child!
     issue.reload
     assert_equal [issue.id, lft1, lft1 + 5], [issue.root_id, issue.lft, issue.rgt]
-    child2.reload.destroy
+    assert_difference 'Journal.count', 1 do
+      child2.reload.destroy
+    end
     issue.reload
     assert_equal [issue.id, lft1, lft1 + 3], [issue.root_id, issue.lft, issue.rgt]
   end
@@ -249,7 +283,9 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     parent.generate_child!(:start_date => 2.days.from_now)
 
     assert_difference 'Issue.count', -3 do
-      Issue.find(parent.id).destroy
+      assert_difference 'Journal.count', -2 do
+        Issue.find(parent.id).destroy
+      end
     end
   end
 
@@ -281,127 +317,12 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     grandchild1 = child.generate_child!
     grandchild2 = child.generate_child!
     assert_difference 'Issue.count', -4 do
-      Issue.find(issue.id).destroy
+      assert_difference 'Journal.count', -2 do
+        Issue.find(issue.id).destroy
+      end
       parent.reload
       assert_equal [lft1, lft1 + 1], [parent.lft, parent.rgt]
     end
-  end
-
-  def test_parent_priority_should_be_the_highest_child_priority
-    parent = Issue.generate!(:priority => IssuePriority.find_by_name('Normal'))
-    # Create children
-    child1 = parent.generate_child!(:priority => IssuePriority.find_by_name('High'))
-    assert_equal 'High', parent.reload.priority.name
-    child2 = child1.generate_child!(:priority => IssuePriority.find_by_name('Immediate'))
-    assert_equal 'Immediate', child1.reload.priority.name
-    assert_equal 'Immediate', parent.reload.priority.name
-    child3 = parent.generate_child!(:priority => IssuePriority.find_by_name('Low'))
-    assert_equal 'Immediate', parent.reload.priority.name
-    # Destroy a child
-    child1.destroy
-    assert_equal 'Low', parent.reload.priority.name
-    # Update a child
-    child3.reload.priority = IssuePriority.find_by_name('Normal')
-    child3.save!
-    assert_equal 'Normal', parent.reload.priority.name
-  end
-
-  def test_parent_dates_should_be_lowest_start_and_highest_due_dates
-    parent = Issue.generate!
-    parent.generate_child!(:start_date => '2010-01-25', :due_date => '2010-02-15')
-    parent.generate_child!(                             :due_date => '2010-02-13')
-    parent.generate_child!(:start_date => '2010-02-01', :due_date => '2010-02-22')
-    parent.reload
-    assert_equal Date.parse('2010-01-25'), parent.start_date
-    assert_equal Date.parse('2010-02-22'), parent.due_date
-  end
-
-  def test_parent_done_ratio_should_be_average_done_ratio_of_leaves
-    parent = Issue.generate!
-    parent.generate_child!(:done_ratio => 20)
-    assert_equal 20, parent.reload.done_ratio
-    parent.generate_child!(:done_ratio => 70)
-    assert_equal 45, parent.reload.done_ratio
-
-    child = parent.generate_child!(:done_ratio => 0)
-    assert_equal 30, parent.reload.done_ratio
-
-    child.generate_child!(:done_ratio => 30)
-    assert_equal 30, child.reload.done_ratio
-    assert_equal 40, parent.reload.done_ratio
-  end
-
-  def test_parent_done_ratio_should_be_weighted_by_estimated_times_if_any
-    parent = Issue.generate!
-    parent.generate_child!(:estimated_hours => 10, :done_ratio => 20)
-    assert_equal 20, parent.reload.done_ratio
-    parent.generate_child!(:estimated_hours => 20, :done_ratio => 50)
-    assert_equal (50 * 20 + 20 * 10) / 30, parent.reload.done_ratio
-  end
-
-  def test_parent_done_ratio_with_child_estimate_to_0_should_reach_100
-    parent = Issue.generate!
-    issue1 = parent.generate_child!
-    issue2 = parent.generate_child!(:estimated_hours => 0)
-    assert_equal 0, parent.reload.done_ratio
-    issue1.reload.close!
-    assert_equal 50, parent.reload.done_ratio
-    issue2.reload.close!
-    assert_equal 100, parent.reload.done_ratio
-  end
-
-  def test_parent_estimate_should_be_sum_of_leaves
-    parent = Issue.generate!
-    parent.generate_child!(:estimated_hours => nil)
-    assert_equal nil, parent.reload.estimated_hours
-    parent.generate_child!(:estimated_hours => 5)
-    assert_equal 5, parent.reload.estimated_hours
-    parent.generate_child!(:estimated_hours => 7)
-    assert_equal 12, parent.reload.estimated_hours
-  end
-
-  def test_done_ratio_of_parent_with_a_child_without_estimated_time_should_not_exceed_100
-    parent = Issue.generate!
-    parent.generate_child!(:estimated_hours => 40)
-    parent.generate_child!(:estimated_hours => 40)
-    parent.generate_child!(:estimated_hours => 20)
-    parent.generate_child!
-    parent.reload.children.each(&:close!)
-    assert_equal 100, parent.reload.done_ratio
-  end
-
-  def test_done_ratio_of_parent_with_a_child_with_estimated_time_at_0_should_not_exceed_100
-    parent = Issue.generate!
-    parent.generate_child!(:estimated_hours => 40)
-    parent.generate_child!(:estimated_hours => 40)
-    parent.generate_child!(:estimated_hours => 20)
-    parent.generate_child!(:estimated_hours => 0)
-    parent.reload.children.each(&:close!)
-    assert_equal 100, parent.reload.done_ratio
-  end
-
-  def test_move_parent_updates_old_parent_attributes
-    first_parent = Issue.generate!
-    second_parent = Issue.generate!
-    child = first_parent.generate_child!(:estimated_hours => 5)
-    assert_equal 5, first_parent.reload.estimated_hours
-    child.update_attributes(:estimated_hours => 7, :parent_issue_id => second_parent.id)
-    assert_equal 7, second_parent.reload.estimated_hours
-    assert_nil first_parent.reload.estimated_hours
-  end
-
-  def test_reschuling_a_parent_should_reschedule_subtasks
-    parent = Issue.generate!
-    c1 = parent.generate_child!(:start_date => '2010-05-12', :due_date => '2010-05-18')
-    c2 = parent.generate_child!(:start_date => '2010-06-03', :due_date => '2010-06-10')
-    parent.reload
-    parent.reschedule_on!(Date.parse('2010-06-02'))
-    c1.reload
-    assert_equal [Date.parse('2010-06-02'), Date.parse('2010-06-08')], [c1.start_date, c1.due_date]
-    c2.reload
-    assert_equal [Date.parse('2010-06-03'), Date.parse('2010-06-10')], [c2.start_date, c2.due_date] # no change
-    parent.reload
-    assert_equal [Date.parse('2010-06-02'), Date.parse('2010-06-10')], [parent.start_date, parent.due_date]
   end
 
   def test_project_copy_should_copy_issue_tree
@@ -416,11 +337,30 @@ class IssueNestedSetTest < ActiveSupport::TestCase
     c.reload
 
     assert_equal 5, c.issues.count
-    ic1, ic2, ic3, ic4, ic5 = c.issues.order('subject').all
+    ic1, ic2, ic3, ic4, ic5 = c.issues.order('subject').to_a
     assert ic1.root?
     assert_equal ic1, ic2.parent
     assert_equal ic1, ic3.parent
     assert_equal ic2, ic4.parent
     assert ic5.root?
+  end
+
+  def test_rebuild_single_tree
+    i1 = Issue.generate!
+    i2 = i1.generate_child!
+    i3 = i1.generate_child!
+    Issue.update_all(:lft => 7, :rgt => 7)
+
+    Issue.rebuild_single_tree!(i1.id)
+
+    i1.reload
+    assert_equal [1, 6], [i1.lft, i1.rgt]
+    i2.reload
+    assert_equal [2, 3], [i2.lft, i2.rgt]
+    i3.reload
+    assert_equal [4, 5], [i3.lft, i3.rgt]
+
+    other = Issue.find(1)
+    assert_equal [7, 7], [other.lft, other.rgt]
   end
 end

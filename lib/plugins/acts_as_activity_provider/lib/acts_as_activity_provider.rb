@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,7 +55,14 @@ module Redmine
             provider_options = activity_provider_options[event_type]
             raise "#{self.name} can not provide #{event_type} events." if provider_options.nil?
 
-            scope = (provider_options[:scope] || self)
+            scope = provider_options[:scope]
+            if !scope
+              scope = self
+            elsif scope.respond_to?(:call)
+              scope = scope.call
+            else
+              ActiveSupport::Deprecation.warn "acts_as_activity_provider with implicit :scope option is deprecated. Please pass a scope on the #{self.name} as a proc."
+            end
 
             if from && to
               scope = scope.where("#{provider_options[:timestamp]} BETWEEN ? AND ?", from, to)

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,19 +22,26 @@ class Comment < ActiveRecord::Base
   belongs_to :commented, :polymorphic => true, :counter_cache => true
   belongs_to :author, :class_name => 'User'
 
-  validates_presence_of :commented, :author, :comments
-  attr_protected :id
+  validates_presence_of :commented, :author, :content
 
-  after_create :send_notification
+  after_create_commit :send_notification
 
   safe_attributes 'comments'
+
+  def comments=(arg)
+    self.content = arg
+  end
+
+  def comments
+    content
+  end
 
   private
 
   def send_notification
-    mailer_method = "#{commented.class.name.underscore}_comment_added"
-    if Setting.notified_events.include?(mailer_method)
-      Mailer.send(mailer_method, self).deliver
+    event = "#{commented.class.name.underscore}_comment_added"
+    if Setting.notified_events.include?(event)
+      Mailer.public_send("deliver_#{event}", self)
     end
   end
 end

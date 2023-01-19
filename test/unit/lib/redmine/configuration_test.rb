@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -54,7 +56,7 @@ class Redmine::ConfigurationTest < ActiveSupport::TestCase
 
   def load_conf(file, env)
     @conf.load(
-      :file => File.join(Rails.root, 'test', 'fixtures', 'configuration', file),
+      :file => file_fixture(File.join('configuration', file)),
       :env => env
     )
   end

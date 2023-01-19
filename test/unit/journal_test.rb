@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,12 +23,13 @@ class JournalTest < ActiveSupport::TestCase
   fixtures :projects, :issues, :issue_statuses, :journals, :journal_details,
            :issue_relations, :workflows,
            :users, :members, :member_roles, :roles, :enabled_modules,
-           :groups_users,
+           :groups_users, :email_addresses,
            :enumerations,
            :projects_trackers, :trackers, :custom_fields
 
   def setup
     @journal = Journal.find 1
+    User.current = nil
   end
 
   def test_journalized_is_an_issue
@@ -49,7 +52,7 @@ class JournalTest < ActiveSupport::TestCase
     journal = issue.init_journal(user, issue)
 
     assert journal.save
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_should_not_save_journal_with_blank_notes_and_no_details
@@ -117,14 +120,36 @@ class JournalTest < ActiveSupport::TestCase
     end
   end
 
+  def test_create_should_add_wacher
+    user = User.first
+    user.pref.auto_watch_on=['issue_contributed_to']
+    user.save
+    journal = Journal.new(:journalized => Issue.first, :notes => 'notes', :user => user)
+
+    assert_difference 'Watcher.count', 1 do
+      assert_equal true, journal.save
+    end
+  end
+
+  def test_create_should_not_add_watcher
+    user = User.first
+    user.pref.auto_watch_on=[]
+    user.save
+    journal = Journal.new(:journalized => Issue.first, :notes => 'notes', :user => user)
+
+    assert_no_difference 'Watcher.count' do
+      assert_equal true, journal.save
+    end
+  end
+
   def test_visible_scope_for_anonymous
     # Anonymous user should see issues of public projects only
-    journals = Journal.visible(User.anonymous).all
+    journals = Journal.visible(User.anonymous).to_a
     assert journals.any?
     assert_nil journals.detect {|journal| !journal.issue.project.is_public?}
     # Anonymous user should not see issues without permission
     Role.anonymous.remove_permission!(:view_issues)
-    journals = Journal.visible(User.anonymous).all
+    journals = Journal.visible(User.anonymous).to_a
     assert journals.empty?
   end
 
@@ -132,18 +157,18 @@ class JournalTest < ActiveSupport::TestCase
     user = User.find(9)
     assert user.projects.empty?
     # Non member user should see issues of public projects only
-    journals = Journal.visible(user).all
+    journals = Journal.visible(user).to_a
     assert journals.any?
     assert_nil journals.detect {|journal| !journal.issue.project.is_public?}
     # Non member user should not see issues without permission
     Role.non_member.remove_permission!(:view_issues)
     user.reload
-    journals = Journal.visible(user).all
+    journals = Journal.visible(user).to_a
     assert journals.empty?
     # User should see issues of projects for which user has view_issues permissions only
     Member.create!(:principal => user, :project_id => 1, :role_ids => [1])
     user.reload
-    journals = Journal.visible(user).all
+    journals = Journal.visible(user).to_a
     assert journals.any?
     assert_nil journals.detect {|journal| journal.issue.project_id != 1}
   end
@@ -152,7 +177,7 @@ class JournalTest < ActiveSupport::TestCase
     user = User.find(1)
     user.members.each(&:destroy)
     assert user.projects.empty?
-    journals = Journal.visible(user).all
+    journals = Journal.visible(user).to_a
     assert journals.any?
     # Admin should see issues on private projects that admin does not belong to
     assert journals.detect {|journal| !journal.issue.project.is_public?}
@@ -162,7 +187,7 @@ class JournalTest < ActiveSupport::TestCase
     d = JournalDetail.new(:property => 'cf', :prop_key => '2')
     journals = [Journal.new(:details => [d])]
 
-    d.expects(:instance_variable_set).with("@custom_field", CustomField.find(2)).once
+    d.expects(:instance_variable_set).with(:@custom_field, CustomField.find(2)).once
     Journal.preload_journals_details_custom_fields(journals)
   end
 
@@ -200,25 +225,45 @@ class JournalTest < ActiveSupport::TestCase
 
   def test_custom_field_should_return_nil_for_non_cf_detail
     d = JournalDetail.new(:property => 'subject')
-    assert_equal nil, d.custom_field
+    assert_nil d.custom_field
   end
 
   def test_visible_details_should_include_relations_to_visible_issues_only
     issue = Issue.generate!
     visible_issue = Issue.generate!
-    IssueRelation.create!(:issue_from => issue, :issue_to => visible_issue, :relation_type => 'relates')
     hidden_issue = Issue.generate!(:is_private => true)
-    IssueRelation.create!(:issue_from => issue, :issue_to => hidden_issue, :relation_type => 'relates')
-    issue.reload
-    assert_equal 1, issue.journals.size
-    journal = issue.journals.first
-    assert_equal 2, journal.details.size
+
+    journal = Journal.new
+    journal.details << JournalDetail.new(:property => 'relation', :prop_key => 'relates', :value => visible_issue.id)
+    journal.details << JournalDetail.new(:property => 'relation', :prop_key => 'relates', :value => hidden_issue.id)
 
     visible_details = journal.visible_details(User.anonymous)
     assert_equal 1, visible_details.size
-    assert_equal visible_issue.id.to_s, visible_details.first.value
+    assert_equal visible_issue.id.to_s, visible_details.first.value.to_s
 
     visible_details = journal.visible_details(User.find(2))
     assert_equal 2, visible_details.size
+  end
+
+  def test_attachments
+    journal = Journal.new
+    [0, 1].map{ |i| Attachment.generate!(:file => mock_file_with_options(:original_filename => "image#{i}.png")) }.each do |attachment|
+      journal.details << JournalDetail.new(:property => 'attachment', :prop_key => attachment.id, :value => attachment.filename)
+    end
+
+    attachments = journal.attachments
+    assert_equal 2, attachments.size
+    attachments.each_with_index do |attachment, i|
+      assert_kind_of Attachment, attachment
+      assert_equal "image#{i}.png", attachment.filename
+    end
+  end
+
+  def test_notified_mentions_should_not_include_users_who_cannot_view_private_notes
+    journal = Journal.generate!(journalized: Issue.find(2), user: User.find(1), private_notes: true, notes: 'Hello @dlopper, @jsmith and @admin.')
+
+    # User "dlopper" has "Developer" role on project "eCookbook"
+    # Role "Developer" does not have the "View private notes" permission
+    assert_equal [1, 2], journal.notified_mentions.map(&:id)
   end
 end

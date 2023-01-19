@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,7 +20,7 @@
 class BoardsController < ApplicationController
   default_search_scope :messages
   before_action :find_project_by_project_id, :find_board_if_available, :authorize
-  accept_rss_auth :index, :show
+  accept_atom_auth :index, :show
 
   helper :sort
   include SortHelper
@@ -35,7 +37,7 @@ class BoardsController < ApplicationController
 
   def show
     respond_to do |format|
-      format.html {
+      format.html do
         sort_init 'updated_on', 'desc'
         sort_update 'created_on' => "#{Message.table_name}.id",
                     'replies' => "#{Message.table_name}.replies_count",
@@ -52,15 +54,15 @@ class BoardsController < ApplicationController
           to_a
         @message = Message.new(:board => @board)
         render :action => 'show', :layout => !request.xhr?
-      }
-      format.atom {
+      end
+      format.atom do
         @messages = @board.messages.
           reorder(:id => :desc).
           includes(:author, :board).
           limit(Setting.feeds_limit.to_i).
           to_a
         render_feed(@messages, :title => "#{@project}: #{@board}")
-      }
+      end
     end
   end
 
@@ -87,16 +89,16 @@ class BoardsController < ApplicationController
     @board.safe_attributes = params[:board]
     if @board.save
       respond_to do |format|
-        format.html {
+        format.html do
           flash[:notice] = l(:notice_successful_update)
           redirect_to_settings_in_projects
-        }
-        format.js { head 200 }
+        end
+        format.js {head 200}
       end
     else
       respond_to do |format|
-        format.html { render :action => 'edit' }
-        format.js { head 422 }
+        format.html {render :action => 'edit'}
+        format.js {head 422}
       end
     end
   end
@@ -108,7 +110,8 @@ class BoardsController < ApplicationController
     redirect_to_settings_in_projects
   end
 
-private
+  private
+
   def redirect_to_settings_in_projects
     redirect_to settings_project_path(@project, :tab => 'boards')
   end

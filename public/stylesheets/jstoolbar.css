@@ -1,23 +1,52 @@
+.jstBlock .hidden {
+    display: none;
+}
 .jstEditor {
     padding-left: 0px;
 }
 .jstEditor textarea, .jstEditor iframe {
     margin: 0;
 }
-
 .jstHandle {
     height: 10px;
     font-size: 0.1em;
     cursor: s-resize;
     /*background: transparent url(img/resizer.png) no-repeat 45% 50%;*/
 }
-
-.jstElements {
-    padding: 3px 3px 3px 0;
+#content .jstTabs.tabs {
+    margin-bottom: -1px;
 }
+#content .jstTabs.tabs ul {border-bottom:0;}
+#content .jstTabs.tabs li {
+    height: 42px;
+}
+#content .jstTabs.tabs li:before{
+    content: '';
+    display: inline-block;
+    vertical-align: middle;
+    height: 100%;
+}
+#content .jstTabs.tabs li a {
+    display: inline-block;
+    vertical-align: bottom;
+    line-height: 19px;
+  border-bottom: 1px solid transparent;
+}
+.jstElements {
+    display: inline-block;
+    vertical-align: bottom;
+    padding-left: 6px;
+    padding-bottom:2px;
+    height: 26px;
+}
+.wiki-preview {
+    background-color: #ffffff;
+    border: 1px solid #bbbbbb;
+}
+.wiki-preview p.empty-preview {color:#999; font-style:italic; margin-top:1em; text-align:center;}
 
 .jstElements button {
-    margin-right: 4px;
+    margin-right: 2px;
     width : 24px;
     height: 24px;
     padding: 4px;
@@ -27,13 +56,16 @@
     background-color : #f7f7f7;
     background-position : 50% 50%;
     background-repeat: no-repeat;
+    cursor:pointer;
+    opacity:0.7;
 }
 .jstElements button:hover {
     border-color: #bbb;
-  background-color: #e5e5e5;
+    background-color: #e5e5e5;
+    opacity:1;
 }
 .jstElements button span {
-    display : none;	
+    display : none;
 }
 .jstElements span {
     display : inline;
@@ -47,6 +79,22 @@
 
 .jstElements .help { float: right; margin-right: 0.5em; padding-top: 8px; font-size: 0.9em; }
 .jstElements .help a {padding: 2px 0 2px 20px; background: url(../images/help.png) no-repeat 0 50%;}
+
+.table-generator td {
+    border: 2px solid #ccc;
+    background-color: white;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.table-generator td.selected-cell, .table-generator td:hover {
+    background-color: #759FCF;
+}
+
+.table-generator {
+    position: absolute;
+    border-collapse: collapse;
+}
 
 /* Buttons
 -------------------------------------------------------- */
@@ -80,6 +128,9 @@
 .jstb_ol {
     background-image: url(../images/jstoolbar/bt_ol.png);
 }
+.jstb_tl {
+    background-image: url(../images/jstoolbar/bt_tl.png);
+}
 .jstb_bq {
     background-image: url(../images/jstoolbar/bt_bq.png);
 }
@@ -89,11 +140,17 @@
 .jstb_pre {
     background-image: url(../images/jstoolbar/bt_pre.png);
 }
+.jstb_precode {
+    background-image: url(../images/jstoolbar/bt_precode.png);
+}
 .jstb_link {
     background-image: url(../images/jstoolbar/bt_link.png);
 }
 .jstb_img {
     background-image: url(../images/jstoolbar/bt_img.png);
+}
+.jstb_table {
+    background-image: url(../images/jstoolbar/bt_table.png);
 }
 .jstb_help {
     background-image: url(../images/help.png);

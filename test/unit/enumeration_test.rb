@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,6 +21,10 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class EnumerationTest < ActiveSupport::TestCase
   fixtures :enumerations, :issues, :custom_fields, :custom_values
+
+  def setup
+    User.current = nil
+  end
 
   def test_objects_count
     # low priority
@@ -47,7 +53,7 @@ class EnumerationTest < ActiveSupport::TestCase
     assert e.is_a?(Enumeration)
     assert e.is_default?
     assert e.active?
-    e.update_attributes(:active => false)
+    e.update(:active => false)
     assert e.is_default?
     assert !e.active?
   end
@@ -68,25 +74,25 @@ class EnumerationTest < ActiveSupport::TestCase
 
   def test_update_default
     e = Enumeration.default
-    e.update_attributes(:name => 'Changed', :is_default => true)
+    e.update(:name => 'Changed', :is_default => true)
     assert_equal e, Enumeration.default
   end
 
   def test_update_default_to_non_default
     e = Enumeration.default
-    e.update_attributes(:name => 'Changed', :is_default => false)
+    e.update(:name => 'Changed', :is_default => false)
     assert_nil Enumeration.default
   end
 
   def test_change_default
     e = Enumeration.find_by_name('Default Enumeration')
-    e.update_attributes(:name => 'Changed Enumeration', :is_default => true)
+    e.update(:name => 'Changed Enumeration', :is_default => true)
     assert_equal e, Enumeration.default
   end
 
   def test_destroy_with_reassign
     Enumeration.find(4).destroy(Enumeration.find(6))
-    assert_nil Issue.where(:priority_id => 4).first
+    assert_not Issue.where(:priority_id => 4).exists?
     assert_equal 6, Enumeration.find(6).objects_count
   end
 
@@ -126,5 +132,51 @@ class EnumerationTest < ActiveSupport::TestCase
     classes.each do |klass|
       assert_equal Enumeration, klass.superclass
     end
+  end
+
+  def test_list_should_be_scoped_for_each_type
+    Enumeration.delete_all
+
+    a = IssuePriority.create!(:name => 'A')
+    b = IssuePriority.create!(:name => 'B')
+    c = DocumentCategory.create!(:name => 'C')
+
+    assert_equal [1, 2, 1], [a, b, c].map(&:reload).map(&:position)
+  end
+
+  def test_override_should_be_created_with_same_position_as_parent
+    Enumeration.delete_all
+
+    a = IssuePriority.create!(:name => 'A')
+    b = IssuePriority.create!(:name => 'B')
+    override = IssuePriority.create!(:name => 'BB', :parent_id => b.id)
+
+    assert_equal [1, 2, 2], [a, b, override].map(&:reload).map(&:position)
+  end
+
+  def test_override_position_should_be_updated_with_parent_position
+    Enumeration.delete_all
+
+    a = IssuePriority.create!(:name => 'A')
+    b = IssuePriority.create!(:name => 'B')
+    override = IssuePriority.create!(:name => 'BB', :parent_id => b.id)
+    b.position -= 1
+    b.save!
+
+    assert_equal [2, 1, 1], [a, b, override].map(&:reload).map(&:position)
+  end
+
+  def test_destroying_override_should_not_update_positions
+    Enumeration.delete_all
+    Issue.delete_all
+
+    a = IssuePriority.create!(:name => 'A')
+    b = IssuePriority.create!(:name => 'B')
+    c = IssuePriority.create!(:name => 'C')
+    override = IssuePriority.create!(:name => 'BB', :parent_id => b.id)
+    assert_equal [1, 2, 3, 2], [a, b, c, override].map(&:reload).map(&:position)
+
+    override.destroy
+    assert_equal [1, 2, 3], [a, b, c].map(&:reload).map(&:position)
   end
 end

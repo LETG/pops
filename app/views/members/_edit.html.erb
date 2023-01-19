@@ -4,17 +4,18 @@
                       :method => :put) do |f| %>
   <p>
     <% @roles.each do |role| %>
-    <label>
+    <label class="block">
       <%= check_box_tag('membership[role_ids][]',
                         role.id, @member.roles.to_a.include?(role),
                         :id => nil,
                         :disabled => !@member.role_editable?(role)) %> <%= role %>
-    </label><br />
+      <%= render_role_inheritance(@member, role) %>
+    </label>
     <% end %>
   </p>
   <%= hidden_field_tag 'membership[role_ids][]', '', :id => nil %>
   <p>
-    <%= submit_tag l(:button_save), :class => "small" %>
+    <%= submit_tag l(:button_save) %>
     <%= link_to_function l(:button_cancel),
                          "$('#member-#{@member.id}-roles').show(); $('#member-#{@member.id}-form').empty(); return false;" if request.xhr? %>
   </p>

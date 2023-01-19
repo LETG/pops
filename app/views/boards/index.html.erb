@@ -1,3 +1,9 @@
+<div class="contextual">
+  <%= link_to_if_authorized l(:label_settings),
+              {:controller => 'projects', :action => 'settings', :id => @project, :tab => 'boards'},
+              :class => 'icon icon-settings' if User.current.allowed_to?(:manage_boards, @project) %>
+</div>
+
 <h2><%= l(:label_board_plural) %></h2>
 
 <table class="list boards">
@@ -9,10 +15,14 @@
   </tr></thead>
   <tbody>
 <% Board.board_tree(@boards) do |board, level| %>
-  <tr>
-    <td class="name" style="padding-left: <%= level * 18 %>px;">
-      <%= link_to board.name, project_board_path(board.project, board), :class => "board" %><br />
-      <%=h board.description %>
+  <% if level > 0 %>
+    <tr class="board idnt idnt-<%= level %>">
+  <% else %>
+    <tr class="board">
+  <% end %>
+    <td class="name">
+      <%= link_to board.name, project_board_path(board.project, board), :class => "board" %>
+      <p class="description"><%= board.description %></p>
     </td>
     <td class="topic-count"><%= board.topics_count %></td>
     <td class="message-count"><%= board.messages_count %></td>
@@ -28,11 +38,11 @@
 </table>
 
 <% other_formats_links do |f| %>
-  <%= f.link_to 'Atom', :url => {:controller => 'activities', :action => 'index', :id => @project, :show_messages => 1, :key => User.current.rss_key} %>
+  <%= f.link_to 'Atom', :url => {:controller => 'activities', :action => 'index', :id => @project, :show_messages => 1, :key => User.current.atom_key} %>
 <% end %>
 
 <% content_for :header_tags do %>
-  <%= auto_discovery_link_tag(:atom, {:controller => 'activities', :action => 'index', :id => @project, :format => 'atom', :show_messages => 1, :key => User.current.rss_key}) %>
+  <%= auto_discovery_link_tag(:atom, {:controller => 'activities', :action => 'index', :id => @project, :format => 'atom', :show_messages => 1, :key => User.current.atom_key}) %>
 <% end %>
 
 <% html_title l(:label_board_plural) %>

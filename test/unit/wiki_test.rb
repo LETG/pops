@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,6 +21,10 @@ require File.expand_path('../../test_helper', __FILE__)
 
 class WikiTest < ActiveSupport::TestCase
   fixtures :projects, :wikis, :wiki_pages, :wiki_contents, :wiki_content_versions
+
+  def setup
+    User.current = nil
+  end
 
   def test_create
     wiki = Wiki.new(:project => Project.find(3))
@@ -46,6 +50,16 @@ class WikiTest < ActiveSupport::TestCase
     assert_equal page, wiki.find_page('Another_page')
     assert_equal page, wiki.find_page('Another page')
     assert_equal page, wiki.find_page('ANOTHER page')
+  end
+
+  def test_ordering_pages_should_not_be_case_sensitive
+    wiki = Wiki.find(1)
+    wiki.pages.destroy_all
+    %w(ABc ACd Aac Acc).each do |title|
+      wiki.pages.create(:title => title)
+    end
+    wiki.reload
+    assert_equal %w(Aac ABc Acc ACd), wiki.pages.pluck(:title)
   end
 
   def test_find_page_with_cyrillic_characters
@@ -78,8 +92,7 @@ class WikiTest < ActiveSupport::TestCase
   end
 
   def test_titleize
-    ja_test = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88"
-    ja_test.force_encoding('UTF-8') if ja_test.respond_to?(:force_encoding)
+    ja_test = 'テスト'
     assert_equal 'Page_title_with_CAPITALES', Wiki.titleize('page title with CAPITALES')
     assert_equal ja_test, Wiki.titleize(ja_test)
   end
@@ -97,5 +110,21 @@ class WikiTest < ActiveSupport::TestCase
 
     assert_kind_of WikiPage, @wiki.sidebar
     assert_equal 'Sidebar', @wiki.sidebar.title
+  end
+
+  def test_destroy_should_remove_redirects_from_the_wiki
+    set_tmp_attachments_directory
+    WikiRedirect.create!(:wiki_id => 1, :title => 'Foo', :redirects_to_wiki_id => 2, :redirects_to => 'Bar')
+
+    Wiki.find(1).destroy
+    assert_equal 0, WikiRedirect.where(:wiki_id => 1).count
+  end
+
+  def test_destroy_should_remove_redirects_to_the_wiki
+    set_tmp_attachments_directory
+    WikiRedirect.create!(:wiki_id => 2, :title => 'Foo', :redirects_to_wiki_id => 1, :redirects_to => 'Bar')
+
+    Wiki.find(1).destroy
+    assert_equal 0, WikiRedirect.where(:redirects_to_wiki_id => 1).count
   end
 end

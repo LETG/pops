@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,22 +22,24 @@ class CustomField < ActiveRecord::Base
   include Redmine::SubclassFactory
 
   has_many :enumerations,
-           lambda { order(:position) },
+           lambda {order(:position)},
            :class_name => 'CustomFieldEnumeration',
            :dependent => :delete_all
   has_many :custom_values, :dependent => :delete_all
-  has_and_belongs_to_many :roles, :join_table => "#{table_name_prefix}custom_fields_roles#{table_name_suffix}", :foreign_key => "custom_field_id"
+  has_and_belongs_to_many :roles,
+                          :join_table => "#{table_name_prefix}custom_fields_roles#{table_name_suffix}",
+                          :foreign_key => "custom_field_id"
   acts_as_positioned
   serialize :possible_values
   store :format_store
 
   validates_presence_of :name, :field_format
-  validates_uniqueness_of :name, :scope => :type
+  validates_uniqueness_of :name, :scope => :type, :case_sensitive => true
   validates_length_of :name, :maximum => 30
   validates_length_of :regexp, maximum: 255
-  validates_inclusion_of :field_format, :in => Proc.new { Redmine::FieldFormat.available_formats }
+  validates_inclusion_of :field_format,
+                         :in => proc {Redmine::FieldFormat.available_formats}
   validate :validate_custom_field
-  attr_protected :id
 
   before_validation :set_searchable
   before_save do |field|
@@ -43,31 +47,37 @@ class CustomField < ActiveRecord::Base
   end
   after_save :handle_multiplicity_change
   after_save do |field|
-    if field.visible_changed? && field.visible
+    if field.saved_change_to_visible? && field.visible
       field.roles.clear
     end
   end
 
-  scope :sorted, lambda { order(:position) }
-  scope :visible, lambda {|*args|
+  scope :sorted, lambda {order(:position)}
+  scope :visible, (lambda do |*args|
     user = args.shift || User.current
     if user.admin?
       # nop
     elsif user.memberships.any?
-      where("#{table_name}.visible = ? OR #{table_name}.id IN (SELECT DISTINCT cfr.custom_field_id FROM #{Member.table_name} m" +
-        " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" +
-        " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr ON cfr.role_id = mr.role_id" +
-        " WHERE m.user_id = ?)",
-        true, user.id)
+      where(
+        "#{table_name}.visible = ? OR #{table_name}.id" \
+          " IN (SELECT DISTINCT cfr.custom_field_id FROM #{Member.table_name} m" \
+          " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" \
+          " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr" \
+          " ON cfr.role_id = mr.role_id" \
+          " WHERE m.user_id = ?)",
+        true,
+        user.id
+      )
     else
       where(:visible => true)
     end
-  }
+  end)
   def visible_by?(project, user=User.current)
     visible? || user.admin?
   end
 
-  safe_attributes 'name',
+  safe_attributes(
+    'name',
     'field_format',
     'possible_values',
     'regexp',
@@ -90,7 +100,27 @@ class CustomField < ActiveRecord::Base
     'user_role',
     'version_status',
     'extensions_allowed',
-    'full_width_layout'
+    'full_width_layout')
+
+  def copy_from(arg, options={})
+    return if arg.blank?
+
+    custom_field = arg.is_a?(CustomField) ? arg : CustomField.find_by(id: arg.to_s)
+    self.attributes = custom_field.attributes.dup.except('id', 'name', 'position')
+    custom_field.enumerations.each do |e|
+      new_enumeration = self.enumerations.build
+      new_enumeration.attributes = e.attributes.except('id')
+    end
+    self.default_value = nil if custom_field.enumerations.any?
+    if %w(IssueCustomField TimeEntryCustomField ProjectCustomField VersionCustomField).include?(self.class.name)
+      self.role_ids = custom_field.role_ids.dup
+    end
+    if self.is_a?(IssueCustomField)
+      self.tracker_ids = custom_field.tracker_ids.dup
+      self.project_ids = custom_field.project_ids.dup
+    end
+    self
+  end
 
   def format
     @format ||= Redmine::FieldFormat.find(field_format)
@@ -191,11 +221,16 @@ class CustomField < ActiveRecord::Base
     full_width_layout == '1'
   end
 
+  def full_text_formatting?
+    text_formatting == 'full'
+  end
+
   # Returns a ORDER BY clause that can used to sort customized
   # objects by their value of the custom field.
   # Returns nil if the custom field can not be used for sorting.
   def order_statement
     return nil if multiple?
+
     format.order_statement(self)
   end
 
@@ -203,6 +238,7 @@ class CustomField < ActiveRecord::Base
   # Returns nil if the custom field can not be used for grouping.
   def group_statement
     return nil if multiple?
+
     format.group_statement(self)
   end
 
@@ -218,23 +254,11 @@ class CustomField < ActiveRecord::Base
     else
       project_key ||= "#{self.class.customized_class.table_name}.project_id"
       id_column ||= id
-      "#{project_key} IN (SELECT DISTINCT m.project_id FROM #{Member.table_name} m" +
-        " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" +
-        " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr ON cfr.role_id = mr.role_id" +
+      "#{project_key} IN (SELECT DISTINCT m.project_id FROM #{Member.table_name} m" \
+        " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" \
+        " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr" \
+        " ON cfr.role_id = mr.role_id" \
         " WHERE m.user_id = #{user.id} AND cfr.custom_field_id = #{id_column})"
-    end
-  end
-
-  def self.visibility_condition
-    if user.admin?
-      "1=1"
-    elsif user.anonymous?
-      "#{table_name}.visible"
-    else
-      "#{project_key} IN (SELECT DISTINCT m.project_id FROM #{Member.table_name} m" +
-        " INNER JOIN #{MemberRole.table_name} mr ON mr.member_id = m.id" +
-        " INNER JOIN #{table_name_prefix}custom_fields_roles#{table_name_suffix} cfr ON cfr.role_id = mr.role_id" +
-        " WHERE m.user_id = #{user.id} AND cfr.custom_field_id = #{id})"
     end
   end
 
@@ -311,23 +335,27 @@ class CustomField < ActiveRecord::Base
     super(attr_name, *args)
   end
 
+  def css_classes
+    "#{field_format}_cf cf_#{id}"
+  end
+
   protected
 
   # Removes multiple values for the custom field after setting the multiple attribute to false
   # We kepp the value with the highest id for each customized object
   def handle_multiplicity_change
-    if !new_record? && multiple_was && !multiple
+    if !new_record? && multiple_before_last_save && !multiple
       ids = custom_values.
-        where("EXISTS(SELECT 1 FROM #{CustomValue.table_name} cve WHERE cve.custom_field_id = #{CustomValue.table_name}.custom_field_id" +
-          " AND cve.customized_type = #{CustomValue.table_name}.customized_type AND cve.customized_id = #{CustomValue.table_name}.customized_id" +
-          " AND cve.id > #{CustomValue.table_name}.id)").
-        pluck(:id)
-
+        where(
+          "EXISTS(SELECT 1 FROM #{CustomValue.table_name} cve" \
+            " WHERE cve.custom_field_id = #{CustomValue.table_name}.custom_field_id" \
+            " AND cve.customized_type = #{CustomValue.table_name}.customized_type" \
+            " AND cve.customized_id = #{CustomValue.table_name}.customized_id" \
+            " AND cve.id > #{CustomValue.table_name}.id)"
+        ).pluck(:id)
       if ids.any?
         custom_values.where(:id => ids).delete_all
       end
     end
   end
 end
-
-require_dependency 'redmine/field_format'

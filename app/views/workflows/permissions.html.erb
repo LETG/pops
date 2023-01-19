@@ -4,8 +4,8 @@
 
 <div class="tabs">
   <ul>
-    <li><%= link_to l(:label_status_transitions), workflows_edit_path(:role_id => @roles, :tracker_id => @trackers) %></li>
-    <li><%= link_to l(:label_fields_permissions), workflows_permissions_path(:role_id => @roles, :tracker_id => @trackers), :class => 'selected' %></li>
+    <li><%= link_to l(:label_status_transitions), edit_workflows_path(:role_id => @roles, :tracker_id => @trackers) %></li>
+    <li><%= link_to l(:label_fields_permissions), permissions_workflows_path(:role_id => @roles, :tracker_id => @trackers), :class => 'selected' %></li>
   </ul>
 </div>
 
@@ -15,14 +15,13 @@
 <p>
   <label><%=l(:label_role)%>:
   <%= options_for_workflow_select 'role_id[]', Role.sorted.select(&:consider_workflow?), @roles, :id => 'role_id', :class => 'expandable' %>
+  <span class="toggle-multiselect icon-only"></span>
   </label>
-  <a href="#" data-expands="#role_id"><span class="toggle-multiselect"></a>
 
   <label><%=l(:label_tracker)%>:
   <%= options_for_workflow_select 'tracker_id[]', Tracker.sorted, @trackers, :id => 'tracker_id', :class => 'expandable' %>
+  <span class="toggle-multiselect icon-only"></span>
   </label>
-  <a href="#" data-expands="#tracker_id"><span class="toggle-multiselect"></a>
-
   <%= submit_tag l(:button_edit), :name => nil %>
 
   <%= hidden_field_tag 'used_statuses_only', '0', :id => nil %>
@@ -31,7 +30,7 @@
 <% end %>
 
 <% if @trackers && @roles && @statuses.any? %>
-  <%= form_tag({}, :id => 'workflow_form' ) do %>
+  <%= form_tag update_permissions_workflows_path, method: :patch, id: 'workflow_form' do %>
     <%= @trackers.map {|tracker| hidden_field_tag 'tracker_id[]', tracker.id, :id => nil}.join.html_safe %>
     <%= @roles.map {|role| hidden_field_tag 'role_id[]', role.id, :id => nil}.join.html_safe %>
     <%= hidden_field_tag 'used_statuses_only', params[:used_statuses_only], :id => nil %>
@@ -55,7 +54,7 @@
     <tbody>
       <tr class="group open">
         <td colspan="<%= @statuses.size + 1 %>">
-          <span class="expander" onclick="toggleRowGroup(this);">&nbsp;</span>
+          <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">&nbsp;</span>
           <%= l(:field_core_fields) %>
         </td>
       </tr>
@@ -67,7 +66,7 @@
         <% for status in @statuses -%>
         <td class="<%= @permissions[status.id][field].try(:join, ' ') %>" title="<%= name %> (<%= status.name %>)">
           <%= field_permission_tag(@permissions, status, field, @roles) %>
-          <% unless status == @statuses.last %><a href="#" class="repeat-value">&#187;</a><% end %>
+          <% unless status == @statuses.last %><a href="#" class="repeat-value" title="<%= l(:button_copy) %>">&#187;</a><% end %>
         </td>
         <% end -%>
       </tr>
@@ -75,7 +74,7 @@
       <% if @custom_fields.any? %>
         <tr class="group open">
           <td colspan="<%= @statuses.size + 1 %>">
-            <span class="expander" onclick="toggleRowGroup(this);">&nbsp;</span>
+            <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">&nbsp;</span>
             <%= l(:label_custom_field_plural) %>
           </td>
         </tr>
@@ -107,17 +106,4 @@ $("a.repeat-value").click(function(e){
   var selected = td.find("select").find(":selected").val();
   td.nextAll('td').find("select").val(selected);
 });
-
-$("a[data-expands]").click(function(e){
-  e.preventDefault();
-  var target = $($(this).attr("data-expands"));
-  if (target.attr("multiple")) {
-    target.attr("multiple", false);
-    target.find("option[value=all]").show();
-  } else {
-    target.attr("multiple", true);
-    target.find("option[value=all]").attr("selected", false).hide();
-  }
-});
-
 <% end %>

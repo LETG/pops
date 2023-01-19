@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,8 @@
 
 module Redmine
   module MenuManager
-    class MenuError < StandardError #:nodoc:
+    # @private
+    class MenuError < StandardError
     end
 
     module MenuController
@@ -121,7 +124,7 @@ module Redmine
         else
           caption, url, selected = extract_node_details(node, project)
           return content_tag('li',
-                               render_single_menu_node(node, caption, url, selected))
+                             render_single_menu_node(node, caption, url, selected))
         end
       end
 
@@ -177,14 +180,14 @@ module Redmine
           url = '#'
           options.reverse_merge!(:onclick => 'return false;')
         end
-        link_to(h(caption), url, options)
+        link_to(h(caption), use_absolute_controller(url), options)
       end
 
       def render_unattached_menu_item(menu_item, project)
         raise MenuError, ":child_menus must be an array of MenuItems" unless menu_item.is_a? MenuItem
 
         if menu_item.allowed?(User.current, project)
-          link_to(menu_item.caption, menu_item.url, menu_item.html_options)
+          link_to(menu_item.caption, use_absolute_controller(menu_item.url), menu_item.html_options)
         end
       end
 
@@ -204,26 +207,39 @@ module Redmine
 
       def extract_node_details(node, project=nil)
         item = node
-        url = case item.url
-        when Hash
-          project.nil? ? item.url : {item.param => project}.merge(item.url)
-        when Symbol
-          if project
-            send(item.url, project)
+        url =
+          case item.url
+          when Hash
+            project.nil? ? item.url : {item.param => project}.merge(item.url)
+          when Symbol
+            if project
+              send(item.url, project)
+            else
+              send(item.url)
+            end
           else
-            send(item.url)
+            item.url
           end
-        else
-          item.url
-        end
         caption = item.caption(project)
         return [caption, url, (current_menu_item == item.name)]
       end
 
       # See MenuItem#allowed?
       def allowed_node?(node, user, project)
-        raise MenuError, ":child_menus must be an array of MenuItems" unless node.is_a? MenuItem
+        unless node.is_a? MenuItem
+          raise MenuError, ":child_menus must be an array of MenuItems"
+        end
+
         node.allowed?(user, project)
+      end
+
+      # Prevent hash type URLs (e.g. {controller: 'foo', action: 'bar}) from being namespaced
+      # when menus are rendered from views in namespaced controllers in plugins or engines
+      def use_absolute_controller(url)
+        if url.is_a?(Hash) && url[:controller].present? && !url[:controller].start_with?('/')
+          url[:controller] = "/#{url[:controller]}"
+        end
+        url
       end
     end
 
@@ -355,9 +371,9 @@ module Redmine
         @children.inject(1) {|sum, node| sum + node.size}
       end
 
-      def each &block
+      def each(&block)
         yield self
-        children { |child| child.each(&block) }
+        children {|child| child.each(&block)}
       end
 
       # Adds a child at first position
@@ -411,13 +427,23 @@ module Redmine
 
     class MenuItem < MenuNode
       include Redmine::I18n
-      attr_reader :name, :url, :param, :condition, :parent, :child_menus, :last, :permission
+      attr_reader :name, :url, :param, :condition, :parent,
+                  :child_menus, :last, :permission
 
       def initialize(name, url, options={})
-        raise ArgumentError, "Invalid option :if for menu item '#{name}'" if options[:if] && !options[:if].respond_to?(:call)
-        raise ArgumentError, "Invalid option :html for menu item '#{name}'" if options[:html] && !options[:html].is_a?(Hash)
-        raise ArgumentError, "Cannot set the :parent to be the same as this item" if options[:parent] == name.to_sym
-        raise ArgumentError, "Invalid option :children for menu item '#{name}'" if options[:children] && !options[:children].respond_to?(:call)
+        if options[:if] && !options[:if].respond_to?(:call)
+          raise ArgumentError, "Invalid option :if for menu item '#{name}'"
+        end
+        if options[:html] && !options[:html].is_a?(Hash)
+          raise ArgumentError, "Invalid option :html for menu item '#{name}'"
+        end
+        if options[:parent] == name.to_sym
+          raise ArgumentError, "Cannot set the :parent to be the same as this item"
+        end
+        if options[:children] && !options[:children].respond_to?(:call)
+          raise ArgumentError, "Invalid option :children for menu item '#{name}'"
+        end
+
         @name = name
         @url = url
         @condition = options[:if]
@@ -468,7 +494,9 @@ module Redmine
           # it is considered an allowed node if at least one of the children is allowed
           all_children = children
           all_children += child_menus.call(project) if child_menus
-          return false unless all_children.detect{|child| child.allowed?(user, project) }
+          unless all_children.detect{|child| child.allowed?(user, project)}
+            return false
+          end
         elsif user && project
           if permission
             unless user.allowed_to?(permission, project)
@@ -484,6 +512,7 @@ module Redmine
           # Condition that doesn't pass
           return false
         end
+
         return true
       end
     end

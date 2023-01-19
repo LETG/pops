@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,12 +30,11 @@ class Board < ActiveRecord::Base
   validates_length_of :name, :maximum => 30
   validates_length_of :description, :maximum => 255
   validate :validate_board
-  attr_protected :id
 
-  scope :visible, lambda {|*args|
+  scope :visible, (lambda do |*args|
     joins(:project).
     where(Project.allowed_to_condition(args.shift || User.current, :view_messages, *args))
-  }
+  end)
 
   safe_attributes 'name', 'description', 'parent_id', 'position'
 
@@ -67,9 +68,13 @@ class Board < ActiveRecord::Base
   def self.reset_counters!(board_id)
     board_id = board_id.to_i
     Board.where(:id => board_id).
-      update_all(["topics_count = (SELECT COUNT(*) FROM #{Message.table_name} WHERE board_id=:id AND parent_id IS NULL)," +
-               " messages_count = (SELECT COUNT(*) FROM #{Message.table_name} WHERE board_id=:id)," +
-               " last_message_id = (SELECT MAX(id) FROM #{Message.table_name} WHERE board_id=:id)", :id => board_id])
+      update_all(
+        ["topics_count = (SELECT COUNT(*) FROM #{Message.table_name}" \
+           " WHERE board_id=:id AND parent_id IS NULL)," \
+           " messages_count = (SELECT COUNT(*) FROM #{Message.table_name} WHERE board_id=:id)," \
+           " last_message_id = (SELECT MAX(id) FROM #{Message.table_name} WHERE board_id=:id)",
+         :id => board_id]
+      )
   end
 
   def self.board_tree(boards, parent_id=nil, level=0)

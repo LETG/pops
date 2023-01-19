@@ -2,7 +2,7 @@
 <%= error_messages_for 'version' %>
 
 <div class="box tabular">
-<p><%= f.text_field :name, :size => 60, :required => true %></p>
+<p><%= f.text_field :name, :maxlength => 60, :size => 60, :required => true %></p>
 <p><%= f.text_field :description, :size => 60 %></p>
 <% unless @version.new_record? %>
   <p><%= f.select :status, Version::VERSION_STATUSES.collect {|s| [l("version_status_#{s}"), s]} %></p>
@@ -14,7 +14,7 @@
 <p><%= f.check_box :default_project_version, :label => :field_default_version %></p>
 <% end %>
 
-<% @version.custom_field_values.each do |value| %>
+<% @version.visible_custom_field_values.each do |value| %>
   <p><%= custom_field_tag_with_label :version, value %></p>
 <% end %>
 

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,14 +32,13 @@ class WorkflowTransition < WorkflowRule
           transition_by_rule.each do |rule, transition|
             trackers.each do |tracker|
               roles.each do |role|
-                w = records.select {|r|
+                w = records.select do |r|
                   r.old_status_id == old_status_id.to_i &&
                   r.new_status_id == new_status_id.to_i &&
                   r.tracker_id == tracker.id &&
                   r.role_id == role.id &&
                   !r.destroyed?
-                }
-
+                end
                 if rule == 'always'
                   w = w.select {|r| !r.author && !r.assignee}
                 else
@@ -48,9 +49,15 @@ class WorkflowTransition < WorkflowRule
                 end
                 w = w.first
 
-                if transition == "1" || transition == true
+                if ["1", true].include?(transition)
                   unless w
-                    w = WorkflowTransition.new(:old_status_id => old_status_id, :new_status_id => new_status_id, :tracker_id => tracker.id, :role_id => role.id)
+                    w = WorkflowTransition.
+                          new(
+                            :old_status_id => old_status_id,
+                            :new_status_id => new_status_id,
+                            :tracker_id => tracker.id,
+                            :role_id => role.id
+                          )
                     records << w
                   end
                   w.author = true if rule == "author"

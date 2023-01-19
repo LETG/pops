@@ -9,6 +9,26 @@
 <body>
 <h1><a name="1" class="wiki-page"></a>Форматирование Wiki</h1>
 
+    <ul class='toc'>
+        <li><a href='#2'>Ссылки</a></li>
+        <ul>
+            <li><a href='#3'>Ссылки Redmine</a></li>
+            <li><a href='#4'>Внешние ссылки</a></li>
+        </ul>
+        <li><a href='#5'>Форматирование текста</a></li>
+        <ul>
+            <li><a href='#6'>Стиль шрифта</a></li>
+            <li><a href='#7'>Вставка изображений</a></li>
+            <li><a href='#8'>Заголовки</a></li>
+            <li><a href='#9'>Параграфы</a></li>
+            <li><a href='#10'>Цитаты</a></li>
+            <li><a href='#11'>Содержание</a></li>
+            <li><a href='#14'>Horizontal Rule</a></li>
+        </ul>
+        <li><a href='#12'>Макросы</a></li>
+        <li><a href='#13'>Подсветка кода</a></li>
+    </ul>
+
     <h2><a name="2" class="wiki-page"></a>Ссылки</h2>
 
         <h3><a name="3" class="wiki-page"></a>Ссылки Redmine</h3>
@@ -21,7 +41,9 @@
                 title="крупное редактирование не меняет категорию и свойства исправленной версии (Закрыто)">#124</a></del>
               - ссылка зачёркнута, если задача закрыта)
             </li>
+            <li>Link to an issue including tracker name and subject: <strong>##124</strong> (displays <a href="#" class="issue" title="bulk edit doesn't change the category or fixed version properties (New)">Bug #124</a>: bulk edit doesn't change the category or fixed version properties)</li>
             <li>Ссылка на задачу: <strong>#124-6</strong>, или <strong>#124#note-6</strong></li>
+            <li>Link to an issue note within the same issue: <strong>#note-6</strong></li>
         </ul>
 
         <p>Wiki ссылки:</p>
@@ -33,6 +55,7 @@
     <li><strong>[[Руководство#дальнейшее-чтение]]</strong> направляет на метку "дальнейшее-чтение". Заголовкам
         автоматически
         метки, таким образом, вы можете на них ссылаться: <a href="#" class="wiki-page">Руководство</a></li>
+    <li><strong>[[#further-reading]]</strong> link to the anchor "further-reading" of the current page: <a href="#" class="wiki-page">#further-reading</a></li>
     <li><strong>[[Руководство|Руководство пользователя]]</strong> выводит ссылку на саму страницу, но с другим текстом:
         <a href="#" class="wiki-page">Руководство пользователя</a>
     </li>
@@ -224,13 +247,17 @@ http://www.redmine.org, someone@foo.bar
     <li>Прикреплённое к wiki-странице изображение можно отобразить в тексте, используя имя файла:
         <strong>!вложенное_изображение.png!</strong>
     </li>
-        </ul>
+    <li>Images in your computer's clipboard can be pasted directly using Ctrl-v or Command-v (note that Internet Explorer is not supported).</li>
+    <li>Image files can be dragged onto the text area in order to be uploaded and embedded.</li>
+</ul>
 
 <h3><a name="8" class="wiki-page"></a>Заголовки</h3>
 
 <pre>
 h1. Заголовок
+
 h2. Подзаголовок
+
 h3. Подзаголовок подзаголовка
 </pre>
 
@@ -268,8 +295,8 @@ bq. Rails - это полноценный, многоуровневый фрей
         <h3><a name="11" class="wiki-page"></a>Содержание</h3>
 
 <pre>
-{{Содержание}} =&gt; содержание, выровненное по левому краю
-{{&gt;Содержание}} =&gt; содержание, выровненное по правому краю
+{{toc}} =&gt; содержание, выровненное по левому краю
+{{&gt;toc}} =&gt; содержание, выровненное по правому краю
 </pre>
 
         <h3><a name="14" class="wiki-page"></a>Horizontal Rule</h3>
@@ -317,7 +344,7 @@ bq. Rails - это полноценный, многоуровневый фрей
 
 <h2><a name="13" class="wiki-page"></a>Подсветка кода</h2>
 
-    <p>По умолчанию за подсветку код отвечает <a href="http://coderay.rubychan.de/" class="external">CodeRay</a>, и для лучшей производительности библиотеки написаны на Ruby. Сейчас поддерживаются c, clojure, cpp (c++, cplusplus), css, delphi (pascal), diff (patch), erb (eruby, rhtml), go, groovy, haml, html (xhtml), java, javascript (ecmascript, ecma_script, java_script, js), json, lua, php, python, ruby (irb), sass, sql, taskpaper, text (plain, plaintext), xml and yaml (yml) языки.</p>
+<p>Default code highlighting relies on <a href="http://rouge.jneen.net/" class="external">Rouge</a>, a pure Ruby code highlighter. Rouge supports many commonly used languages such as <strong>c</strong>, <strong>cpp</strong> (c++), <strong>csharp</strong> (c#, cs), <strong>css</strong>, <strong>diff</strong> (patch, udiff), <strong>go</strong> (golang), <strong>groovy</strong>, <strong>html</strong>, <strong>java</strong>, <strong>javascript</strong> (js), <strong>kotlin</strong>, <strong>objective_c</strong> (objc), <strong>perl</strong> (pl), <strong>php</strong>, <strong>python</strong> (py), <strong>r</strong>, <strong>ruby</strong> (rb), <strong>sass</strong>, <strong>scala</strong>, <strong>shell</strong> (bash, zsh, ksh, sh), <strong>sql</strong>, <strong>swift</strong>, <strong>xml</strong> and <strong>yaml</strong> (yml) languages - the names inside parentheses are aliases. Please refer to the <a href="../code_highlighting_languages.html" target="_blank">list of languages supported by Redmine code highlighter</a>.</p>
 
 <p>Вы можете подсветить код в любом месте, где поддерживается wiki-форматирование (название языка не зависит от регистра):</p>
 
@@ -329,16 +356,16 @@ bq. Rails - это полноценный, многоуровневый фрей
 
 <p>Пример:</p>
 
-<pre><code class="ruby syntaxhl"><span class="CodeRay"><span class="comment"># The Greeter class</span>
-<span class="keyword">class</span> <span class="class">Greeter</span>
-  <span class="keyword">def</span> <span class="function">initialize</span>(name)
-    <span class="instance-variable">@name</span> = name.capitalize
-  <span class="keyword">end</span>
+<pre><code class="ruby syntaxhl"><span class="c1"># The Greeter class</span>
+<span class="k">class</span> <span class="nc">Greeter</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
+    <span class="vi">@name</span> <span class="o">=</span> <span class="nb">name</span><span class="p">.</span><span class="nf">capitalize</span>
+  <span class="k">end</span>
 
-  <span class="keyword">def</span> <span class="function">salute</span>
-    puts <span class="string"><span class="delimiter">"</span><span class="content">Hello </span><span class="inline"><span class="inline-delimiter">#{</span><span class="instance-variable">@name</span><span class="inline-delimiter">}</span></span><span class="content">!</span><span class="delimiter">"</span></span>
-  <span class="keyword">end</span>
-<span class="keyword">end</span></span></code>
-</pre>
+  <span class="k">def</span> <span class="nf">salute</span>
+    <span class="nb">puts</span> <span class="s2">"Hello </span><span class="si">#{</span><span class="vi">@name</span><span class="si">}</span><span class="s2">!"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre>
 </body>
 </html>

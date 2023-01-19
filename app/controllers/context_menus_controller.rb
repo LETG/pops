@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,26 +24,30 @@ class ContextMenusController < ApplicationController
   before_action :find_issues, :only => :issues
 
   def issues
-    if (@issues.size == 1)
+    if @issues.size == 1
       @issue = @issues.first
     end
     @issue_ids = @issues.map(&:id).sort
 
     @allowed_statuses = @issues.map(&:new_statuses_allowed_to).reduce(:&)
 
-    @can = {:edit => @issues.all?(&:attributes_editable?),
-            :log_time => (@project && User.current.allowed_to?(:log_time, @project)),
-            :copy => User.current.allowed_to?(:copy_issues, @projects) && Issue.allowed_target_projects.any?,
-            :add_watchers => User.current.allowed_to?(:add_issue_watchers, @projects),
-            :delete => @issues.all?(&:deletable?)
-            }
+    @can = {
+      :edit => @issues.all?(&:attributes_editable?),
+      :log_time => (@project && User.current.allowed_to?(:log_time, @project)),
+      :copy => User.current.allowed_to?(:copy_issues, @projects) && Issue.allowed_target_projects.any?,
+      :add_watchers => User.current.allowed_to?(:add_issue_watchers, @projects),
+      :delete => @issues.all?(&:deletable?),
+      :add_subtask => @issue && !@issue.closed? && User.current.allowed_to?(:manage_subtasks, @project)
+    }
 
     @assignables = @issues.map(&:assignable_users).reduce(:&)
-    @trackers = @projects.map {|p| Issue.allowed_target_trackers(p) }.reduce(:&)
+    @trackers = @projects.map {|p| Issue.allowed_target_trackers(p)}.reduce(:&)
     @versions = @projects.map {|p| p.shared_versions.open}.reduce(:&)
 
     @priorities = IssuePriority.active.reverse
     @back = back_url
+
+    @columns = params[:c]
 
     @options_by_custom_field = {}
     if @can[:edit]
@@ -64,7 +70,7 @@ class ContextMenusController < ApplicationController
       preload(:user).to_a
 
     (render_404; return) unless @time_entries.present?
-    if (@time_entries.size == 1)
+    if @time_entries.size == 1
       @time_entry = @time_entries.first
     end
 

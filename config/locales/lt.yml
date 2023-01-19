@@ -137,6 +137,10 @@ lt:
         earlier_than_minimum_start_date: "negali būti anksčiau už %{date} dėl ankstesnių darbų"
         not_a_regexp: "neteisingas reguliarusis reiškinys"
         open_issue_with_closed_parent: "Atviras darbas negali būti pridėtas prie uždarytos tėvinės užduoties"
+        must_contain_uppercase: "must contain uppercase letters (A-Z)"
+        must_contain_lowercase: "must contain lowercase letters (a-z)"
+        must_contain_digits: "must contain digits (0-9)"
+        must_contain_special_chars: "must contain special characters (!, $, %, ...)"
 
   actionview_instancetag_blank_option: Prašom parinkti
 
@@ -178,7 +182,6 @@ lt:
   notice_failed_to_save_issues: "Nepavyko išsaugoti %{count} darbo(ų) iš %{total} pasirinktų: %{ids}."
   notice_failed_to_save_time_entries: "Nepavyko išsaugoti %{count} laiko įrašo(ų) iš %{total} pasirinktų: %{ids}."
   notice_failed_to_save_members: "Nepavyko išsaugoti nario(ių): %{errors}."
-  notice_no_issue_selected: "Nepasirinktas nei vienas darbas! Prašom pažymėti darbus, kuriuos norite redaguoti"
   notice_account_pending: "Jūsų paskyra buvo sukurta ir dabar laukiama administratoriaus patvirtinimo."
   notice_default_data_loaded: Numatytoji konfigūracija sėkmingai įkrauta.
   notice_unable_delete_version: Neįmanoma ištrinti versijos.
@@ -208,14 +211,14 @@ lt:
   error_issue_done_ratios_not_updated: "Įrašo baigtumo rodikliai nebuvo atnaujinti. "
   error_workflow_copy_source: 'Prašome pasirinkti pirminį seklį arba rolę, kurį norite kopijuoti'
   error_workflow_copy_target: 'Prašome pasirinkti seklį(-ius) arba rolę(-s) į kuriuos norite kopijuoti'
-  error_unable_delete_issue_status: 'Negalima ištrinti darbo statuso'
+  error_unable_delete_issue_status: 'Negalima ištrinti darbo statuso (%{value})'
   error_unable_to_connect: "Negalima prisijungti (%{value})"
   error_attachment_too_big: "Šis failas negali būti įkeltas, nes viršija maksimalų (%{max_size}) leistiną failo dydį"
   error_session_expired: "Jūsų sesija pasibaigė. Prašome prisijunti iš naujo."
   warning_attachments_not_saved: "%{count} byla(-ų) negali būti išsaugota."
   error_password_expired: "Jūsų slaptažodžio galiojimo laikas baigėsi arba administratorius reikalauja jūsų jį pasikeisti"
   error_invalid_file_encoding: "Failas nėra tinkamas %{encoding} koduotės failas"
-  error_invalid_csv_file_or_settings: "Failas nėra CSV failas arba neatitinka žemiau esančių nustatymų"
+  error_invalid_csv_file_or_settings: "Failas nėra CSV failas arba neatitinka žemiau esančių nustatymų (%{value})"
   error_can_not_read_import_file: "Iškilo klaida skaitant importuojamą failą"
   error_attachment_extension_not_allowed: "Priedo plėtinys %{extension} negalimas"
   error_ldap_bind_credentials: "Netinkamas LDAP Vartotojo vardas/Slaptažodis"
@@ -333,7 +336,6 @@ lt:
   field_parent_title: Pagrindinis puslapis
   field_editable: Redaguojamas
   field_watcher: Stebėtojas
-  field_identity_url: OpenID URL
   field_content: Turinys
   field_group_by: Sugrupuoti pagal
   field_sharing: Dalijimasis
@@ -369,7 +371,6 @@ lt:
   field_remote_ip: IP adresas
 
   setting_app_title: Programos pavadinimas
-  setting_app_subtitle: Programos paantraštė
   setting_welcome_text: Pasveikinimas
   setting_default_language: Numatytoji kalba
   setting_login_required: Reikalingas autentiškumo nustatymas
@@ -377,7 +378,6 @@ lt:
   setting_attachment_max_size: Priedo maksimalus dydis
   setting_issues_export_limit: Darbų eksportavimo riba
   setting_mail_from: Išleidimo elektroninio pašto adresas
-  setting_bcc_recipients: Nematomos kopijos (bcc) gavėjai
   setting_plain_text_mail: Tik tekstas laiške (be HTML)
   setting_host_name: Pagrindinio kompiuterio pavadinimas ir kelias
   setting_text_formatting: Teksto formatavimas
@@ -413,7 +413,6 @@ lt:
   setting_diff_max_lines_displayed: Maksimalus rodomas pakeitimų eilučių skaičius
   setting_file_max_size_displayed: Maksimalus tekstinių failų dydis rodomas vienoje eilutėje
   setting_repository_log_display_limit: Maksimalus revizijų skaičius rodomas failo žurnale
-  setting_openid: Leisti OpenID prisijungimą ir registraciją
   setting_password_max_age: Reikalauti slaptažodžio pakeitimo po
   setting_password_min_length: Minimalus slaptažodžio ilgis
   setting_lost_password: Leisti slaptažodžio atstatymą elektroninu laišku
@@ -470,7 +469,6 @@ lt:
   permission_edit_own_issue_notes: Redaguoti savo pastabas
   permission_view_private_notes:  Matyti privačias pastabas
   permission_set_notes_private: Nustatyti pastabas privačiomis
-  permission_move_issues: Perkelti darbus
   permission_delete_issues: Pašalinti darbus
   permission_manage_public_queries: Valdyti viešas užklausas
   permission_save_queries: Išsaugoti užklausas
@@ -580,9 +578,7 @@ lt:
   label_enumeration_new: Nauja vertė
   label_information: Informacija
   label_information_plural: Informacija
-  label_please_login: Prašom prisijungti
   label_register: Užsiregistruoti
-  label_login_with_open_id_option: arba prisijunkite su OpenID
   label_password_lost: Prarastas slaptažodis
   label_password_required: Norėdami tęsti, patvirtinkite savo slaptažodį
   label_home: Pagrindinis
@@ -599,7 +595,6 @@ lt:
   label_last_login: Paskutinis prisijungimas
   label_registered_on: Užregistruota
   label_activity: Veikla
-  label_overall_activity: Visa veikla
   label_user_activity: "%{value} veikla"
   label_new: Naujas
   label_logged_as: Prisijungęs kaip
@@ -711,7 +706,6 @@ lt:
   label_between: tarp
   label_in: per
   label_today: šiandien
-  label_all_time: visas laikas
   label_yesterday: vakar
   label_this_week: šią savaitę
   label_last_week: praeita savaitė
@@ -777,7 +771,6 @@ lt:
   label_issue_tracking: Darbų sekimas
   label_spent_time: Dirbtas laikas
   label_total_spent_time: Visas dirbtas laikas
-  label_overall_spent_time: Visas dirbtas laikas
   label_f_hour: "%{value} valanda"
   label_f_hour_plural: "%{value} valandų(-os)"
   label_f_hour_short: "%{value} h"
@@ -920,7 +913,6 @@ lt:
   label_completed_versions: Užbaigtos versijos
   label_search_for_watchers: Ieškoti vartotojų kuriuos įtraukti kaip stebėtojus
   label_session_expiration: Baigėsi sujungimo sesija
-  label_show_closed_projects: Matyti uždarytus projektus
   label_status_transitions: Darbų eiga
   label_fields_permissions: Leidimai
   label_readonly: Tik peržiūra
@@ -1033,7 +1025,6 @@ lt:
   button_update: Atnaujinti
   button_configure: Konfigūruoti
   button_quote: Cituoti
-  button_duplicate: Dubliuoti
   button_show: Rodyti
   button_hide: Slėpti
   button_edit_section: Redaguoti šį skirsnį
@@ -1059,7 +1050,6 @@ lt:
 
   text_select_mail_notifications: Išrinkite veiksmus, apie kuriuos būtų pranešta elektroniniu paštu.
   text_regexp_info: pvz. ^[A-Z0-9]+$
-  text_min_max_length_info: 0 reiškia jokių apribojimų
   text_project_destroy_confirmation: Ar esate įsitikinęs, kad norite pašalinti šį projektą ir visus susijusius duomenis?
   text_subprojects_destroy_warning: "Šis(-ie) sub-projektas(-ai): %{value} bus taip pat pašalinti."
   text_workflow_edit: Išrinkite vaidmenį ir pėdsekį, kad redaguotumėte darbų eigą
@@ -1099,13 +1089,14 @@ lt:
   text_default_administrator_account_changed: Administratoriaus numatytoji paskyra pakeista
   text_file_repository_writable: Į failų saugyklą saugoti galima (RW)
   text_plugin_assets_writable: Į įskiepių katalogą įrašyti galima
-  text_rmagick_available: RMagick pasiekiamas (pasirinktinai)
+  text_minimagick_available: MiniMagick pasiekiamas (pasirinktinai)
   text_convert_available: ImageMagick konvertavimas galimas (pasirinktinai)
   text_destroy_time_entries_question: "Naikinamam darbui priskirta %{hours} valandų. Ką norite su jomis daryti?"
   text_destroy_time_entries: Ištrinti įrašytas valandas
   text_assign_time_entries_to_project: Priskirti įrašytas valandas prie projekto
   text_reassign_time_entries: 'Priskirti įrašytas valandas šiam darbui:'
   text_user_wrote: "%{value} parašė:"
+  text_user_wrote_in: "%{value} parašė (%{link}):"
   text_enumeration_destroy_question: "%{count} objektai(ų) priskirti šiai reikšmei “%{name}”."
   text_enumeration_category_reassign_to: 'Priskirti juos šiai reikšmei:'
   text_email_delivery_not_configured: "El.pašto siuntimas nesukonfigūruotas ir perspėjimai neaktyvus.\nSukonfigūruokite savo SMTP serverį byloje config/configuration.yml ir perleiskite programą norėdami pritaikyti pakeitimus."
@@ -1137,7 +1128,7 @@ lt:
   text_turning_multiple_off: "Jei jūs išjungsite kelių reikšmių pasirinkimą, visos išvardintos reikšmės bus pašalintos ir palikta tik viena reikšmė kiekvienam laukui."
 
   default_role_manager: Vadovas
-  default_role_developer: Projektuotojas
+  default_role_developer: Plėtotojas
   default_role_reporter: Pranešėjas
   default_tracker_bug: Klaida
   default_tracker_feature: Ypatybė
@@ -1197,14 +1188,14 @@ lt:
   setting_timespan_format: Laiko tarpo formatas
   label_table_of_contents: Turinio lentelė
   setting_commit_logs_formatting: Pritaikyti teksto formatavimą patvirtinimo žinutėms
-  setting_mail_handler_enable_regex_delimiters: Įjungti reguliariuosius reiškinius
-  error_move_of_child_not_possible: 'Darbo dalis %{child} negali būti perkelta į naują 
+  setting_mail_handler_enable_regex: Įjungti reguliariuosius reiškinius
+  error_move_of_child_not_possible: 'Darbo dalis %{child} negali būti perkelta į naują
     projektą: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Dirbtas laikas negali būti
     iš naujo paskirtas darbui, kuris bus ištrintas
   setting_timelog_required_fields: Privalomi laukai laiko registracijai
   label_attribute_of_object: '%{object_name}''s %{name}'
-  label_user_mail_option_only_assigned: Tik dalykai, kuriuos stebiu arba esu įtrauktas
+  label_user_mail_option_only_assigned: Tik dalykai, kuriuos stebiu arba esu paskirtas
   label_user_mail_option_only_owner: Tik dalykai, kuriuos stebiu arba esu jų savininkas
   warning_fields_cleared_on_bulk_edit: Pakeitimai iššauks automatinį reikšmių
     pašalinimą iš vieno arba kelių laukų pažymėtiems objektams
@@ -1218,3 +1209,202 @@ lt:
   permission_view_news: Žiūrėti naujienas
   label_no_preview_alternative_html: Peržiūra neprieinama. Naudokite failą %{link}.
   label_no_preview_download: Atsisiųsti
+  setting_close_duplicate_issues: Automatiškai uždaryi dubliuojančius darbus
+  error_exceeds_maximum_hours_per_day: Dienoje negalima registruoti daugiau valandų nei numatytas maksimumas %{max_hours}
+    (jau užregistruotos %{logged_hours} valandos)
+  setting_time_entry_list_defaults: Laiko žurnalo sąrašo numatytieji nustatymai
+  setting_timelog_accept_0_hours: Galima registruoti užduočių vykdymą su 0 laiko
+  setting_timelog_max_hours_per_day: Maksimalus galimas valandų kiekis naudotojui per dieną
+  label_x_revisions: "%{count} revisions"
+  error_can_not_delete_auth_source: Šis autentifikavimo metodas yra naudojamas ir negali būti pašalintas.
+  button_actions: Veiksmai
+  mail_body_lost_password_validity: Nuoroda skirta pakeisti slaptažodį tik vieną kartą.
+  text_login_required_html: Vieši projektai ir jų turinys bus matomas visiems jei nėra reikalaujama prisijungimo.
+    Taikomus ribojimus galite <a href="%{anonymous_role_path}">pakeisti</a>.
+  label_login_required_yes: 'Taip'
+  label_login_required_no: Leisti anoniminį prisijungimą prie viešų projektų
+  text_project_is_public_non_member: Vieši projektai ir jų turinys matomas tik prisijungusiems naudotojams (visiems).
+  text_project_is_public_anonymous: Vieši projektai ir jų turinys matomas laisvai.
+  label_version_and_files: Versijos (%{count}) ir failai
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (be saugos sertifikato patikrinimo)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Tam, kad išvengti saugos pažeidimų prisijungimo procese yra rekomenduojama naudoti
+    LDAPS ryšį užkoduota naudojant saugos sertifikatą.
+  label_nothing_to_preview: Nėra ką peržiūrėti
+  error_token_expired: Slaptažodio atstatymo nuoroda nebegalioja. Pakartokite procesą iš naujo..
+  error_spent_on_future_date: Negalima registruoti laiko pasirenkant ateities datas
+  setting_timelog_accept_future_dates: Leisti registruoti laiką pasirenkant ateities datas
+  label_delete_link_to_subtask: Pašalinti ryšį
+  error_not_allowed_to_log_time_for_other_users: Jūs negalite nurodyti kitų naudotojų darbo trukmes
+  permission_log_time_for_other_users: Galima nurodyti kitų naudotojų darbo trukmes
+  label_tomorrow: rytoj
+  label_next_week: kita savaitė
+  label_next_month: kitas mėnuo
+  text_role_no_workflow: Šiai rolei nenurodyta jokia darbo eiga
+  text_status_no_workflow: Nė pėdsekys nenaudoja šios būsenos darbo eigose
+  setting_mail_handler_preferred_body_part: Pageidaujama kelių dalių (HTML) el. laiškų dalis
+  setting_show_status_changes_in_mail_subject: Rodyti būsenos pakeitimus laiškų pranešimų temoje
+  label_inherited_from_parent_project: Paveldėta iš tėvinio projekto
+  label_inherited_from_group: Paveldėta iš grupės %{name}
+  label_trackers_description: Pėdsekio aprašymas
+  label_open_trackers_description: Rodyti visų pėdsekių aprašymus
+  label_preferred_body_part_text: Tekstas
+  label_preferred_body_part_html: HTML (bandomoji versija)
+  field_parent_issue_subject: Tėvinės užduoties tema
+  permission_edit_own_issues: Redaguoti savo darbus
+  text_select_apply_tracker: Pasirinkti pėdsekį
+  label_updated_issues: Atnaujinti darbai
+  text_avatar_server_config_html: Šiuometu naudojamas avataro paveiksliukų serveris <a href="%{url}">%{url}</a>.
+    Pakeisti galima faile config/configuration.yml.
+  setting_gantt_months_limit: Didžiausias mėnesių skaičius, rodomas Gantt diagramoje
+  permission_import_time_entries: Importuoti laiko įrašus
+  label_import_notifications: Importavimo metu išsiusti el. pašto pranešimą
+  text_gs_available: ImageMagick PDF palaikomas (nebūtinas)
+  field_recently_used_projects: Neseniai naudotų projektų skaičius jump box
+  label_optgroup_bookmarks: Žymės
+  label_optgroup_others: Kiti projektai
+  label_optgroup_recents: Pastaruoju metu naudota
+  button_project_bookmark: Pridėti žymę
+  button_project_bookmark_delete: Pašalinti žymę
+  field_history_default_tab: Darbo istorijos skirtukas pagal nutylėjimą
+  label_issue_history_properties: Savybių pakeitimai
+  label_issue_history_notes: Pastabos
+  label_last_tab_visited: Paskutinis žiūrėtas skirtukas
+  field_unique_id: Unikalus ID
+  text_no_subject: be temos
+  setting_password_required_char_classes: Slaptažodyje privalomi simbolių tipai
+  label_password_char_class_uppercase: didžiosios raidės
+  label_password_char_class_lowercase: mažosios raidės
+  label_password_char_class_digits: skaitmenys
+  label_password_char_class_special_chars: specialieji simboliai
+  text_characters_must_contain: Privalo būti %{character_classes}.
+  label_starts_with: prasideda
+  label_ends_with: baigiasi
+  label_issue_fixed_version_updated: Tikslinė versija atnaujinta
+  setting_project_list_defaults: Projektų sąrašo numatytosios reikšmės
+  label_display_type: Rodyti įrašus kaip
+  label_display_type_list: Sąrašas
+  label_display_type_board: Lenta
+  label_my_bookmarks: Mano žymės
+  label_import_time_entries: Importuoti laiko įrašus
+  field_toolbar_language_options: Kodo paryškinimo įrankių juostos kalbos
+  label_user_mail_notify_about_high_priority_issues_html: Taip pat informuoti mane apie darbus
+    su prioritetu <em>%{prio}</em> ar aukštesniu
+  label_assign_to_me: Paskirti man
+  notice_issue_not_closable_by_open_tasks: Darbas negali būti uždarytas nes turi nepabaigtų sudėtinių dalių.
+  notice_issue_not_closable_by_blocking_issue: Darbas negali būti uždarytas nes yra blokuojamas atidaryto darbo.
+  notice_issue_not_reopenable_by_closed_parent_issue: Darbas negali būti pakartotinai atidarytas nes jo motininis darbas yra uždarytas.
+  error_bulk_download_size_too_big: Parinkti pridėti failai negali būti atsisiunčiami vienu metu nes bendras failų dydis viršija leistiną (%{max_size})
+  setting_bulk_download_max_size: Maksimalus vienu metu atsisiunčiamų failų bendras dydis
+  label_download_all_attachments: Parsisiųsti visus failus
+  error_attachments_too_many: Šis failas negali būti įkeltas nes viršijamas vienu metu įkeliamų failų skaičius (%{max_number_of_files})
+  setting_email_domains_allowed: Leidžiami el. pašto domenai
+  setting_email_domains_denied: Draudžiami el. pašto domenai
+  field_passwd_changed_on: Slaptažodis buvo pakeistas
+  label_relations_mapping: Susiejimas
+  label_import_users: Importuoti naudotojus
+  label_days_to_html: "%{days} dienos iki %{date}"
+  setting_twofa: Dviejų veiksnių autentifikavimas
+  label_optional: pasirinktinai
+  label_required_lower: būtina
+  button_disable: Išjungti
+  twofa__totp__name: autentifikavimo programa
+  twofa__totp__text_pairing_info_html: Nuskanuokite QR kodą arba rankiniu būdu įveskite rakto tekstą
+    į TOTP programą (e.g. <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) ir įveskite kodą į lauką apačioje tam, kad įjungtumėte dviejų veiksnių autentifikavimą.
+  twofa__totp__label_plain_text_key: Rakto tekstas
+  twofa__totp__label_activate: Įjungti autentifikavimo programą
+  twofa_currently_active: 'Šiuo metu įjungta: %{twofa_scheme_name}'
+  twofa_not_active: Neįjungta
+  twofa_label_code: Kodas
+  twofa_hint_disabled_html: Nustatymas <strong>%{label}</strong> išjungs dviejų veiksnių autentifikaciją visiems naudotojams.
+  twofa_hint_required_html: Nustatymas <strong>%{label}</strong> padarys dviejų veiksnių autentifikaciją vieismes naudotojams sekančio jų
+    prisijungimo metu.
+  twofa_label_setup: Įjungti dviejų veiksnių autentifikaciją
+  twofa_label_deactivation_confirmation: Išjungti dviejų veiksnių autentifikaciją
+  twofa_notice_select: 'Pasirinkite jums tinkamą dviejų veiksnių autentifikacijos metodą:'
+  twofa_warning_require: Administratorius aktyvavo privalomą dviejų veiksnių autentifikaciją.
+  twofa_activated: Dviejų veiksnių autentifikacija sėkmingai įjungta. Rekomenduojama sukurti
+    <a data-method="post" href="%{bc_path}">atsarginius kodus</a> skirtus jūsų prisijungimui.
+  twofa_deactivated: Dviejų veiksnių autentifikacija išjungta.
+  twofa_mail_body_security_notification_paired: Dviejų veiksnių autentifikacija įjungta naudojant %{field}.
+  twofa_mail_body_security_notification_unpaired: Jūsų prisijungimui išjungta dviejų veiksnių autentifikacija.
+  twofa_mail_body_backup_codes_generated: Sukurti atsarginiai dviejų veiksnių autentifikacijos kodai.
+  twofa_mail_body_backup_code_used: Buvo panaudotas atsarginis dviejų veiksnių autentifikacijos kodas.
+  twofa_invalid_code: Kodas yra netinkamas arba pasenęs.
+  twofa_label_enter_otp: Įveskite dviejų veiksnių autentifikacijos kodą.
+  twofa_too_many_tries: Per daug bandymų.
+  twofa_resend_code: Pakartotinai atsiųsti kodą.
+  twofa_code_sent: Jums buvo išsiųstas autentifikacijos kodas.
+  twofa_generate_backup_codes: Sukurti atsarginius kodus.
+  twofa_text_generate_backup_codes_confirmation: Šis veiksmas visus anksčiau sugeneruotus atsarginius kodus padarys negaliojančiais
+    ir sugeneruos naujus. Ar norite tęsti procesą?
+  twofa_notice_backup_codes_generated: Jūsų atsarginiai kodai buvo sugeneruoti.
+  twofa_warning_backup_codes_generated_invalidated: Buvo sugeneruoti nauji atsarginiai kodai.
+    Anksčiau %{time} sugeneruotų kodų galiojimas panaikintas.
+  twofa_label_backup_codes: Dviejų veiksnių autentifikacijos atsarginiai kodai
+  twofa_text_backup_codes_hint: Jei neturite priėjimo prie antros dviejų veiksnių autentifikacijos aplinkos - naudokite šiuos kodus, o ne vienkartinį slaptažodį.
+    Kiekvieną kodą galima panaudoti tik vieną kartą, todėl rekomenduojama kodus atsispausdinti ir laikyti saugiai.
+  twofa_text_backup_codes_created_at: Atsarginiai kodai sukurti %{datetime}.
+  twofa_backup_codes_already_shown: Atsarginiai kodai negali būti parodyti pakartotinai. Jei reikia - <a data-method="post"
+    href="%{bc_path}">sugeneruokite naujus atsarginius kodus</a>.
+  error_can_not_execute_macro_html: Klaida vykdant <strong>%{name}</strong> makrokomandą
+    (%{error})
+  error_macro_does_not_accept_block: Ši makrokomanda nepriima teksto bloko
+  error_childpages_macro_no_argument: Be jokių argumentų, šią makrokomandą gali iškviesti tik wiki puslapiai
+  error_circular_inclusion: Aptiktas ciklinis įterpimas
+  error_page_not_found: Puslapis nerastas
+  error_filename_required: Failo pavadinimas būtinas
+  error_invalid_size_parameter: Netinkamas dydžio parametras
+  error_attachment_not_found: Pridėtas failas %{name} nerastas
+  permission_delete_project: Pašalinti projektą
+  field_twofa_scheme: Dviejų veiksnių autentifikavimo schema
+  text_user_destroy_confirmation: Ar tikrai norite pašalinti naudotoją ir visas sąsajas su juo? Po šio veiksmo informacijos atkūrimas negalimas.
+    Naudotojo užrakinimas gali būti geresnis sprendimas. Patvirtinimui įveskite šalinamo naudotojo prisijungimo vardą (%{login}).
+  text_project_destroy_enter_identifier: Patvirtinimjui įveskite projekto identifikatorių (%{identifier}).
+  button_add_subtask: Pridėti užduoties dedamąją
+  notice_invalid_watcher: 'Neteisingas stebėtojas: Naudotojas negaus jokių pranešimų nes jam nėra suteikta prieiga prie šio objekto.'
+  button_fetch_changesets: Gauti įkėlimus
+  permission_view_message_watchers: Peržiūrėti pranešimo stebėtojų sąrašą
+  permission_add_message_watchers: Pridėti pranešimo stebėtojus
+  permission_delete_message_watchers: Pašalinti pranešimo stebėtojus
+  label_message_watchers: Stebėtojai
+  button_copy_link: Kopijuoti nuorodą
+  error_invalid_authenticity_token: Netinkamas formos autentiškumo ženklas.
+  error_query_statement_invalid: Užklausos vykdymo metu įvyko klaida kuri buvo įrašyta į įvykių žurnalą.
+    Apie klaidą informuokite Redmine administratorių.
+  permission_view_wiki_page_watchers: Peržiūrėkite wiki puslapio stebėtojų sąrašą
+  permission_add_wiki_page_watchers: Papildyti wiki puslapio stebėtojų sąrašą
+  permission_delete_wiki_page_watchers: Pašalinti wiki puslapio stebėtojus iš sąrašo
+  label_wiki_page_watchers: Stebėtojai
+  label_attachment_description: Failo aprašymas
+  error_no_data_in_file: Faile nėra jokių duomenų
+  field_twofa_required: Reikalinga dviejų veiksnių autentifikacija
+  twofa_hint_optional_html: Nustatant <strong>%{label}</strong> leis vartotojams įjungti dviejų veiksnių autentifikavimą savo nuožiūra, nebent to reikalauja viena iš jų grupių.
+  twofa_text_group_required: Šis nustatymas galioja tik tada kai globalus dviejų veiksnių autentifikavimas įjuntas kaip 'neprivalomas'. Šiuo metu dviejų veiksnių autentifikavimas yra įjungtas kaip privalomas visiems naudotojams.
+  twofa_text_group_disabled:  Šis nustatymas galioja tik tada kai globalus dviejų veiksnių autentifikavimas įjuntas kaip 'neprivalomas'. Šiuo metu dviejų veiksnių autentifikavimas yra išjungtas pilnai.
+  field_default_issue_query: Numatytoji darbo užklausa
+  label_default_queries:
+    for_all_projects: Visiems projektams
+    for_current_project: Pasirinktam projektui
+    for_all_users: Visiems naudotojams
+    for_this_user: For this user
+  text_allowed_queries_to_select: Galima pasirinkti tik užklausas prieinamas (Viešas) visiems naudotojams
+  text_all_migrations_have_been_run: Buvo įvykdytos visos duomenų bazės migravimo procedūros
+  button_save_object: Išsaugoti %{object_name}
+  button_edit_object: Redaguoti %{object_name}
+  button_delete_object: Pašalinti %{object_name}
+  text_setting_config_change: Elgseną galite konfiguruoti faile config/configuration.yml.
+    Baigę redaguoti - nepamirškite perkrauti aplikacijos.
+  label_bulk_edit: Masinis redagavimas
+  button_create_and_follow: Kurti ir sekti
+  label_subtask: Subužduotis
+  label_default_query: Numatytoji užklausa
+  field_default_project_query: Numatytoji projekto užklausa
+  label_required_administrators: administratoriams privaloma
+  twofa_hint_required_administrators_html: Nustatymas <strong>%{label}</strong> veikia kaip neprivalomas, bet reikalauja, kad visi naudotojai
+    turintys administravimo teises kito prisijungimo metu aktyvuotų dviejų veiksnių autentifikaciją.
+  label_auto_watch_on: Automatinis stebėjimas
+  label_auto_watch_on_issue_contributed_to: Darbai prie kurių prisidėjau

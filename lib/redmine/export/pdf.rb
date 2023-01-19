@@ -1,7 +1,8 @@
-# encoding: utf-8
+# frozen_string_literal: true
+
 #
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,8 +28,6 @@ module Redmine
         attr_accessor :footer_date
 
         def initialize(lang, orientation='P')
-          @@k_path_cache = Rails.root.join('tmp', 'pdf')
-          FileUtils.mkdir_p @@k_path_cache unless File::exist?(@@k_path_cache)
           set_language_if_valid lang
           super(orientation, 'mm', 'A4')
           set_print_header(false)
@@ -51,6 +50,7 @@ module Redmine
         end
 
         def SetFont(family, style='', size=0, fontfile='')
+          style = +style
           # FreeSerif Bold Thai font has problem.
           style.delete!('B') if family.to_s.casecmp('freeserif') == 0
           # DejaVuSans Italic Arabic and Persian font has problem.
@@ -69,7 +69,7 @@ module Redmine
           Redmine::WikiFormatting.to_html(Setting.text_formatting, text)
         end
 
-        def RDMCell(w ,h=0, txt='', border=0, ln=0, align='', fill=0, link='')
+        def RDMCell(w, h=0, txt='', border=0, ln=0, align='', fill=0, link='')
           cell(w, h, txt, border, ln, align, fill, link)
         end
 
@@ -91,7 +91,7 @@ module Redmine
           </style>'
 
           # Strip {{toc}} tags
-          txt.gsub!(/<p>\{\{([<>]?)toc\}\}<\/p>/i, '')
+          txt = txt.gsub(/<p>\{\{((<|&lt;)|(>|&gt;))?toc\}\}<\/p>/i, '')
           writeHTMLCell(w, h, x, y, css_tag + txt, border, ln, fill)
         end
 
@@ -104,6 +104,16 @@ module Redmine
           atta = RDMPdfEncoding.attach(@attachments, attrname, "UTF-8")
           if atta
             return atta.diskfile
+          # rubocop:disable Lint/DuplicateBranch
+          elsif %r{/attachments/download/(?<id>[^/]+)/} =~ attrname and
+                atta = @attachments.find{|a| a.id.to_s == id} and
+                atta.readable? and atta.visible?
+            return atta.diskfile
+          # rubocop:enable Lint/DuplicateBranch
+          elsif %r{/attachments/thumbnail/(?<id>[^/]+)/(?<size>\d+)} =~ attrname and
+                atta = @attachments.find{|a| a.id.to_s == id} and
+                atta.readable? and atta.visible?
+            return atta.thumbnail(size: size)
           else
             return nil
           end
@@ -126,22 +136,20 @@ module Redmine
             RDMCell(0, 5, @footer_date, 0, 0, 'L')
           end
           set_x(-30)
-          RDMCell(0, 5, get_alias_num_page() + '/' + get_alias_nb_pages(), 0, 0, 'C')
+          RDMCell(0, 5, get_alias_num_page + '/' + get_alias_nb_pages, 0, 0, 'C')
         end
       end
 
       class RDMPdfEncoding
         def self.rdm_from_utf8(txt, encoding)
           txt ||= ''
-          txt = Redmine::CodesetUtil.from_utf8(txt, encoding)
-          txt.force_encoding('ASCII-8BIT')
-          txt
+          Redmine::CodesetUtil.from_utf8(txt, encoding).b
         end
 
         def self.attach(attachments, filename, encoding)
           filename_utf8 = Redmine::CodesetUtil.to_utf8(filename, encoding)
           atta = nil
-          if filename_utf8 =~ /^[^\/"]+\.(gif|jpg|jpe|jpeg|png)$/i
+          if /^[^\/"]+\.(gif|jpg|jpe|jpeg|png)$/i.match?(filename_utf8)
             atta = Attachment.latest_attach(attachments, filename_utf8)
           end
           if atta && atta.readable? && atta.visible?

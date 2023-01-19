@@ -1,6 +1,11 @@
 <div class="contextual">
   <%= link_to(l(:label_version_new), new_project_version_path(@project),
               :class => 'icon icon-add') if User.current.allowed_to?(:manage_versions, @project) %>
+  <%= actions_dropdown do %>
+  <%= link_to_if_authorized l(:label_settings),
+              {:controller => 'projects', :action => 'settings', :id => @project, :tab => 'versions'},
+              :class => 'icon icon-settings' if User.current.allowed_to?(:manage_versions, @project) %>
+  <% end %>
 </div>
 
 <h2><%=l(:label_roadmap)%></h2>
@@ -17,7 +22,8 @@
       </div>
     <% end %>
     <header>
-      <h3 class="icon icon-package version"><%= link_to_version version, :name => version_anchor(version) %></h3>
+      <h3 class="icon icon-package version inline-flex"><%= link_to_version version, :name => version_anchor(version) %></h3>
+      <span class="badge badge-status-<%= version.status %>"><%= l("version_status_#{version.status}") %></span>
     </header>
     <%= render :partial => 'versions/overview', :locals => {:version => version} %>
     <%= render(:partial => "wiki/content",
@@ -27,9 +33,11 @@
         <table class="list related-issues">
         <caption><%= l(:label_related_issues) %></caption>
         <% issues.each do |issue| -%>
-          <tr class="hascontextmenu">
+          <tr class="hascontextmenu <%= issue.css_classes %>">
             <td class="checkbox"><%= check_box_tag 'ids[]', issue.id, false, :id => nil %></td>
+            <td class="assigned_to"><%= assignee_avatar(issue.assigned_to, :size => 16) %></td>
             <td class="subject"><%= link_to_issue(issue, :project => (@project != issue.project)) %></td>
+            <td class="buttons"><%= link_to_context_menu %></td>
           </tr>
         <% end -%>
         </table>
@@ -42,59 +50,7 @@
 <% end %>
 
 <% content_for :sidebar do %>
-<%= form_tag({}, :method => :get) do %>
-<h3><%= l(:label_roadmap) %></h3>
-<ul>
-<% @trackers.each do |tracker| %>
-  <li>
-    <label>
-      <%= check_box_tag("tracker_ids[]", tracker.id,
-                        (@selected_tracker_ids.include? tracker.id.to_s),
-                        :id => nil) %>
-      <%= tracker.name %>
-    </label>
-  </li>
-<% end %>
-</ul>
-<p></p>
-<ul>
-  <li>
-    <label for="completed">
-      <%= check_box_tag "completed", 1, params[:completed] %> <%= l(:label_show_completed_versions) %>
-    </label>
-  </li>
-  <% if @project.descendants.active.any? %>
-  <li>
-    <%= hidden_field_tag 'with_subprojects', 0, :id => nil %>
-    <label>
-      <%= check_box_tag 'with_subprojects', 1, @with_subprojects %> <%=l(:label_subproject_plural)%>
-    </label>
-  </li>
-  <% end %>
-</ul>
-<p><%= submit_tag l(:button_apply), :class => 'button-small', :name => nil %></p>
-<% end %>
-
-<h3><%= l(:label_version_plural) %></h3>
-<ul>
-<% @versions.each do |version| %>
-  <li>
-    <%= link_to(format_version_name(version), "##{version_anchor(version)}") %>
-  </li>
-<% end %>
-</ul>
-<% if @completed_versions.present? %>
-<p>
-  <%= link_to_function l(:label_completed_versions),
-                       '$("#toggle-completed-versions").toggleClass("collapsed"); $("#completed-versions").toggle()',
-                       :id => 'toggle-completed-versions', :class => 'collapsible collapsed' %>
-  <ul id = "completed-versions" style = "display:none;">
-    <% @completed_versions.each do |version| %>
-      <li><%= link_to_version version %></li>
-    <% end %>
-  </ul>
-</p>
-<% end %>
+  <%= render :partial => 'versions/sidebar' %>
 <% end %>
 
 <% html_title(l(:label_roadmap)) %>

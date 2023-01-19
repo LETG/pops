@@ -1,7 +1,32 @@
 <%= title [l(:label_role_plural), roles_path], l(:label_permissions_report) %>
 
+<div class="hide-when-print">
+  <fieldset id="filters" class="collapsible collapsed">
+    <legend onclick="toggleFieldset(this);" class="icon icon-collapsed"><%= l(:label_filter_plural) %></legend>
+    <div style="display: none;">
+      <%= form_tag({}, :method => :get) do %>
+        <fieldset>
+          <legend><%= toggle_checkboxes_link('#filters input[type=checkbox]:enabled') %></legend>
+          <% Role.sorted.to_a.each do |role| %>
+            <label>
+              <%= check_box_tag "ids[]", role.id, @roles.include?(role) %>
+              <%= role.name %>
+            </label>
+          <% end %>
+        </fieldset>
+        <p>
+          <%= submit_tag l(:button_apply), :name => nil %>
+          <%= link_to l(:button_clear), permissions_roles_path, :class => 'icon icon-reload' %>
+        </p>
+      <% end %>
+    </div>
+  </fieldset>
+</div>
+
 <%= form_tag(permissions_roles_path, :id => 'permissions_form') do %>
-<%= hidden_field_tag 'permissions[0]', '', :id => nil %>
+<% @roles.each do |role| %>
+    <%= hidden_field_tag "permissions[#{role.id}][]", '', :id => nil %>
+<% end %>
 <div class="autoscroll">
 <table class="list permissions">
 <thead>
@@ -24,7 +49,7 @@
     <% unless mod.blank? %>
         <tr class="group open">
           <td>
-            <span class="expander" onclick="toggleRowGroup(this);">&nbsp;</span>
+            <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">&nbsp;</span>
             <%= l_or_humanize(mod, :prefix => 'project_module_') %>
           </td>
           <% @roles.each do |role| %>
@@ -60,3 +85,16 @@
 <p><%= check_all_links 'permissions_form' %></p>
 <p><%= submit_tag l(:button_save) %></p>
 <% end %>
+<% other_formats_links do |f| %>
+  <%= f.link_to_with_query_parameters 'CSV', {}, :onclick => "showModal('csv-export-options', '330px'); return false;" %>
+<% end %>
+<div id="csv-export-options" style="display: none;">
+  <h3 class="title"><%= l(:label_export_options, :export_format => 'CSV') %></h3>
+  <%= form_tag(permissions_roles_path(:format => 'csv'), :method => :get, :id => 'csv-export-form') do %>
+  <%= export_csv_encoding_select_tag %>
+  <p class="buttons">
+    <%= submit_tag l(:button_export), :name => nil, :onclick => 'hideModal(this);', :data => {:disable_with => false} %>
+    <%= link_to_function l(:button_cancel), 'hideModal(this);' %>
+  </p>
+  <% end %>
+</div>

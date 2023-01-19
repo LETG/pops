@@ -76,10 +76,6 @@
     position: relative;
     overflow-x: hidden; /* hide horizontal overflow */
     max-width: 100%;
-  }
-
-  #wrapper,
-  #wrapper2 {
     margin: 0;
   }
 
@@ -173,11 +169,11 @@
     -webkit-transform: scale(1,.8);
         -ms-transform: scale(1,.8);
             transform: scale(1,.8);
-	padding-top:8px;
+    padding-top:8px;
   }
 
   #project-jump .drdn-content {
-	position:absolute;
+    position:absolute;
     left:0px;
     top:64px;
     width:100%;
@@ -186,7 +182,7 @@
   }
   #project-jump .drdn-content .autocomplete {
     height:40px;
-	font-size:20px;
+    font-size:20px;
   }
   #project-jump .drdn-content a {
     padding:8px;
@@ -217,12 +213,11 @@
     display: none;
   }
 
-  .splitcontentleft, #list-left {
+  .splitcontentleft, .splitcontentright, .splitcontenttop {
     width: 100%;
-  }
-
-  .splitcontentright, #list-right {
-    width: 100%;
+    flex: auto;
+    margin-right: 0;
+    margin-left: 0;
   }
 
   /*----------------------------------------*\
@@ -262,7 +257,7 @@
 
   /* search magnifier icon */
   .search-magnifier {
-    font-family: Verdana;
+    font-family: Verdana, sans-serif;
     color: #bbb;
 
     cursor: pointer;
@@ -558,7 +553,7 @@
     content: '\00D7'; /* close glyph */
   }
 
-  .flyout-is-active #wrapper2 {
+  .flyout-is-active #main {
     /*
      * only relevant for devices with cursor when flyout it active, in order to show,
      * that whole wrapper content is clickable and closes flyout menu
@@ -598,7 +593,8 @@
     white-space: normal;
   }
 
-  #content>.contextual a,
+  #content>.contextual>a,
+  #content>.contextual .drdn,
   p.buttons a {
     font-weight: bold;
 
@@ -611,12 +607,20 @@
     border: 1px solid #ddd;
     -webkit-border-radius: 3px;
     border-radius: 3px;
-    background-color: transparent;
-    background-position-x: 4px;
+  }
+  #content>.contextual .drdn-content {
+	right:initial;
+    left:0px;
+	top:40px;
+  }
+  #content>.contextual .drdn .drdn-content a {
+    padding-top: 9px;
+    padding-bottom: 9px;
   }
 
   #content>.contextual a.icon,
   p.buttons a.icon {
+    background-position-x: 4px;
     padding-left: 25px;
   }
 
@@ -647,19 +651,6 @@
   /*----------------------------------------*\
     F) PAGE SPECIFIC STYLES
   \*----------------------------------------*/
-
-  /* page /login */
-
-  #login-form table {
-    width: 100%;
-  }
-
-  #login-form input#username,
-  #login-form input#password,
-  #login-form input#openid_url {
-    width: 100%;
-    height: auto;
-  }
 
   /* some themes add a margin to login page, remove it on mobile */
   .action-login #main {
@@ -703,8 +694,8 @@
 
   .gantt_subjects_column .gantt_hdr {
     width: 100% !important;
-    border-right: 1px solid #c0c0c0; /* [2] */
     right: 0 !important; /* [2] */
+    border-right: solid 1px #c0c0c0;
   }
 
   #gantt_area {
@@ -747,6 +738,10 @@
     float: none !important;
   }
 
+  #all_attributes #issue_tracker_id {
+    width: 90%;
+  }
+
   #issue_is_private_label {
     display: inline;
   }
@@ -779,25 +774,21 @@
     padding-right: 5px;
   }
 
-  #issue_tree .issue > td, #relations .issue > td, #issue_tree .issue .user {
-    text-overflow: ellipsis; /* if text exceeds its space, add ... */
-    overflow: hidden;
-  }
-
   #issue_tree .issue > td.subject, #relations .issue > td.subject {
-    width: 100% !important; /* let subject have one full width column */
-    word-break: break-word; /* break word if subject is too long */
+    width: 100%; /* let subject have one full width column */
   }
 
-  #issue_tree .issue > td:not(.checkbox), #relations .issue > td:not(.checkbox) {
-    width: 33.33%; /* three columns for all cells that are not subject */
+  #issue_tree .issue > td:not(.subject), #relations .issue > td:not(.subject) {
+    width: 20%; /* three columns for all cells that are not subject */
   }
 
+  #issue_tree .issues, #issue_tree .issue,
   #relations .issues, #relations .issue {
     position: relative; /* needed for .buttons positioning */
   }
 
   /* positioniong of unline button */
+  #issue_tree .issue > td.buttons,
   #relations .issue > td.buttons {
     text-align: right;
     position: absolute;
@@ -806,13 +797,9 @@
     padding-right: 0;
   }
 
+  #issue_tree .issue .buttons a,
   #relations .issue .buttons a {
     vertical-align: middle;
-    padding-right: 5px;
-  }
-
-  #relations .issue > td.subject {
-    padding-right: 25px; /* this is the spaces that .buttons uses next to subject */
   }
 
   /* attachment upload form */
@@ -843,4 +830,3 @@
 
   #login-form {width:100%; margin-top:2em;}
 }
-

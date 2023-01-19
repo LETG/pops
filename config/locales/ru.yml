@@ -200,15 +200,19 @@ ru:
         equal_to: "может иметь лишь значение, равное %{count}"
         less_than: "может иметь значение меньшее чем %{count}"
         less_than_or_equal_to: "может иметь значение меньшее или равное %{count}"
-        odd: "может иметь лишь нечетное значение"
-        even: "может иметь лишь четное значение"
+        odd: "может иметь лишь нечётное значение"
+        even: "может иметь лишь чётное значение"
         greater_than_start_date: "должна быть позднее даты начала"
         not_same_project: "не относится к одному проекту"
-        circular_dependency: "Такая связь приведет к циклической зависимости"
+        circular_dependency: "Такая связь приведёт к циклической зависимости"
         cant_link_an_issue_with_a_descendant: "Задача не может быть связана со своей подзадачей"
         earlier_than_minimum_start_date: "не может быть раньше %{date} из-за предыдущих задач"
         not_a_regexp: "не является допустимым регулярным выражением"
         open_issue_with_closed_parent: "Открытая задача не может быть добавлена к закрытой родительской задаче"
+        must_contain_uppercase: "должен содержать заглавные латинские буквы (A-Z)"
+        must_contain_lowercase: "должен содержать строчные латинские буквы (a-z)"
+        must_contain_digits: "должен содержать цифры (0-9)"
+        must_contain_special_chars: "должен содержать специальные символы (!, $, %, ...)"
 
   support:
     array:
@@ -245,7 +249,7 @@ ru:
   button_list: Список
   button_lock: Заблокировать
   button_login: Вход
-  button_log_time: Трудозатраты
+  button_log_time: Добавить трудозатраты
   button_move: Переместить
   button_quote: Цитировать
   button_rename: Переименовать
@@ -270,7 +274,7 @@ ru:
   default_doc_category_user: Пользовательская документация
   default_issue_status_in_progress: В работе
   default_issue_status_closed: Закрыта
-  default_issue_status_feedback: Обратная связь
+  default_issue_status_feedback: Нужен отклик
   default_issue_status_new: Новая
   default_issue_status_rejected: Отклонена
   default_issue_status_resolved: Решена
@@ -299,7 +303,7 @@ ru:
   error_scm_command_failed: "Ошибка доступа к хранилищу: %{value}"
   error_scm_not_found: Хранилище не содержит записи и/или исправления.
   error_unable_to_connect: Невозможно подключиться (%{value})
-  error_unable_delete_issue_status: Невозможно удалить статус задачи
+  error_unable_delete_issue_status: Невозможно удалить статус задачи (%{value})
 
   field_account: Учётная запись
   field_activity: Деятельность
@@ -338,7 +342,6 @@ ru:
   field_host: Компьютер
   field_hours: час(а,ов)
   field_identifier: Уникальный идентификатор
-  field_identity_url: OpenID URL
   field_is_closed: Задача закрыта
   field_is_default: Значение по умолчанию
   field_is_filter: Используется в качестве фильтра
@@ -413,7 +416,6 @@ ru:
   label_administration: Администрирование
   label_age: Возраст
   label_ago: дней(я) назад
-  label_all_time: всё время
   label_all_words: Все слова
   label_all: все
   label_and_its_subprojects: "%{value} и все подпроекты"
@@ -440,8 +442,6 @@ ru:
   label_browse: Обзор
   label_bulk_edit_selected_issues: Редактировать все выбранные задачи
   label_calendar: Календарь
-  label_calendar_filter: Включая
-  label_calendar_no_assigned: не мои
   label_change_plural: Правки
   label_change_properties: Изменить свойства
   label_change_status: Изменить статус
@@ -558,7 +558,6 @@ ru:
   label_loading: Загрузка...
   label_logged_as: Вошли как
   label_login: Войти
-  label_login_with_open_id_option: или войти с помощью OpenID
   label_logout: Выйти
   label_max_size: Максимальный размер
   label_member_new: Новый участник
@@ -599,12 +598,10 @@ ru:
   label_open_issues_plural5: открыто
   label_optional_description: Описание (необязательно)
   label_options: Опции
-  label_overall_activity: Сводный отчёт действий
   label_overview: Обзор
   label_password_lost: Восстановление пароля
   label_permissions_report: Отчёт по правам доступа
   label_permissions: Права доступа
-  label_please_login: Пожалуйста, войдите.
   label_plugins: Модули
   label_precedes: следующая
   label_preferences: Предпочтения
@@ -677,7 +674,6 @@ ru:
   label_this_week: на этой неделе
   label_this_year: этот год
   label_time_tracking: Учёт времени
-  label_timelog_today: Расход времени на сегодня
   label_today: сегодня
   label_topic_plural: Темы
   label_total: Всего
@@ -764,7 +760,6 @@ ru:
   notice_feeds_access_key_reseted: Ваш ключ доступа Atom был сброшен.
   notice_file_not_found: Страница, на которую Вы пытаетесь зайти, не существует или удалена.
   notice_locking_conflict: Информация обновлена другим пользователем.
-  notice_no_issue_selected: "Не выбрано ни одной задачи! Пожалуйста, отметьте задачи, которые Вы хотите отредактировать."
   notice_not_authorized: У Вас нет прав для посещения данной страницы.
   notice_successful_connection: Подключение успешно установлено.
   notice_successful_create: Создание успешно.
@@ -809,7 +804,6 @@ ru:
   permission_manage_subtasks: Управление подзадачами
   permission_manage_versions: Управление версиями
   permission_manage_wiki: Управление Wiki
-  permission_move_issues: Перенос задач
   permission_protect_wiki_pages: Блокирование wiki-страниц
   permission_rename_wiki_pages: Переименование wiki-страниц
   permission_save_queries: Сохранение запросов
@@ -835,12 +829,10 @@ ru:
   project_module_calendar: Календарь
 
   setting_activity_days_default: Количество дней, отображаемых в Действиях
-  setting_app_subtitle: Подзаголовок приложения
   setting_app_title: Название приложения
   setting_attachment_max_size: Максимальный размер вложения
   setting_autofetch_changesets: Автоматически следить за изменениями хранилища
   setting_autologin: Автоматический вход
-  setting_bcc_recipients: Использовать скрытые копии (BCC)
   setting_cache_formatted_text: Кешировать форматированный текст
   setting_commit_fix_keywords: Назначение ключевых слов
   setting_commit_ref_keywords: Ключевые слова для поиска
@@ -863,7 +855,6 @@ ru:
   setting_mail_from: Исходящий email адрес
   setting_mail_handler_api_enabled: Включить веб-сервис для входящих сообщений
   setting_mail_handler_api_key: API ключ
-  setting_openid: Разрешить OpenID для входа и регистрации
   setting_per_page_options: Количество записей на страницу
   setting_plain_text_mail: Только простой текст (без HTML)
   setting_protocol: Протокол
@@ -907,14 +898,13 @@ ru:
   text_journal_set_to: "Параметр %{label} изменился на %{value}"
   text_length_between: "Длина между %{min} и %{max} символов."
   text_load_default_configuration: Загрузить конфигурацию по умолчанию
-  text_min_max_length_info: 0 означает отсутствие ограничений
   text_no_configuration_data: "Роли, трекеры, статусы задач и оперативный план не были сконфигурированы.\nНастоятельно рекомендуется загрузить конфигурацию по-умолчанию. Вы сможете её изменить потом."
   text_plugin_assets_writable: Каталог ресурсов модулей доступен для записи
   text_project_destroy_confirmation: Вы настаиваете на удалении данного проекта и всей относящейся к нему информации?
   text_reassign_time_entries: 'Перенести зарегистрированное время на следующую задачу:'
   text_regexp_info: "например: ^[A-Z0-9]+$"
   text_repository_usernames_mapping: "Выберите или обновите пользователя Redmine, связанного с найденными именами в журнале хранилища.\nПользователи с одинаковыми именами или email в Redmine и хранилище связываются автоматически."
-  text_rmagick_available: Доступно использование RMagick (опционально)
+  text_minimagick_available: Доступно использование MiniMagick (опционально)
   text_select_mail_notifications: Выберите действия, при которых будет отсылаться уведомление на электронную почту.
   text_select_project_modules: 'Выберите модули, которые будут использованы в проекте:'
   text_status_changed_by_changeset: "Реализовано в %{value} редакции."
@@ -923,9 +913,10 @@ ru:
   text_tip_issue_begin_end_day: начало задачи и окончание её в этот же день
   text_tip_issue_end_day: дата завершения задачи
   text_tracker_no_workflow: Для этого трекера последовательность действий не определена
-  text_unallowed_characters: Запрещенные символы
+  text_unallowed_characters: Запрещённые символы
   text_user_mail_option: "Для невыбранных проектов, Вы будете получать уведомления только о том, что просматриваете или в чем участвуете (например, задачи, автором которых Вы являетесь, или которые Вам назначены)."
   text_user_wrote: "%{value} писал(а):"
+  text_user_wrote_in: "%{value} писал(а) (%{link}):"
   text_wiki_destroy_confirmation: Вы уверены, что хотите удалить данную Wiki и все её содержимое?
   text_workflow_edit: Выберите роль и трекер для редактирования последовательности состояний
 
@@ -972,7 +963,6 @@ ru:
   label_version_sharing_tree: С деревом проектов
   label_version_sharing_none: Без совместного использования
   error_can_not_archive_project: Этот проект не может быть заархивирован
-  button_duplicate: Дублировать
   button_copy_and_follow: Копировать и продолжить
   label_copy_source: Источник
   setting_issue_done_ratio:  Рассчитывать готовность задачи с помощью поля
@@ -1011,7 +1001,6 @@ ru:
   text_zoom_out: Отдалить
   text_zoom_in: Приблизить
   notice_unable_delete_time_entry: Невозможно удалить запись журнала.
-  label_overall_spent_time: Всего трудозатрат
   label_user_mail_option_none: Нет событий
   field_member_of_group: Группа назначенного
   field_assigned_to_role: Роль назначенного
@@ -1102,27 +1091,26 @@ ru:
   label_copy_attachments: Копировать вложения
   label_item_position: "%{position}/%{count}"
   label_completed_versions: Завершенные версии
-  text_project_identifier_info: Допускаются только строчные латинские буквы (a-z), цифры, тире и подчеркивания.<br />После сохранения идентификатор изменить нельзя.
+  text_project_identifier_info: Допускаются только строчные латинские буквы (a-z), цифры, дефисы и подчёркивания.<br />После сохранения идентификатор изменить нельзя.
   field_multiple: Множественные значения
   setting_commit_cross_project_ref: Разрешить ссылаться и исправлять задачи во всех остальных проектах
   text_issue_conflict_resolution_add_notes: Добавить мои примечания и отказаться от моих изменений
   text_issue_conflict_resolution_overwrite: Применить мои изменения (все предыдущие замечания будут сохранены, но некоторые изменения могут быть перезаписаны)
-  notice_issue_update_conflict: Кто-то изменил задачу, пока вы ее редактировали.
+  notice_issue_update_conflict: Кто-то изменил задачу, пока вы её редактировали.
   text_issue_conflict_resolution_cancel: Отменить мои изменения и показать задачу заново %{link}
   permission_manage_related_issues: Управление связанными задачами
   field_auth_source_ldap_filter: Фильтр LDAP
   label_search_for_watchers: Найти наблюдателей
-  notice_account_deleted: "Ваша учетная запись полностью удалена"
-  setting_unsubscribe: "Разрешить пользователям удалять свои учетные записи"
-  button_delete_my_account: "Удалить мою учетную запись"
-  text_account_destroy_confirmation: "Ваша учетная запись будет полностью удалена без возможности восстановления.\nВы уверены, что хотите продолжить?"
-  error_session_expired: Срок вашей сессии истек. Пожалуйста войдите еще раз
+  notice_account_deleted: "Ваша учётная запись полностью удалена"
+  setting_unsubscribe: "Разрешить пользователям удалять свои учётные записи"
+  button_delete_my_account: "Удалить мою учётную запись"
+  text_account_destroy_confirmation: "Ваша учётная запись будет полностью удалена без возможности восстановления.\nВы уверены, что хотите продолжить?"
+  error_session_expired: Срок вашей сессии истёк. Пожалуйста войдите ещё раз
   text_session_expiration_settings: "Внимание! Изменение этих настроек может привести к завершению текущих сессий, включая вашу."
   setting_session_lifetime: Максимальная продолжительность сессии
   setting_session_timeout: Таймаут сессии
   label_session_expiration: Срок истечения сессии
   permission_close_project: Закрывать / открывать проекты
-  label_show_closed_projects: Просматривать закрытые проекты
   button_close: Сделать закрытым
   button_reopen: Сделать открытым
   project_status_active: открытые
@@ -1138,7 +1126,7 @@ ru:
   label_fields_permissions: Права на изменения полей
   label_readonly: Не изменяется
   label_required: Обязательное
-  text_repository_identifier_info: Допускаются только строчные латинские буквы (a-z), цифры, тире и подчеркивания.<br />После сохранения идентификатор изменить нельзя.
+  text_repository_identifier_info: Допускаются только строчные латинские буквы (a-z), цифры, дефисы и подчёркивания.<br />После сохранения идентификатор изменить нельзя.
   field_board_parent: Родительский форум
   label_attribute_of_project: Проект %{name}
   label_attribute_of_author: Имя автора %{name}
@@ -1166,7 +1154,7 @@ ru:
   label_cross_project_system: Со всеми проектами
   button_hide: Скрыть
   setting_non_working_week_days: Нерабочие дни
-  label_in_the_next_days: в средующие дни
+  label_in_the_next_days: в следующие дни
   label_in_the_past_days: в прошлые дни
   label_attribute_of_user: Пользователь %{name}
   text_turning_multiple_off: Если отключить множественные значения, лишние значения из списка будут удалены, чтобы осталось только по одному значению.
@@ -1181,9 +1169,9 @@ ru:
   field_generate_password: Создание пароля
   setting_default_projects_tracker_ids: Трекеры по умолчанию для новых проектов
   label_total_time: Общее время
-  notice_account_not_activated_yet: Вы пока не имеете активированных учетных записей.
+  notice_account_not_activated_yet: Вы пока не имеете активированных учётных записей.
     Чтобы получить письмо с активацией, перейдите по <a href="%{url}">ссылке</a>.
-  notice_account_locked: Ваша учетная запись заблокирована.
+  notice_account_locked: Ваша учётная запись заблокирована.
   label_hidden: Скрытый
   label_visibility_private: только мне
   label_visibility_roles: только этим ролям
@@ -1246,7 +1234,7 @@ ru:
   notice_import_finished: "%{count} элемент(а, ов) были импортированы"
   notice_import_finished_with_errors: "%{count} из %{total} элемент(а, ов) не могут быть импортированы"
   error_invalid_file_encoding: Кодировка файла не соответствует выбранной %{encoding}
-  error_invalid_csv_file_or_settings: Файл не является файлом CSV или не соответствует представленным настройкам
+  error_invalid_csv_file_or_settings: Файл не является файлом CSV или не соответствует представленным настройкам (%{value})
   error_can_not_read_import_file: Во время чтения файла для импорта произошла ошибка
   permission_import_issues: Импорт задач
   label_import_issues: Импорт задач
@@ -1308,7 +1296,7 @@ ru:
   setting_timespan_format: Формат промежутка времени
   label_table_of_contents: Содержание
   setting_commit_logs_formatting: Использовать форматирование текста для комментариев хранилища
-  setting_mail_handler_enable_regex_delimiters: Использовать регулярные выражения
+  setting_mail_handler_enable_regex: Использовать регулярные выражения
   error_move_of_child_not_possible: 'Подзадача %{child} не может быть перемещена в новый
     project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Затраченное время не может быть переназначено на задачу, которая будет удалена
@@ -1327,3 +1315,209 @@ ru:
   permission_view_news: Просмотр новостей
   label_no_preview_alternative_html: Предпросмотр недоступен. %{link} файл.
   label_no_preview_download: Скачать
+  setting_close_duplicate_issues: Закрывать дубликаты задач автоматически
+  error_exceeds_maximum_hours_per_day: Не удается зарегистрировать больше %{max_hours} часов в один день (%{logged_hours} часов уже зарегистрированы)
+  setting_time_entry_list_defaults: Список трудозатрат по умолчанию
+  setting_timelog_accept_0_hours: Принимать трудозатраты с 0 часов
+  setting_timelog_max_hours_per_day: Максимальное количество часов, которое может быть зарегистрировано в день одним пользователем
+  label_x_revisions: "%{count} изменени(я, ий)"
+  error_can_not_delete_auth_source: Этот режим аутентификации используется и не может быть удален.
+  button_actions: Действия
+  mail_body_lost_password_validity: Помните, вы можете изменить пароль только один раз, используя эту ссылку.
+  text_login_required_html: Если аутентификация не требуется, публичные проекты и их содержимое в свободном доступе. Вы можете <a href="%{anonymous_role_path}">редактировать соответствующие разрешения</a>.
+  label_login_required_yes: 'Да'
+  label_login_required_no: Нет, разрешить свободный доступ к публичным проектам.
+  text_project_is_public_non_member: Публичные проекты и их содержимое доступны всем зарегистрированным пользователям.
+  text_project_is_public_anonymous: Публичные проекты и их содержимое в свободном доступе.
+  label_version_and_files: Версии (%{count}) и файлы
+  label_ldap: LDAP
+  label_ldaps_verify_none: LDAPS (без проверки сертификата)
+  label_ldaps_verify_peer: LDAPS
+  label_ldaps_warning: Рекомендуется использовать зашифрованное соединение LDAPS с проверкой сертификата для предотвращения любых посторонних вмешательств в процессе аутентификации.
+  label_nothing_to_preview: Нет данных для предварительного просмотра
+  error_token_expired: Срок действия этой ссылки восстановления пароля истёк. Пожалуйста, попробуйте снова.
+  error_spent_on_future_date: Нельзя учитывать время в будущие даты
+  setting_timelog_accept_future_dates: Принимать трудозатраты на будущие даты
+  label_delete_link_to_subtask: Удалить связь
+  error_not_allowed_to_log_time_for_other_users: Вам не разрешено учитывать время для других пользователей
+  permission_log_time_for_other_users: Учитывать время других пользователей
+  label_tomorrow: завтра
+  label_next_week: следующая неделя
+  label_next_month: следующий месяц
+  text_role_no_workflow: Эта роль не имеет заданных последовательностей действий
+  text_status_no_workflow: Ни один трекер не использует этот стутус в последовательностях действий
+  setting_mail_handler_preferred_body_part: Предпочитаемая часть multipart (HTML) писем
+  setting_show_status_changes_in_mail_subject: Включать изменения статуса задачи в уведомления по email
+  label_inherited_from_parent_project: Наследуется из родительского проекта
+  label_inherited_from_group: Наследуется из группы %{name}
+  label_trackers_description: Описание трекеров
+  label_open_trackers_description: Показать описания трекеров
+  label_preferred_body_part_text: Текст
+  label_preferred_body_part_html: HTML (экспериментально)
+  field_parent_issue_subject: Тема родительской задачи
+  permission_edit_own_issues: Редактировать свои задачи
+  text_select_apply_tracker: Выбор этого трекера
+  label_updated_issues: Обновленные задачи
+  text_avatar_server_config_html: Текущий сервер аватар — <a href="%{url}">%{url}</a>.
+    Вы можете изменить его в config/configuration.yml.
+  setting_gantt_months_limit: Максимальное число месяцев на диаграмме Ганта
+  permission_import_time_entries: Импорт трудозатрат
+  label_import_notifications: Послать уведомления по email в течение импорта
+  text_gs_available: Доступно использование ImageMagick PDF (опционально)
+  field_recently_used_projects: Число последних проектов в выпадающем списке
+  label_optgroup_bookmarks: Закладки
+  label_optgroup_others: Другие проекты
+  label_optgroup_recents: Последние
+  button_project_bookmark: Добавить закладку
+  button_project_bookmark_delete: Удалить закладку
+  field_history_default_tab: Вкладка истории задачи по умолчанию
+  label_issue_history_properties: Изменения свойств
+  label_issue_history_notes: Примечания
+  label_last_tab_visited: Последняя посещённая вкладка
+  field_unique_id: Уникальный идентификатор
+  text_no_subject: Нет темы
+  setting_password_required_char_classes: Требуемые классы символов для паролей
+  label_password_char_class_uppercase: заглавные буквы
+  label_password_char_class_lowercase: строчные буквы
+  label_password_char_class_digits: цифры
+  label_password_char_class_special_chars: специальные символы
+  text_characters_must_contain: Должен содержать %{character_classes}.
+  label_starts_with: начинается с
+  label_ends_with: заканчивается на
+  label_issue_fixed_version_updated: Версии обновлены
+  setting_project_list_defaults: Опции списка проектов по умолчанию
+  label_display_type: Отображать как
+  label_display_type_list: Список
+  label_display_type_board: Панель
+  label_my_bookmarks: Мои закладки
+  label_import_time_entries: Импорт трудозатрат
+  field_toolbar_language_options: Список языков на панели инструментов "Подсветка кода"
+  label_user_mail_notify_about_high_priority_issues_html: Также уведомлять меня о задачах
+    с приоритетом <em>%{prio}</em> или выше
+  label_assign_to_me: Назначить мне
+  notice_issue_not_closable_by_open_tasks: Эта задача не может быть закрыта, так как у
+    неё есть открытые подзадачи.
+  notice_issue_not_closable_by_blocking_issue: Эта задача не может быть закрыта, так как
+    есть открытые блокирующие её задачи.
+  notice_issue_not_reopenable_by_closed_parent_issue: Эта задача не может быть открыта
+    снова, так как её родительская задача закрыта.
+  error_bulk_download_size_too_big: Эти файлы не могут быть загружены одновременно, так как их суммарный объём превышает допустимый максимум (%{max_size})
+  setting_bulk_download_max_size: Максимальный суммарный объём для одновременной загрузки
+  label_download_all_attachments: Загрузить все файлы
+  error_attachments_too_many: Этот файл не будет загружен, так как превышено максимальное
+    количество одновременно загружаемых файлов (%{max_number_of_files})
+  setting_email_domains_allowed: Разрешённые email домены
+  setting_email_domains_denied: Запрещённые email домены
+  field_passwd_changed_on: Последний раз пароль был изменён
+  label_relations_mapping: Связанные задачи
+  label_import_users: Импорт пользователей
+  label_days_to_html: "%{days} дней до %{date}"
+  setting_twofa: Двухфакторная аутентификация
+  label_optional: необязательно
+  label_required_lower: обязательно
+  button_disable: Отключить
+  twofa__totp__name: Приложение аутентификации
+  twofa__totp__text_pairing_info_html: Отсканируйте этот QR-код или введите текстовый ключ
+    в приложение TOTP (например, <a href="https://support.google.com/accounts/answer/1066447">Google
+    Authenticator</a>, <a href="https://authy.com/download/">Authy</a>, <a href="https://guide.duo.com/third-party-accounts">Duo
+    Mobile</a>) и введите код в поле ниже, чтобы активировать двухфакторную аутентификацию.
+  twofa__totp__label_plain_text_key: Простой текстовый ключ
+  twofa__totp__label_activate: Включить приложение аутентификации
+  twofa_currently_active: 'Активная аутентификация: %{twofa_scheme_name}'
+  twofa_not_active: Не активирован
+  twofa_label_code: Код
+  twofa_hint_disabled_html: Настройка <strong>%{label}</strong> отключит двухфакторную аутентификацию для всех пользователей.
+  twofa_hint_required_html: Настройка <strong>%{label}</strong> потребует всех пользователей
+    для настройки двухфакторной аутентификации при следующем входе в систему.
+  twofa_label_setup: Активация двухфакторной аутентификации
+  twofa_label_deactivation_confirmation: Отключение двухфакторной аутентификации
+  twofa_notice_select: 'Выберите двухфакторную схему, которую вы хотите использовать:'
+  twofa_warning_require: Администратор требует, чтобы вы включили двухфакторную аутентификацию.
+  twofa_activated: Двухфакторная аутентификация успешно включена. Рекомендуется <a data-method="post" href="%{bc_path}">сгенерировать резервные коды</a> для вашего профиля.
+  twofa_deactivated: Двухфакторная аутентификация отключена.
+  twofa_mail_body_security_notification_paired: Двухфакторная аутентификация успешно активирована с помощью %{field}.
+  twofa_mail_body_security_notification_unpaired: Двухфакторная аутентификация отключена для вашей учетной записи.
+  twofa_mail_body_backup_codes_generated: Созданы новые резервные коды двухфакторной аутентификации.
+  twofa_mail_body_backup_code_used: Был использован резервный код двухфакторной аутентификации.
+  twofa_invalid_code: Код недействителен или устарел.
+  twofa_label_enter_otp: Пожалуйста, введите свой код двухфакторной аутентификации.
+  twofa_too_many_tries: Слишком много попыток.
+  twofa_resend_code: Отправить код еще раз
+  twofa_code_sent: Вам был отправлен код аутентификации.
+  twofa_generate_backup_codes: Сгенерировать резервные коды
+  twofa_text_generate_backup_codes_confirmation: Это действие аннулирует все существующие резервные коды и сгенерирует
+    новые. Вы хотите продолжить?
+  twofa_notice_backup_codes_generated: Ваши резервные коды созданы.
+  twofa_warning_backup_codes_generated_invalidated: Созданы новые резервные коды.
+    Ваши существующие коды от %{time} теперь недействительны.
+  twofa_label_backup_codes: Резервные коды двухфакторной аутентификации
+  twofa_text_backup_codes_hint: Используйте эти коды вместо одноразового пароля, если у вас нет доступа ко второму
+    фактору. Каждый код можно использовать только один раз. Рекомендуется распечатать и сохранить эти коды в надежном месте.
+  twofa_text_backup_codes_created_at: Созданы резервные коды %{datetime}.
+  twofa_backup_codes_already_shown: Резервные коды не могут быть показаны снова, пожалуйста, <a data-method="post"
+    href="%{bc_path}">сгенерируйте новые резервные коды</a> при необходимости.
+  error_can_not_execute_macro_html: Ошибка при выполнении макроса <strong>%{name}</strong>
+    (%{error})
+  error_macro_does_not_accept_block: Этот макрос не принимает текстовый блок
+  error_childpages_macro_no_argument: Без аргумента этот макрос можно вызывать только из wiki страницы.
+  error_circular_inclusion: Обнаружено циклическое включение
+  error_page_not_found: Страница не найдена
+  error_filename_required: Требуется имя файла
+  error_invalid_size_parameter: Неверный параметр размера
+  error_attachment_not_found: Прикрепленный файл %{name} не найден
+  permission_delete_project: Удалить проект
+  field_twofa_scheme: Схема двухфакторной аутентификации
+  text_user_destroy_confirmation: Вы действительно хотите безвозвратно удалить этого пользователя и удалить все ссылки на него?
+    Часто блокировка пользователя - лучшее решение, чем его удаление. Для подтверждения введите логин (%{login}) ниже.
+  text_project_destroy_enter_identifier: Для подтверждения введите идентификатор проекта
+    (%{identifier}) ниже.
+  button_add_subtask: Добавить подзадачу
+  notice_invalid_watcher: 'Недействительный наблюдатель: пользователь не будет получать никаких уведомлений, потому что у него нет доступа к этому объекту.'
+  button_fetch_changesets: Получить изменения
+  permission_view_message_watchers: Просмотр списка наблюдателей сообщений
+  permission_add_message_watchers: Добавление наблюдателей сообщений
+  permission_delete_message_watchers: Удаление наблюдателей сообщений
+  label_message_watchers: Наблюдатели сообщений
+  button_copy_link: Копировать ссылку
+  error_invalid_authenticity_token: Недействительный токен аутентификации.
+  error_query_statement_invalid: Ошибка при выполнении запроса была зарегистрирована.
+    Сообщите об этой ошибке администратору Redmine.
+  permission_view_wiki_page_watchers: Просмотр списка наблюдателей wiki-страниц
+  permission_add_wiki_page_watchers: Добавление наблюдателей wiki-страниц
+  permission_delete_wiki_page_watchers: Удаление наблюдателей wiki-страниц
+  label_wiki_page_watchers: Наблюдатели
+  label_attachment_description: Описание файла
+  error_no_data_in_file: Данный файл не содержит данных
+  field_twofa_required: Требовать двухфакторной аутентификации
+  twofa_hint_optional_html: Настройка <strong>%{label}</strong> разрешает пользователям
+    настраивать двухфакторную аутентификацию по желанию, если это не требуется их группой.
+  twofa_text_group_required: Данная настройка используется только тогда, когда двухфакторная
+    аутентификация является необязательной. В данный момент двухфакторная аутентификация
+    обязательна для всех пользователей.
+  twofa_text_group_disabled: Данная настройка используется только тогда, когда двухфакторная
+    аутентификация является необязательной. В данный момент двухфакторная аутентификация
+    отключена.
+  field_default_issue_query: Задачи по умолчанию
+  label_default_queries:
+    for_all_projects: Для всех проектов
+    for_current_project: Для текущего проекта
+    for_all_users: Для всех пользователей
+    for_this_user: For this user
+  text_allowed_queries_to_select: Выбор производится из публичных запросов (видимых для всех пользователей)
+  text_all_migrations_have_been_run: Миграция база данных полностью выполнена
+  button_save_object: Записать %{object_name}
+  button_edit_object: Изменить %{object_name}
+  button_delete_object: Удалить %{object_name}
+  text_setting_config_change: Вы можете настроить поведение в файле config/configuration.yml.
+    Пожалуйста, перезапустите приложение после редактирования этого файла.
+  label_bulk_edit: Массовое редактирование
+  button_create_and_follow: Создать и перейти
+  label_subtask: Подзадача
+  label_default_query: Запрос по умолчанию
+  field_default_project_query: Проекты по умолчанию
+  label_required_administrators: обязательна для администраторов
+  twofa_hint_required_administrators_html: Настройка <strong>%{label}</strong> ведёт себя
+    аналогично необязательной двухфакторной аутентификации, однако администраторам
+    потребуется включить двухфакторную аутентификацию при следующем входе.
+  label_auto_watch_on: Следить автоматически
+  label_auto_watch_on_issue_contributed_to: За задачами, в которых я принимаю участие

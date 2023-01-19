@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,10 +17,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-module Redmine #:nodoc:
-  module CoreExtensions #:nodoc:
-    module String #:nodoc:
+module Redmine
+  # @private
+  module CoreExt
+    # @private
+    module String
       # Custom string conversions
+      # @private
       module Conversions
         # Parses hours format and returns a float
         def to_hours
@@ -28,12 +33,12 @@ module Redmine #:nodoc:
             s = $1
           else
             # 2:30 => 2.5
-            s.gsub!(%r{^(\d+):(\d+)$}) { $1.to_i + $2.to_i / 60.0 }
+            s.gsub!(%r{^(\d+):(\d+)$}) {$1.to_i + $2.to_i / 60.0}
             # 2h30, 2h, 30m => 2.5, 2, 0.5
-            s.gsub!(%r{^((\d+)\s*(h|hours?))?\s*((\d+)\s*(m|min)?)?$}i) { |m| ($1 || $4) ? ($2.to_i + $5.to_i / 60.0) : m[0] }
+            s.gsub!(%r{^((\d+)\s*(h|hours?))?\s*((\d+)\s*(m|min)?)?$}i) {|m| ($1 || $4) ? ($2.to_i + $5.to_i / 60.0) : m[0]}
           end
           # 2,5 => 2.5
-          s.gsub!(',', '.')
+          s.tr!(',', '.')
           begin; Kernel.Float(s); rescue; nil; end
         end
       end

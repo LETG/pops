@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,7 +35,7 @@ module Redmine
           c.iv = iv
           e = c.update(text.to_s)
           e << c.final
-          "aes-256-cbc:" + [e, iv].map {|v| Base64.encode64(v).strip}.join('--')
+          "aes-256-cbc:" + [e, iv].map {|v| Base64.strict_encode64(v)}.join('--')
         end
       end
 
@@ -72,7 +74,7 @@ module Redmine
           all.each do |object|
             clear = object.send(attribute)
             object.send "#{attribute}=", clear
-            raise(ActiveRecord::Rollback) unless object.save(:validation => false)
+            raise(ActiveRecord::Rollback) unless object.save(validate: false)
           end
         end ? true : false
       end
@@ -82,7 +84,7 @@ module Redmine
           all.each do |object|
             clear = object.send(attribute)
             object.send :write_attribute, attribute, clear
-            raise(ActiveRecord::Rollback) unless object.save(:validation => false)
+            raise(ActiveRecord::Rollback) unless object.save(validate: false)
           end
         end ? true : false
       end

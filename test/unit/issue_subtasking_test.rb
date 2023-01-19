@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,6 +26,10 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
            :issues,
            :enabled_modules,
            :workflows
+
+  def setup
+    User.current = nil
+  end
 
   def test_leaf_planning_fields_should_be_editable
     issue = Issue.generate!
@@ -157,6 +163,17 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
     end
   end
 
+  def test_parent_done_ratio_should_be_rounded_down_to_the_nearest_integer
+    with_settings :parent_issue_done_ratio => 'derived' do
+      parent = Issue.generate!
+      parent.generate_child!(:done_ratio => 20)
+      parent.generate_child!(:done_ratio => 20)
+      parent.generate_child!(:done_ratio => 10)
+      # (20 + 20 + 10) / 3 = 16.666...
+      assert_equal 16, parent.reload.done_ratio
+    end
+  end
+
   def test_parent_done_ratio_should_be_weighted_by_estimated_times_if_any
     with_settings :parent_issue_done_ratio => 'derived' do
       parent = Issue.generate!
@@ -224,6 +241,23 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
     end
   end
 
+  def test_done_ratio_of_parent_with_completed_children_should_not_be_99
+    with_settings :parent_issue_done_ratio => 'derived' do
+      parent1 = Issue.generate!
+      parent1.generate_child!(:estimated_hours => 8.0, :done_ratio => 100)
+      parent1.generate_child!(:estimated_hours => 8.1, :done_ratio => 100)
+      # (8.0 * 100 + 8.1 * 100) / (8.0 + 8.1) => 99.99999999999999
+      assert_equal 100, parent1.reload.done_ratio
+
+      parent2 = Issue.generate!
+      parent2.generate_child!(:estimated_hours => 9.0, :done_ratio => 100)
+      10.times do
+        parent2.generate_child!(:estimated_hours => 10.0, :done_ratio => 100)
+      end
+      assert_equal 100, parent2.reload.done_ratio
+    end
+  end
+
   def test_changing_parent_should_update_previous_parent_done_ratio
     with_settings :parent_issue_done_ratio => 'derived' do
       first_parent = Issue.generate!
@@ -232,7 +266,7 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
       child = first_parent.generate_child!(:done_ratio => 20)
       assert_equal 30, first_parent.reload.done_ratio
       assert_equal 0, second_parent.reload.done_ratio
-      child.update_attributes(:parent_issue_id => second_parent.id)
+      child.update(:parent_issue_id => second_parent.id)
       assert_equal 40,  first_parent.reload.done_ratio
       assert_equal 20, second_parent.reload.done_ratio
     end
@@ -250,6 +284,7 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
     with_settings :issue_done_ratio => 'issue_status' do
       status = IssueStatus.find(4)
       status.update_attribute :default_done_ratio, 50
+      child1.reload
       child1.update_attribute :status, status
 
       assert_equal 50, child1.done_ratio
@@ -321,13 +356,16 @@ class IssueSubtaskingTest < ActiveSupport::TestCase
     end
   end
 
-  def test_parent_total_estimated_hours_should_be_sum_of_descendants
+  def test_parent_total_estimated_hours_should_be_sum_of_visible_descendants
     parent = Issue.generate!
     parent.generate_child!(:estimated_hours => nil)
     assert_equal 0, parent.reload.total_estimated_hours
     parent.generate_child!(:estimated_hours => 5)
     assert_equal 5, parent.reload.total_estimated_hours
     parent.generate_child!(:estimated_hours => 7)
+    assert_equal 12, parent.reload.total_estimated_hours
+
+    parent.generate_child!(:estimated_hours => 9, :is_private => true)
     assert_equal 12, parent.reload.total_estimated_hours
   end
 

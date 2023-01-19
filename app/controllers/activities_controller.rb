@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,8 +19,8 @@
 
 class ActivitiesController < ApplicationController
   menu_item :activity
-  before_action :find_optional_project
-  accept_rss_auth :index
+  before_action :find_optional_project_by_id, :authorize_global
+  accept_atom_auth :index
 
   def index
     @days = Setting.activity_days_default.to_i
@@ -31,7 +33,7 @@ class ActivitiesController < ApplicationController
     @date_from = @date_to - @days
     @with_subprojects = params[:with_subprojects].nil? ? Setting.display_subprojects_issues? : (params[:with_subprojects] == '1')
     if params[:user_id].present?
-      @author = User.active.find(params[:user_id])
+      @author = User.visible.active.find(params[:user_id])
     end
 
     @activity = Redmine::Activity::Fetcher.new(User.current, :project => @project,
@@ -53,15 +55,20 @@ class ActivitiesController < ApplicationController
       end
     end
 
-    events = @activity.events(@date_from, @date_to)
+    events =
+      if params[:format] == 'atom'
+        @activity.events(nil, nil, :limit => Setting.feeds_limit.to_i)
+      else
+        @activity.events(@date_from, @date_to)
+      end
 
     if events.empty? || stale?(:etag => [@activity.scope, @date_to, @date_from, @with_subprojects, @author, events.first, events.size, User.current, current_language])
       respond_to do |format|
-        format.html {
+        format.html do
           @events_by_day = events.group_by {|event| User.current.time_to_date(event.event_datetime)}
           render :layout => false if request.xhr?
-        }
-        format.atom {
+        end
+        format.atom do
           title = l(:label_activity)
           if @author
             title = @author.name
@@ -69,21 +76,10 @@ class ActivitiesController < ApplicationController
             title = l("label_#{@activity.scope.first.singularize}_plural")
           end
           render_feed(events, :title => "#{@project || Setting.app_title}: #{title}")
-        }
+        end
       end
     end
 
-  rescue ActiveRecord::RecordNotFound
-    render_404
-  end
-
-  private
-
-  # TODO: refactor, duplicated in projects_controller
-  def find_optional_project
-    return true unless params[:id]
-    @project = Project.find(params[:id])
-    authorize
   rescue ActiveRecord::RecordNotFound
     render_404
   end

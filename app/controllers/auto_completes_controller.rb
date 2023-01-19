@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,26 +21,43 @@ class AutoCompletesController < ApplicationController
   before_action :find_project
 
   def issues
-    @issues = []
+    issues = []
     q = (params[:q] || params[:term]).to_s.strip
     status = params[:status].to_s
     issue_id = params[:issue_id].to_s
-    if q.present?
-      scope = Issue.cross_project_scope(@project, params[:scope]).visible
-      if status.present?
-        scope = scope.open(status == 'o')
-      end
-      if issue_id.present?
-        scope = scope.where.not(:id => issue_id.to_i)
-      end
-      if q.match(/\A#?(\d+)\z/)
-        @issues << scope.find_by_id($1.to_i)
-      end
 
-      @issues += scope.like(q).order(:id => :desc).limit(10).to_a
-      @issues.compact!
+    scope = Issue.cross_project_scope(@project, params[:scope]).visible
+    scope = scope.open(status == 'o') if status.present?
+    scope = scope.where.not(:id => issue_id.to_i) if issue_id.present?
+    if q.present?
+      if q =~ /\A#?(\d+)\z/
+        issues << scope.find_by(:id => $1.to_i)
+      end
+      issues += scope.like(q).order(:id => :desc).limit(10).to_a
+      issues.compact!
+    else
+      issues += scope.order(:id => :desc).limit(10).to_a
     end
-    render :layout => false
+
+    render :json => format_issues_json(issues)
+  end
+
+  def wiki_pages
+    q = params[:q].to_s.strip
+    wiki = Wiki.find_by(project: @project)
+    if wiki.nil? || !User.current.allowed_to?(:view_wiki_pages, @project)
+      render json: []
+      return
+    end
+
+    scope = wiki.pages.reorder(id: :desc)
+    wiki_pages =
+      if q.present?
+        scope.where("LOWER(#{WikiPage.table_name}.title) LIKE LOWER(?)", "%#{q}%").limit(10).to_a
+      else
+        scope.limit(10).to_a
+      end
+    render json: format_wiki_pages_json(wiki_pages)
   end
 
   private
@@ -49,5 +68,25 @@ class AutoCompletesController < ApplicationController
     end
   rescue ActiveRecord::RecordNotFound
     render_404
+  end
+
+  def format_issues_json(issues)
+    issues.map do |issue|
+      {
+        'id' => issue.id,
+        'label' => "#{issue.tracker} ##{issue.id}: #{issue.subject.to_s.truncate(255)}",
+        'value' => issue.id
+      }
+    end
+  end
+
+  def format_wiki_pages_json(wiki_pages)
+    wiki_pages.map do |wiki_page|
+      {
+        'id' => wiki_page.id,
+        'label' => wiki_page.title.to_s.truncate(255),
+        'value' => wiki_page.title
+      }
+    end
   end
 end

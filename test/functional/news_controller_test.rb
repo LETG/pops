@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,10 +19,10 @@
 
 require File.expand_path('../../test_helper', __FILE__)
 
-class NewsControllerTest < ActionController::TestCase
-  fixtures :projects, :users, :roles, :members, :member_roles,
+class NewsControllerTest < Redmine::ControllerTest
+  fixtures :projects, :users, :email_addresses, :roles, :members, :member_roles,
            :enabled_modules, :news, :comments,
-           :attachments
+           :attachments, :user_preferences
 
   def setup
     User.current = nil
@@ -29,28 +31,44 @@ class NewsControllerTest < ActionController::TestCase
   def test_index
     get :index
     assert_response :success
-    assert_template 'index'
-    assert_not_nil assigns(:newss)
-    assert_nil assigns(:project)
+    assert_select 'h3 a', :text => 'eCookbook first release !'
   end
 
   def test_index_with_project
-    get :index, :project_id => 1
+    get(:index, :params => {:project_id => 1})
     assert_response :success
-    assert_template 'index'
-    assert_not_nil assigns(:newss)
+    assert_select 'h3 a', :text => 'eCookbook first release !'
   end
 
   def test_index_with_invalid_project_should_respond_with_404
-    get :index, :project_id => 999
+    get(:index, :params => {:project_id => 999})
     assert_response 404
   end
 
+  def test_index_without_permission_should_fail
+    Role.all.each {|r| r.remove_permission! :view_news}
+    @request.session[:user_id] = 2
+
+    get :index
+    assert_response 403
+  end
+
+  def test_index_without_manage_news_permission_should_not_display_add_news_link
+    user = User.find(2)
+    @request.session[:user_id] = user.id
+    Role.all.each {|r| r.remove_permission! :manage_news}
+    get :index
+    assert_select '.add-news-link', count: 0
+
+    user.members.first.roles.first.add_permission! :manage_news
+    get :index
+    assert_select '.add-news-link', count: 1
+  end
+
   def test_show
-    get :show, :id => 1
+    get(:show, :params => {:id => 1})
     assert_response :success
-    assert_template 'show'
-    assert_tag :tag => 'h2', :content => /eCookbook first release/
+    assert_select 'h2', :text => 'eCookbook first release !'
   end
 
   def test_show_should_show_attachments
@@ -58,21 +76,53 @@ class NewsControllerTest < ActionController::TestCase
     attachment.container = News.find(1)
     attachment.save!
 
-    get :show, :id => 1
+    get(:show, :params => {:id => 1})
     assert_response :success
-    assert_tag 'a', :content => attachment.filename
+    assert_select 'a', :text => attachment.filename
+  end
+
+  def test_show_with_comments_in_reverse_order
+    user = User.find(1)
+    user.pref[:comments_sorting] = 'desc'
+    user.pref.save!
+
+    @request.session[:user_id] = 1
+    get(:show, :params => {:id => 1})
+    assert_response :success
+
+    comments = css_select('#comments .wiki').map(&:text).map(&:strip)
+    assert_equal ["This is an other comment", "my first comment"], comments
   end
 
   def test_show_not_found
-    get :show, :id => 999
+    get(:show, :params => {:id => 999})
     assert_response 404
   end
 
-  def test_get_new
+  def test_get_new_with_project_id
     @request.session[:user_id] = 2
-    get :new, :project_id => 1
+    get(:new, :params => {:project_id => 1})
     assert_response :success
-    assert_template 'new'
+    assert_select 'select[name=project_id]', false
+    assert_select 'input[name=?]', 'news[title]'
+  end
+
+  def test_get_new_without_project_id
+    @request.session[:user_id] = 2
+    get(:new)
+    assert_response :success
+    assert_select 'select[name=project_id]'
+    assert_select 'input[name=?]', 'news[title]'
+  end
+
+  def test_get_new_if_user_does_not_have_permission
+    @request.session[:user_id] = 2
+    User.find(2).roles.each{|u| u.remove_permission! :manage_news }
+
+    get(:new)
+    assert_response :forbidden
+    assert_select 'select[name=project_id]', false
+    assert_select 'input[name=?]', 'news[title]', count: 0
   end
 
   def test_post_create
@@ -80,9 +130,17 @@ class NewsControllerTest < ActionController::TestCase
     @request.session[:user_id] = 2
 
     with_settings :notified_events => %w(news_added) do
-      post :create, :project_id => 1, :news => { :title => 'NewsControllerTest',
-                                            :description => 'This is the description',
-                                            :summary => '' }
+      post(
+        :create,
+        :params => {
+          :project_id => 1,
+          :news => {
+            :title => 'NewsControllerTest',
+            :description => 'This is the description',
+            :summary => ''
+          }
+        }
+      )
     end
     assert_redirected_to '/projects/ecookbook/news'
 
@@ -91,46 +149,110 @@ class NewsControllerTest < ActionController::TestCase
     assert_equal 'This is the description', news.description
     assert_equal User.find(2), news.author
     assert_equal Project.find(1), news.project
-    assert_equal 1, ActionMailer::Base.deliveries.size
+    assert_equal 2, ActionMailer::Base.deliveries.size
+  end
+
+  def test_post_create_with_cross_project_param
+    ActionMailer::Base.deliveries.clear
+    @request.session[:user_id] = 2
+
+    with_settings :notified_events => %w(news_added) do
+      post(
+        :create,
+        :params => {
+          :project_id => 1,
+          :cross_project => '1',
+          :news => {
+            :title => 'NewsControllerTest',
+            :description => 'This is the description',
+            :summary => ''
+          }
+        }
+      )
+    end
+    assert_redirected_to '/news'
+
+    news = News.find_by(title: 'NewsControllerTest')
+    assert_not_nil news
+    assert_equal 'This is the description', news.description
+    assert_equal User.find(2), news.author
+    assert_equal Project.find(1), news.project
+    assert_equal 2, ActionMailer::Base.deliveries.size
   end
 
   def test_post_create_with_attachment
     set_tmp_attachments_directory
+    ActionMailer::Base.deliveries.clear
     @request.session[:user_id] = 2
     assert_difference 'News.count' do
       assert_difference 'Attachment.count' do
-        post :create, :project_id => 1,
-          :news => { :title => 'Test', :description => 'This is the description' },
-          :attachments => {'1' => {'file' => uploaded_test_file('testfile.txt', 'text/plain')}}
+        with_settings :notified_events => %w(news_added) do
+          post(
+            :create,
+            :params => {
+              :project_id => 1,
+              :news => {
+                :title => 'Test',
+                :description => 'This is the description'
+              },
+              :attachments => {
+                '1' => {
+                  'file' => uploaded_test_file('testfile.txt', 'text/plain')
+                }
+              }
+            }
+          )
+        end
       end
     end
     attachment = Attachment.order('id DESC').first
     news = News.order('id DESC').first
     assert_equal news, attachment.container
+    assert_select_email do
+      # link to the attachments download
+      assert_select 'fieldset.attachments' do
+        assert_select 'a[href=?]',
+                      "http://localhost:3000/attachments/download/#{attachment.id}/testfile.txt",
+                      :text => 'testfile.txt'
+      end
+    end
   end
 
   def test_post_create_with_validation_failure
     @request.session[:user_id] = 2
-    post :create, :project_id => 1, :news => { :title => '',
-                                            :description => 'This is the description',
-                                            :summary => '' }
+    post(
+      :create,
+      :params => {
+        :project_id => 1,
+        :news => {
+          :title => '',
+          :description => 'This is the description',
+          :summary => ''
+        }
+      }
+    )
     assert_response :success
-    assert_template 'new'
-    assert_not_nil assigns(:news)
-    assert assigns(:news).new_record?
-    assert_error_tag :content => /title #{ESCAPED_CANT} be blank/i
+    assert_select_error /title cannot be blank/i
   end
 
   def test_get_edit
     @request.session[:user_id] = 2
-    get :edit, :id => 1
+    get(:edit, :params => {:id => 1})
     assert_response :success
-    assert_template 'edit'
+    assert_select 'input[name=?][value=?]', 'news[title]', 'eCookbook first release !'
   end
 
   def test_put_update
     @request.session[:user_id] = 2
-    put :update, :id => 1, :news => { :description => 'Description changed by test_post_edit' }
+    put(
+      :update,
+      :params => {
+        :id => 1,
+        :news => {
+          :description => 'Description changed by test_post_edit'
+        }
+      }
+    )
     assert_redirected_to '/news/1'
     news = News.find(1)
     assert_equal 'Description changed by test_post_edit', news.description
@@ -141,9 +263,20 @@ class NewsControllerTest < ActionController::TestCase
     @request.session[:user_id] = 2
     assert_no_difference 'News.count' do
       assert_difference 'Attachment.count' do
-        put :update, :id => 1,
-          :news => { :description => 'This is the description' },
-          :attachments => {'1' => {'file' => uploaded_test_file('testfile.txt', 'text/plain')}}
+        put(
+          :update,
+          :params => {
+            :id => 1,
+            :news => {
+              :description => 'This is the description'
+            },
+            :attachments => {
+              '1' => {
+                'file' => uploaded_test_file('testfile.txt', 'text/plain')
+              }
+            }
+          }
+        )
       end
     end
     attachment = Attachment.order('id DESC').first
@@ -152,16 +285,24 @@ class NewsControllerTest < ActionController::TestCase
 
   def test_update_with_failure
     @request.session[:user_id] = 2
-    put :update, :id => 1, :news => { :description => '' }
+    put(
+      :update,
+      :params => {
+        :id => 1,
+        :news => {
+          :description => ''
+        }
+      }
+    )
     assert_response :success
-    assert_template 'edit'
-    assert_error_tag :content => /description #{ESCAPED_CANT} be blank/i
+    assert_select_error /description cannot be blank/i
   end
 
   def test_destroy
     @request.session[:user_id] = 2
-    delete :destroy, :id => 1
+    delete(:destroy, :params => {:id => 1})
     assert_redirected_to '/projects/ecookbook/news'
+    assert_equal 'Successful deletion.', flash[:notice]
     assert_nil News.find_by_id(1)
   end
 end

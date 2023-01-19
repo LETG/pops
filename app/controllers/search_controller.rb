@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,12 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 class SearchController < ApplicationController
-  before_action :find_optional_project
+  before_action :find_optional_project_by_id, :authorize_global
   accept_api_auth :index
 
   def index
-    @question = params[:q] || ""
-    @question.strip!
+    @question = params[:q]&.strip || ""
     @all_words = params[:all_words] ? params[:all_words].present? : true
     @titles_only = params[:titles_only] ? params[:titles_only].present? : false
     @search_attachments = params[:attachments].presence || '0'
@@ -37,7 +38,7 @@ class SearchController < ApplicationController
     end
 
     # quick jump to an issue
-    if (m = @question.match(/^#?(\d+)$/)) && (issue = Issue.visible.find_by_id(m[1].to_i))
+    if !api_request? && (m = @question.match(/^#?(\d+)$/)) && (issue = Issue.visible.find_by_id(m[1].to_i))
       redirect_to issue_path(issue)
       return
     end
@@ -49,7 +50,7 @@ class SearchController < ApplicationController
       when 'my_projects'
         User.current.projects
       when 'subprojects'
-        @project ? (@project.self_and_descendants.active.to_a) : nil
+        @project ? (@project.self_and_descendants.to_a) : nil
       else
         @project
       end
@@ -62,13 +63,13 @@ class SearchController < ApplicationController
       @object_types = @object_types.select {|o| User.current.allowed_to?("view_#{o}".to_sym, projects_to_search)}
     end
 
-    @scope = @object_types.select {|t| params[t]}
+    @scope = @object_types.select {|t| params[t].present?}
     @scope = @object_types if @scope.empty?
 
     fetcher = Redmine::Search::Fetcher.new(
       @question, User.current, @scope, projects_to_search,
       :all_words => @all_words, :titles_only => @titles_only, :attachments => @search_attachments, :open_issues => @open_issues,
-      :cache => params[:page].present?, :params => params
+      :cache => params[:page].present?, :params => params.to_unsafe_hash
     )
 
     if fetcher.tokens.present?
@@ -83,17 +84,11 @@ class SearchController < ApplicationController
       @question = ""
     end
     respond_to do |format|
-      format.html { render :layout => false if request.xhr? }
-      format.api  { @results ||= []; render :layout => false }
+      format.html {render :layout => false if request.xhr?}
+      format.api do
+        @results ||= []
+        render :layout => false
+      end
     end
-  end
-
-private
-  def find_optional_project
-    return true unless params[:id]
-    @project = Project.find(params[:id])
-    check_project_privacy
-  rescue ActiveRecord::RecordNotFound
-    render_404
   end
 end

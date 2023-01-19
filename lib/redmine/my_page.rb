@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,15 +24,17 @@ module Redmine
     CORE_GROUPS = ['top', 'left', 'right']
 
     CORE_BLOCKS = {
-        'issuesassignedtome' => {:label => :label_assigned_to_me_issues},
-        'issuesreportedbyme' => {:label => :label_reported_issues},
-        'issueswatched' => {:label => :label_watched_issues},
-        'issuequery' => {:label => :label_issue_plural, :max_occurs => 3},
-        'news' => {:label => :label_news_latest},
-        'calendar' => {:label => :label_calendar},
-        'documents' => {:label => :label_document_plural},
-        'timelog' => {:label => :label_spent_time}
-      }
+      'issuesassignedtome' => {:label => :label_assigned_to_me_issues},
+      'issuesreportedbyme' => {:label => :label_reported_issues},
+      'issuesupdatedbyme' => {:label => :label_updated_issues},
+      'issueswatched' => {:label => :label_watched_issues},
+      'issuequery' => {:label => :label_issue_plural, :max_occurs => 3},
+      'news' => {:label => :label_news_latest},
+      'calendar' => {:label => :label_calendar},
+      'documents' => {:label => :label_document_plural},
+      'timelog' => {:label => :label_spent_time},
+      'activity' => {:label => :label_activity}
+    }
 
     def self.groups
       CORE_GROUPS.dup.freeze
@@ -44,11 +48,11 @@ module Redmine
     def self.block_options(blocks_in_use=[])
       options = []
       blocks.each do |block, block_options|
-        indexes = blocks_in_use.map {|n|
+        indexes = blocks_in_use.map do |n|
           if n =~ /\A#{block}(__(\d+))?\z/
             $2.to_i
           end
-        }.compact
+        end.compact
 
         occurs = indexes.size
         block_id = indexes.any? ? "#{block}__#{indexes.max + 1}" : block
@@ -73,11 +77,14 @@ module Redmine
 
     # Returns the additional blocks that are defined by plugin partials
     def self.additional_blocks
-      @@additional_blocks ||= Dir.glob("#{Redmine::Plugin.directory}/*/app/views/my/blocks/_*.{rhtml,erb}").inject({}) do |h,file|
-        name = File.basename(file).split('.').first.gsub(/^_/, '')
-        h[name] = {:label => name.to_sym, :partial => "my/blocks/#{name}"}
-        h
-      end
+      @@additional_blocks ||=
+        Dir.glob(
+          "#{Redmine::Plugin.directory}/*/app/views/my/blocks/_*.{rhtml,erb}"
+        ).inject({}) do |h, file|
+          name = File.basename(file).split('.').first.gsub(/^_/, '')
+          h[name] = {:label => name.to_sym, :partial => "my/blocks/#{name}"}
+          h
+        end
     end
 
     # Returns the default layout for My Page

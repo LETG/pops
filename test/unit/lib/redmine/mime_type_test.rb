@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,49 +20,65 @@
 require File.expand_path('../../../../test_helper', __FILE__)
 
 class Redmine::MimeTypeTest < ActiveSupport::TestCase
-
   def test_of
-    to_test = {'test.unk' => nil,
-               'test.txt' => 'text/plain',
-               'test.c' => 'text/x-c',
-               }
+    to_test = {
+      'test.txt' => 'text/plain',
+      'test.c' => 'text/x-c',
+      'TEST.JPG' => 'image/jpeg',
+    }
     to_test.each do |name, expected|
       assert_equal expected, Redmine::MimeType.of(name)
     end
   end
 
+  def test_of_with_unknown_type
+    assert_nil Redmine::MimeType.of('test.unk')
+  end
+
   def test_css_class_of
-    to_test = {'test.unk' => nil,
-               'test.txt' => 'text-plain',
-               'test.c' => 'text-x-c',
-               }
+    to_test = {
+      'test.txt' => 'text-plain',
+      'test.c' => 'text-x-c',
+      'TEST.JPG' => 'image-jpeg',
+    }
     to_test.each do |name, expected|
       assert_equal expected, Redmine::MimeType.css_class_of(name)
     end
   end
 
+  def test_css_class_of_with_unknown_type
+    assert_nil Redmine::MimeType.css_class_of('test.unk')
+  end
+
   def test_main_mimetype_of
-    to_test = {'test.unk' => nil,
-               'test.txt' => 'text',
-               'test.c' => 'text',
-               }
+    to_test = {
+      'test.txt' => 'text',
+      'test.c' => 'text',
+      'TEST.JPG' => 'image',
+    }
     to_test.each do |name, expected|
       assert_equal expected, Redmine::MimeType.main_mimetype_of(name)
     end
   end
 
+  def test_main_mimetype_of_with_unknown_type
+    assert_nil Redmine::MimeType.main_mimetype_of('test.unk')
+  end
+
   def test_is_type
-    to_test = {['text', 'test.unk'] => false,
-               ['text', 'test.txt'] => true,
-               ['text', 'test.c'] => true,
-               }
+    to_test = {
+      ['text', 'test.unk'] => false,
+      ['text', 'test.txt'] => true,
+      ['text', 'test.c'] => true,
+      ['image', 'TEST.JPG'] => true,
+    }
     to_test.each do |args, expected|
       assert_equal expected, Redmine::MimeType.is_type?(*args)
     end
   end
 
   def test_should_default_to_mime_type_gem
-    assert !Redmine::MimeType::EXTENSIONS.keys.include?("zip")
+    assert !Redmine::MimeType::EXTENSIONS.key?("zip")
     assert_equal "application/zip", Redmine::MimeType.of("file.zip")
   end
 end

@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,11 +32,11 @@ class VersionsController < ApplicationController
 
   def index
     respond_to do |format|
-      format.html {
+      format.html do
         @trackers = @project.trackers.sorted.to_a
         retrieve_selected_tracker_ids(@trackers, @trackers.select {|t| t.is_in_roadmap?})
         @with_subprojects = params[:with_subprojects].nil? ? Setting.display_subprojects_issues? : (params[:with_subprojects] == '1')
-        project_ids = @with_subprojects ? @project.self_and_descendants.collect(&:id) : [@project.id]
+        project_ids = @with_subprojects ? @project.self_and_descendants.pluck(:id) : [@project.id]
 
         @versions = @project.shared_versions.preload(:custom_values)
         @versions += @project.rolled_up_versions.visible.preload(:custom_values) if @with_subprojects
@@ -54,22 +56,22 @@ class VersionsController < ApplicationController
           @issues_by_version = issues.group_by(&:fixed_version)
         end
         @versions.reject! {|version| !project_ids.include?(version.project_id) && @issues_by_version[version].blank?}
-      }
-      format.api {
+      end
+      format.api do
         @versions = @project.shared_versions.to_a
-      }
+      end
     end
   end
 
   def show
     respond_to do |format|
-      format.html {
+      format.html do
         @issues = @version.fixed_issues.visible.
           includes(:status, :tracker, :priority).
           preload(:project).
           reorder("#{Tracker.table_name}.position, #{Issue.table_name}.id").
           to_a
-      }
+      end
       format.api
     end
   end
@@ -106,9 +108,9 @@ class VersionsController < ApplicationController
         end
       else
         respond_to do |format|
-          format.html { render :action => 'new' }
-          format.js   { render :action => 'new' }
-          format.api  { render_validation_errors(@version) }
+          format.html {render :action => 'new'}
+          format.js   {render :action => 'new'}
+          format.api  {render_validation_errors(@version)}
         end
       end
     end
@@ -124,16 +126,16 @@ class VersionsController < ApplicationController
       @version.safe_attributes = attributes
       if @version.save
         respond_to do |format|
-          format.html {
+          format.html do
             flash[:notice] = l(:notice_successful_update)
             redirect_back_or_default settings_project_path(@project, :tab => 'versions')
-          }
-          format.api  { render_api_ok }
+          end
+          format.api  {render_api_ok}
         end
       else
         respond_to do |format|
-          format.html { render :action => 'edit' }
-          format.api  { render_validation_errors(@version) }
+          format.html {render :action => 'edit'}
+          format.api  {render_validation_errors(@version)}
         end
       end
     end
@@ -150,23 +152,23 @@ class VersionsController < ApplicationController
     if @version.deletable?
       @version.destroy
       respond_to do |format|
-        format.html { redirect_back_or_default settings_project_path(@project, :tab => 'versions') }
-        format.api  { render_api_ok }
+        format.html {redirect_back_or_default settings_project_path(@project, :tab => 'versions')}
+        format.api  {render_api_ok}
       end
     else
       respond_to do |format|
-        format.html {
+        format.html do
           flash[:error] = l(:notice_unable_delete_version)
           redirect_to settings_project_path(@project, :tab => 'versions')
-        }
-        format.api  { head :unprocessable_entity }
+        end
+        format.api  {head :unprocessable_entity}
       end
     end
   end
 
   def status_by
     respond_to do |format|
-      format.html { render :action => 'show' }
+      format.html {render :action => 'show'}
       format.js
     end
   end
@@ -175,9 +177,15 @@ class VersionsController < ApplicationController
 
   def retrieve_selected_tracker_ids(selectable_trackers, default_trackers=nil)
     if ids = params[:tracker_ids]
-      @selected_tracker_ids = (ids.is_a? Array) ? ids.collect { |id| id.to_i.to_s } : ids.split('/').collect { |id| id.to_i.to_s }
+      @selected_tracker_ids =
+        if ids.is_a? Array
+          ids.collect {|id| id.to_i.to_s}
+        else
+          ids.split('/').collect {|id| id.to_i.to_s}
+        end
     else
-      @selected_tracker_ids = (default_trackers || selectable_trackers).collect {|t| t.id.to_s }
+      @selected_tracker_ids =
+        (default_trackers || selectable_trackers).collect {|t| t.id.to_s}
     end
   end
 end

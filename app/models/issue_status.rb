@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,18 +29,18 @@ class IssueStatus < ActiveRecord::Base
   before_destroy :delete_workflow_rules
 
   validates_presence_of :name
-  validates_uniqueness_of :name
+  validates_uniqueness_of :name, :case_sensitive => true
   validates_length_of :name, :maximum => 30
   validates_inclusion_of :default_done_ratio, :in => 0..100, :allow_nil => true
-  attr_protected :id
 
-  scope :sorted, lambda { order(:position) }
+  scope :sorted, lambda {order(:position)}
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
 
-  safe_attributes 'name',
+  safe_attributes(
+    'name',
     'is_closed',
     'position',
-    'default_done_ratio'
+    'default_done_ratio')
 
   # Update all the +Issues+ setting their done_ratio to the value of their +IssueStatus+
   def self.update_issue_done_ratios
@@ -89,7 +91,7 @@ class IssueStatus < ActiveRecord::Base
 
   # Updates issues closed_on attribute when an existing status is set as closed.
   def handle_is_closed_change
-    if is_closed_changed? && is_closed == true
+    if saved_change_to_is_closed? && is_closed == true
       # First we update issues that have a journal for when the current status was set,
       # a subselect is used to update all issues with a single query
       subquery = Journal.joins(:details).

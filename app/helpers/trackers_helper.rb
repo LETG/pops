@@ -1,7 +1,7 @@
-# encoding: utf-8
-#
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,4 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 module TrackersHelper
+
+  def tracker_name_tag(tracker)
+    title = tracker.description.presence
+    css = title ? "field-description" : nil
+    content_tag 'span', tracker.name, :class => css, :title => title
+  end
 end

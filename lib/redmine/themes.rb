@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 # Redmine - project management software
-# Copyright (C) 2006-2017  Jean-Philippe Lang
+# Copyright (C) 2006-2022  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,7 +19,6 @@
 
 module Redmine
   module Themes
-
     # Return an array of installed themes
     def self.themes
       @@installed_themes ||= scan_themes
@@ -121,7 +122,7 @@ module Redmine
         end
         @current_theme
       end
-    
+
       # Returns the header tags for the current theme
       def heads_for_theme
         if current_theme && current_theme.javascripts.include?('theme')
@@ -130,8 +131,6 @@ module Redmine
       end
     end
 
-    private
-
     def self.scan_themes
       dirs = Dir.glob("#{Rails.public_path}/themes/*").select do |f|
         # A theme should at least override application.css
@@ -139,5 +138,6 @@ module Redmine
       end
       dirs.collect {|dir| Theme.new(dir)}.sort
     end
+    private_class_method :scan_themes
   end
 end

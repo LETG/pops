@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 module Redmine
   module Scm
     class Base
       class << self
-
         def all
           @scms || []
         end
