@@ -5,13 +5,5 @@ development:
   port: 5432
   timeout: 10000
   username: popsadm
-  password: 'Nh;aqwzsx1414'
+  password: ''
   encoding: utf8
-
-  # production:
-  # adapter: postgresql
-  # database: pops
-  # host: pgiuem.univ-brest.fr
-  # username: popsadm
-  # password: aB-jCorwWzfhor
-  # encoding: utf8
