@@ -1,5 +1,6 @@
 config.paths['app/views'].unshift(FoundationTheme::Engine.root.join('app', 'views'))
 config.paths['app/views'].unshift(PopsRedmineEngine::Engine.root.join('app', 'views'))
+config.paths['db/migrate'].push(PopsRedmineEngine::Engine.root.join('db', 'migrate'))
 
 config.assets.enabled = false
 
